@@ -27,7 +27,11 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from .fleets import TrackedObject, propagate_all
+import numpy as np
+from scipy.spatial import cKDTree
+from sgp4.api import SatrecArray
+
+from .fleets import TrackedObject
 
 # Industry-realistic defaults (see project definition, Sec. 3):
 # ~1e-4 is the common threshold for standard maneuver planning,
@@ -39,10 +43,20 @@ DEFAULT_COMBINED_HBR_KM = 0.02  # ~20 m combined hard-body radius (typical small
 
 
 @dataclass
-class TimeSample:
-    t_offset_s: float
-    positions: dict  # {norad_id: (x,y,z) km}
-    velocities: dict  # {norad_id: (vx,vy,vz) km/s}
+class PropagationResult:
+    """Vectorized propagation output: every object, every timestep, in one shot.
+
+    ``positions``/``velocities`` have shape (n_objects, n_times, 3);
+    ``valid`` is a (n_objects, n_times) boolean mask (False where SGP4
+    reported an error at that instant, e.g. a decayed orbit) — callers must
+    check it before trusting a row/column, since invalid entries hold
+    whatever garbage SGP4 returned rather than being pre-zeroed.
+    """
+    t_offsets_s: np.ndarray       # shape (n_times,)
+    object_ids: list              # length n_objects, row order matches positions/velocities
+    positions: np.ndarray         # shape (n_objects, n_times, 3) km
+    velocities: np.ndarray        # shape (n_objects, n_times, 3) km/s
+    valid: np.ndarray             # shape (n_objects, n_times) bool
 
 
 @dataclass
@@ -62,24 +76,33 @@ class Conjunction:
 
 
 def propagate_window(objects: list[TrackedObject], jd0: float, fr0: float,
-                      duration_s: float, step_s: float) -> list["TimeSample"]:
-    """Propagate every object across a time grid; returns one sample per step."""
-    samples = []
+                      duration_s: float, step_s: float) -> "PropagationResult":
+    """Propagate every object across a time grid in one vectorized call.
+
+    Uses ``sgp4.api.SatrecArray``, which propagates every satellite at
+    every requested time inside compiled code in a single call, instead of
+    looping one (object, timestep) pair at a time in Python. That loop is
+    fine for the ~76-object synthetic demo fleet but becomes the dominant
+    cost against a real multi-thousand-satellite catalog (a 24h/30s-step
+    backtest against ~8,000 real Starlink satellites is ~23 million
+    individual propagations) — this is what makes that case tractable.
+    """
     n_steps = int(duration_s // step_s) + 1
-    for k in range(n_steps):
-        t_offset_s = k * step_s
-        fr = fr0 + t_offset_s / 86400.0
-        jd = jd0 + math.floor(fr)
-        fr = fr - math.floor(fr)
-        result = propagate_all(objects, jd, fr)
-        positions = {nid: pv[0] for nid, pv in result.items()}
-        velocities = {nid: pv[1] for nid, pv in result.items()}
-        samples.append(TimeSample(t_offset_s=t_offset_s, positions=positions, velocities=velocities))
-    return samples
+    t_offsets_s = np.arange(n_steps) * step_s
+    fr_raw = fr0 + t_offsets_s / 86400.0
+    jd_arr = jd0 + np.floor(fr_raw)
+    fr_arr = fr_raw - np.floor(fr_raw)
 
+    satrec_array = SatrecArray([o.satrec for o in objects])
+    errors, r, v = satrec_array.sgp4(jd_arr, fr_arr)  # shapes: (n_obj,n_times), (n_obj,n_times,3) x2
 
-def _dist(p1, p2) -> float:
-    return math.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
+    return PropagationResult(
+        t_offsets_s=t_offsets_s,
+        object_ids=[o.norad_id for o in objects],
+        positions=r,
+        velocities=v,
+        valid=(errors == 0),
+    )
 
 
 def _classify_geometry(vel_a, vel_b) -> str:
@@ -118,7 +141,7 @@ def compute_pc(miss_distance_km: float,
 
 def screen_conjunctions(
     objects: list[TrackedObject],
-    samples: list["TimeSample"],
+    propagation: "PropagationResult",
     screening_distance_km: float = DEFAULT_SCREENING_DISTANCE_KM,
     combined_sigma_km: float = DEFAULT_COMBINED_SIGMA_KM,
     combined_hbr_km: float = DEFAULT_COMBINED_HBR_KM,
@@ -126,50 +149,67 @@ def screen_conjunctions(
 ) -> list[Conjunction]:
     """Screen every object pair across the time grid for close approaches.
 
-    Two-pass approach, mirroring real conjunction-assessment practice:
-    pass 1 finds, per pair, the time sample with minimum distance within
-    ``screening_distance_km``; pass 2 (implicit, via the time grid
-    resolution) reports that sample's data as the TCA estimate. For a
-    final-year prototype this grid resolution is an accepted
-    simplification — a production system refines TCA with a local
-    quadratic/Brent search between grid points.
+    Broad-phase pass: at each timestep, a KD-tree (``scipy.spatial.cKDTree``)
+    finds every pair within ``screening_distance_km`` in O(n log n) instead
+    of brute-force O(n^2) — the standard "broad phase" trick borrowed from
+    collision detection, applied here because it is exactly the problem
+    conjunction screening has. Brute force is fine for the ~76-object
+    synthetic demo fleet (a few thousand pairs) but explodes against a real
+    multi-thousand-satellite catalog (~8,000 objects is ~32 million pairs
+    PER timestep, times thousands of timesteps); with sparse real
+    conjunctions, the KD-tree pass finds the same handful of close pairs in
+    a small fraction of the time.
+
+    Narrow-phase: per candidate pair, keep whichever timestep had the
+    smallest distance as the TCA estimate — for a final-year prototype this
+    grid resolution is an accepted simplification; a production system
+    would refine TCA with a local quadratic/Brent search between grid
+    points.
     """
     by_id = {o.norad_id: o for o in objects}
-    ids = list(by_id.keys())
-    n = len(ids)
+    object_ids = propagation.object_ids
+    n_times = propagation.positions.shape[1]
 
     best: dict[tuple, dict] = {}
-    for sample in samples:
-        present = [i for i in ids if i in sample.positions]
-        for a_idx in range(len(present)):
-            for b_idx in range(a_idx + 1, len(present)):
-                ida, idb = present[a_idx], present[b_idx]
-                obj_a, obj_b = by_id[ida], by_id[idb]
-                if obj_a.is_debris and obj_b.is_debris and not include_debris_debris:
-                    continue
-                d = _dist(sample.positions[ida], sample.positions[idb])
-                if d > screening_distance_km:
-                    continue
-                key = (ida, idb)
-                if key not in best or d < best[key]["dist"]:
-                    best[key] = {
-                        "dist": d,
-                        "t": sample.t_offset_s,
-                        "vel_a": sample.velocities[ida],
-                        "vel_b": sample.velocities[idb],
-                    }
+    for t_idx in range(n_times):
+        valid_idx = np.nonzero(propagation.valid[:, t_idx])[0]
+        if valid_idx.size < 2:
+            continue
+        coords = propagation.positions[valid_idx, t_idx, :]
+        tree = cKDTree(coords)
+        pairs = tree.query_pairs(r=screening_distance_km, output_type="ndarray")
+        if pairs.size == 0:
+            continue
+
+        t_offset_s = float(propagation.t_offsets_s[t_idx])
+        for a_local, b_local in pairs:
+            a_glob, b_glob = int(valid_idx[a_local]), int(valid_idx[b_local])
+            ida, idb = object_ids[a_glob], object_ids[b_glob]
+            obj_a, obj_b = by_id[ida], by_id[idb]
+            if obj_a.is_debris and obj_b.is_debris and not include_debris_debris:
+                continue
+            d = float(np.linalg.norm(coords[a_local] - coords[b_local]))
+            key = (min(ida, idb), max(ida, idb))
+            if key not in best or d < best[key]["dist"]:
+                best[key] = {
+                    "dist": d,
+                    "t": t_offset_s,
+                    "vel_a": propagation.velocities[a_glob, t_idx, :],
+                    "vel_b": propagation.velocities[b_glob, t_idx, :],
+                    "obj_a": obj_a,
+                    "obj_b": obj_b,
+                }
 
     conjunctions = []
-    for (ida, idb), rec in best.items():
-        obj_a, obj_b = by_id[ida], by_id[idb]
-        vrel = tuple(a - b for a, b in zip(rec["vel_a"], rec["vel_b"]))
-        rel_speed = math.sqrt(sum(c * c for c in vrel))
+    for rec in best.values():
+        vrel = rec["vel_a"] - rec["vel_b"]
+        rel_speed = float(np.linalg.norm(vrel))
         pc = compute_pc(rec["dist"], combined_sigma_km, combined_hbr_km)
         geometry = _classify_geometry(rec["vel_a"], rec["vel_b"])
         conjunctions.append(
             Conjunction(
-                object_a=obj_a,
-                object_b=obj_b,
+                object_a=rec["obj_a"],
+                object_b=rec["obj_b"],
                 tca_offset_s=rec["t"],
                 miss_distance_km=rec["dist"],
                 pc=pc,

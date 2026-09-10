@@ -119,5 +119,5 @@ if __name__ == "__main__":
         main()
     text = buf.getvalue()
     sys.stdout.write(text)
-    with open("docs/sample_run.md", "w") as fh:
+    with open("docs/sample_run.md", "w", encoding="utf-8") as fh:
         fh.write("# Sample run output\n\n```\n" + text + "```\n")

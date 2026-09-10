@@ -99,10 +99,28 @@ scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest
 ```
 
+## Historical backtesting: real results so far
+
+`scripts/run_backtest.py` (single real operator) and
+`scripts/run_cross_operator_backtest.py` (two real operators — the version
+that actually exercises signal abstraction, federation, and deconfliction
+on genuine data) are both working. A run against the real Starlink catalog
+(10,713 objects, 24h window) found 173,356 raw conjunctions within the 25km
+screening volume and 19 that crossed the operational Pc threshold — see
+`docs/sample_run.md` for a synthetic-data walkthrough of the same pipeline,
+or re-run the backtest scripts for current real numbers.
+
+Note: the original brute-force screening implementation did not scale to a
+real multi-thousand-object catalog (O(n^2) pairwise comparison per
+timestep). `twin.py` now uses vectorized SGP4 propagation
+(`sgp4.api.SatrecArray`) and a KD-tree broad-phase screening pass
+(`scipy.spatial.cKDTree.query_pairs`) instead — a 24h/30s-step backtest
+against ~8,000-10,000 objects now runs in well under a minute.
+
 ## Next steps (see the Semester Implementation Plan, Sec. 10 of the project definition)
 
-1. Historical backtest against a real documented close-approach period
-   (needs real TLE data — see "Why synthetic" above).
+1. Run `run_cross_operator_backtest.py` against a second real constellation
+   (OneWeb or Kuiper from CelesTrak) to find a genuine cross-operator event.
 2. Incentive/reputation layer (stretch goal).
 3. Wire `evaluate.py`'s real computed numbers into a live version of
    `conjunction_watch.html` (currently a standalone, hand-scripted demo).
