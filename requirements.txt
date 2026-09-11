@@ -3,3 +3,6 @@ numpy>=1.26
 scipy>=1.11
 matplotlib>=3.8
 pytest>=7.4
+cryptography>=42.0
+torch>=2.6
+opacus>=1.5

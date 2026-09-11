@@ -2,8 +2,10 @@
 """
 End-to-end walkthrough of every implemented layer, in one run:
 
-    simulation -> digital twin -> signal abstraction -> federation
+    simulation -> digital twin (+ Kalman refinement) -> signal abstraction
+    -> signing/tamper-evident log -> federation (plain + secure/MPC)
     -> deconfliction -> 3-scenario evaluation -> robustness sweep
+    -> federated learning (FedAvg + DP-SGD)
 
 Run with:  PYTHONPATH=src python3 scripts/run_demo.py
 Writes a plain-text report to docs/sample_run.md as a side effect.
@@ -21,6 +23,15 @@ from satcollision.federation import OperatorReport, mean_aggregate, trimmed_mean
     inject_adversarial_report, aggregation_error
 from satcollision.deconfliction import negotiate_maneuver, simulate_uncoordinated_vs_negotiated
 from satcollision.evaluate import run_three_scenario_comparison, robustness_sweep
+from satcollision.identity import (
+    build_operator_identities, public_key_registry, sign_signal, sign_report,
+    verify_signed, SignedLog, OperatorIdentity,
+)
+from satcollision.secure_aggregation import (
+    build_mpc_states, secure_sum_aggregate, secure_mean_aggregate, compute_masked_share,
+)
+from satcollision.kalman import refine_pc_for_conjunction
+from satcollision.federated_learning import compare_scenarios
 
 
 def main():
@@ -58,6 +69,16 @@ def main():
         if {c.object_a.norad_id, c.object_b.norad_id} == {actor_a.norad_id, actor_b.norad_id}
     )
 
+    # ---- 2b. Kalman-filter state estimation: a real evolving sigma instead of the fixed constant ----
+    print("\n[2b] Kalman-filter refinement: re-deriving this encounter's combined sigma from an")
+    print("     actual tracking history instead of the fixed DEFAULT_COMBINED_SIGMA_KM=0.5km...")
+    kalman_result = refine_pc_for_conjunction(actor_conj, jd0, fr0, seed=0)
+    print(f"    fixed-sigma Pc   (sigma=0.5km, constant)      : {kalman_result['fixed_sigma_pc']:.3e}")
+    print(f"    Kalman-derived Pc (sigma={kalman_result['kalman_sigma_km']:.4f}km at TCA, evolved): "
+          f"{kalman_result['kalman_sigma_pc']:.3e}")
+    print(f"    ({kalman_result['seconds_since_last_measurement']:.0f}s since the simulated last "
+          "tracking update at TCA -- this is exactly what the fixed constant can't represent)")
+
     # ---- 3. Signal abstraction ----
     print("\n[3] Abstracting the flagged conjunction into shareable signals...")
     sig_a, sig_b = abstract_conjunction(actor_conj)
@@ -65,6 +86,34 @@ def main():
     print("    signal from B:", sig_b)
     print("    (no position/velocity/orbital-element field exists on this object —")
     print("     see signal.assert_no_raw_state, exercised in tests/test_twin_and_signal.py)")
+
+    # ---- 3b. Cryptographic identity, signing, and tamper-evident logging ----
+    print("\n[3b] Cryptographic signing (real Ed25519 keys) + hash-chained log...")
+    operator_names = [actor_a.operator, actor_b.operator, "Op0", "Op1", "Op2", "Op3", "Op4", "Adversary"]
+    identities = build_operator_identities(operator_names)
+    trusted_keys = public_key_registry(identities)
+    fed_log = SignedLog()
+
+    signed_a = sign_signal(identities[actor_a.operator], sig_a)
+    signed_b = sign_signal(identities[actor_b.operator], sig_b)
+    fed_log.append(signed_a)
+    fed_log.append(signed_b)
+    print(f"    {actor_a.operator} signs its signal; {actor_b.operator} verifies it: "
+          f"{verify_signed(signed_a, trusted_keys)}")
+
+    print("    tamper check: mutating the signed payload after signing...")
+    import dataclasses as _dc
+    tampered_signal = _dc.replace(signed_a.signal, geometry_class="head-on")
+    tampered = _dc.replace(signed_a, signal=tampered_signal)
+    print(f"      verify(tampered content, same signature) = {verify_signed(tampered, trusted_keys)}  "
+          "(must be False)")
+
+    print("    impersonation check: an attacker signs with their own key, claiming to be "
+          f"'{actor_a.operator}'...")
+    forger = OperatorIdentity.generate(actor_a.operator)  # attacker has NO real identity for this operator
+    forged = sign_signal(forger, sig_a)
+    print(f"      verify(forged signature, real trusted registry) = {verify_signed(forged, trusted_keys)}  "
+          "(must be False -- registry only trusts the real keypair on file)")
 
     # ---- 4. Federation: aggregation under attack ----
     print("\n[4] Federation aggregation: 5 honest operators + 1 adversary reporting")
@@ -82,6 +131,43 @@ def main():
     print(f"    plain mean   : {mean_est}   error vs honest truth = {aggregation_error(mean_est, honest):.3f}")
     print(f"    trimmed mean : {trimmed_est}   error = {aggregation_error(trimmed_est, honest):.3f}")
     print(f"    Krum         : {krum_est}   error = {aggregation_error(krum_est, honest):.3f}")
+
+    print("    every report above also gets signed and appended to the same tamper-evident log")
+    print("    (note: the adversary's SPOOFED CONTENT still verifies -- signing proves who sent")
+    print("     a message and that it wasn't altered in transit, not that its contents are honest;")
+    print("     that is what Byzantine-robust aggregation above, and secure aggregation, are for)...")
+    for report in all_reports:
+        fed_log.append(sign_report(identities[report.operator], report))
+    chain_ok, chain_reason = fed_log.verify_chain(trusted_keys)
+    print(f"    hash-chained log: {len(fed_log.entries)} entries, tail_hash={fed_log.tail_hash()[:16]}..., "
+          f"verify_chain() = {chain_ok}")
+
+    print("    now simulating a cover-up: someone edits an already-logged entry after the fact...")
+    entries = fed_log.entries
+    edited_report = _dc.replace(entries[2].signed.report, counts=np.array([0.0, 0.0, 0.0]))
+    edited_signed = _dc.replace(entries[2].signed, report=edited_report)
+    object.__setattr__(fed_log._entries[2], "signed", edited_signed)
+    chain_ok_after, chain_reason_after = fed_log.verify_chain(trusted_keys)
+    print(f"    verify_chain() after the edit = {chain_ok_after}  reason: {chain_reason_after}")
+
+    # ---- 4b. Secure aggregation: same 6 reports, but the "aggregator" never sees a plaintext one ----
+    print("\n[4b] Secure aggregation on the same 6 reports (Bonawitz-style pairwise-masked")
+    print("     additive secret sharing over a 127-bit field, real X25519 key agreement)...")
+    reports_by_operator = {r.operator: r for r in all_reports}
+    mpc_states = build_mpc_states(list(reports_by_operator.keys()))
+    for operator in reports_by_operator:
+        share = compute_masked_share(mpc_states, reports_by_operator, operator)
+        print(f"      {operator:10s} plaintext={reports_by_operator[operator].counts}   "
+              f"masked share (first coord) = {share[0]}")
+    secure_mean = secure_mean_aggregate(mpc_states, reports_by_operator)
+    print(f"    plain mean_aggregate()      : {mean_est}")
+    print(f"    secure_mean_aggregate()     : {secure_mean}")
+    print("    (identical result -- the aggregator computed the same mean, but its own")
+    print("     arithmetic never touched a single operator's plaintext count vector; the")
+    print("     'masked share' values above are exactly what it saw instead. Note this loses")
+    print("     the Byzantine-robustness demonstrated above -- the adversary's spoofed value")
+    print("     is still baked into this mean, since masked shares can't be trimmed/Krummed.")
+    print("     See README 'Trust model' for why these two protections don't compose for free.)")
 
     # ---- 5. Deconfliction ----
     print("\n[5] Maneuver deconfliction negotiation...")
@@ -106,6 +192,22 @@ def main():
     for i, frac in enumerate(sweep["adversary_fractions"]):
         print(f"    {frac:>6.0%}     {sweep['mean_error'][i]:7.3f}      {sweep['trimmed_mean_error'][i]:7.3f}"
               f"            {sweep['krum_error'][i]:7.3f}")
+
+    # ---- 8. Real federated learning: FedAvg + DP-SGD training an actual model ----
+    print("\n[8] Federated learning: FedAvg + DP-SGD (Opacus) training a real risk-classifier")
+    print("    across Alpha/Beta/Gamma's own non-IID local encounter data, evaluated on a held-out")
+    print("    set mixing every operator's regime (never any single operator's own distribution)...")
+    fl_result = compare_scenarios(["Alpha", "Beta", "Gamma"], n_samples_per_operator=400, n_rounds=8,
+                                   local_epochs=2, seed=42)
+    print(f"    centralized (pools raw data, no privacy -- upper bound) : {fl_result['centralized']}")
+    print(f"    local-only  (each operator alone, mean across 3)        : {fl_result['local_only_mean']}")
+    print(f"    federated, no DP  (FedAvg only)                         : {fl_result['federated_no_dp']}")
+    print(f"    federated + DP-SGD (FedAvg + Opacus)                    : {fl_result['federated_dp']}")
+    print(f"    final-round (epsilon, delta=1e-5) per operator under DP-SGD: "
+          f"{fl_result['federated_dp_final_round_epsilons']}")
+    print("    (federated should land close to centralized without ever pooling raw data; DP-SGD")
+    print("     costs a little more accuracy in exchange for the formal epsilon above on every")
+    print("     operator's shared update -- see README 'Trust model' for what that epsilon means.)")
 
     print("\n" + "=" * 78)
     print("Done. See README.md for what's built vs. future work, and")
