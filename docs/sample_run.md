@@ -43,18 +43,18 @@ End-to-end demonstration run
     (note: the adversary's SPOOFED CONTENT still verifies -- signing proves who sent
      a message and that it wasn't altered in transit, not that its contents are honest;
      that is what Byzantine-robust aggregation above, and secure aggregation, are for)...
-    hash-chained log: 8 entries, tail_hash=f1753d2fc4aa6667..., verify_chain() = True
+    hash-chained log: 8 entries, tail_hash=142be50928290a3a..., verify_chain() = True
     now simulating a cover-up: someone edits an already-logged entry after the fact...
     verify_chain() after the edit = False  reason: entry 2: stored hash does not match recomputed hash -- entry content was modified after logging
 
 [4b] Secure aggregation on the same 6 reports (Bonawitz-style pairwise-masked
      additive secret sharing over a 127-bit field, real X25519 key agreement)...
-      Op0        plaintext=[4. 4. 4.]   masked share (first coord) = 113409798746388985793897490058134892877
-      Op1        plaintext=[2. 2. 6.]   masked share (first coord) = 59990202516354902005699701156239867529
-      Op2        plaintext=[3. 4. 2.]   masked share (first coord) = 101566873922284443885915691379161016163
-      Op3        plaintext=[5. 3. 4.]   masked share (first coord) = 14241080829909873155624220033598656599
-      Op4        plaintext=[4. 1. 4.]   masked share (first coord) = 40249463959553921904088273951756348589
-      Adversary  plaintext=[52. 51. 50.]   masked share (first coord) = 10824946946446336718149230852947429697
+      Op0        plaintext=[4. 4. 4.]   masked share (first coord) = 34464388249375727699765410081122555123
+      Op1        plaintext=[2. 2. 6.]   masked share (first coord) = 17701342439513775987390369047720407047
+      Op2        plaintext=[3. 4. 2.]   masked share (first coord) = 141661162020616596460590879517231011479
+      Op3        plaintext=[5. 3. 4.]   masked share (first coord) = 158237721566022071214737294666118668955
+      Op4        plaintext=[4. 1. 4.]   masked share (first coord) = 63270825961682499871937326137812234641
+      Adversary  plaintext=[52. 51. 50.]   masked share (first coord) = 95088110144197023960640631697717439936
     plain mean_aggregate()      : [11.66666667 10.83333333 11.66666667]
     secure_mean_aggregate()     : [11.66666667 10.83333333 11.66666667]
     (identical result -- the aggregator computed the same mean, but its own
@@ -89,10 +89,90 @@ End-to-end demonstration run
     local-only  (each operator alone, mean across 3)        : {'accuracy': 0.9838888888888889, 'precision': 0.9877889067006042, 'recall': 0.9899923017705928, 'f1': 0.9888338018448222}
     federated, no DP  (FedAvg only)                         : {'accuracy': 0.9883333333333333, 'precision': 0.9840909090909091, 'recall': 1.0, 'f1': 0.9919816723940436}
     federated + DP-SGD (FedAvg + Opacus)                    : {'accuracy': 0.9616666666666667, 'precision': 0.9495614035087719, 'recall': 1.0, 'f1': 0.9741282339707538}
-    final-round (epsilon, delta=1e-5) per operator under DP-SGD: {'Alpha': np.float64(1.437487877739899), 'Beta': np.float64(1.437487877739899), 'Gamma': np.float64(1.437487877739899)}
+    final-round (epsilon, delta=1e-5) per operator under DP-SGD: {'Alpha': np.float64(1.4374878778525355), 'Beta': np.float64(1.4374878778525355), 'Gamma': np.float64(1.4374878778525355)}
     (federated should land close to centralized without ever pooling raw data; DP-SGD
      costs a little more accuracy in exchange for the formal epsilon above on every
      operator's shared update -- see README 'Trust model' for what that epsilon means.)
+
+[9] Incentive/reputation layer: 20 reporting periods, 6 operators, 4 strategies.
+    Reputation is built only from things the federation can already see -- whether a
+    counterparty attests the encounter you reported (or the one you stayed silent about),
+    how far your counts sit from the robust consensus, and whether you contributed at all...
+    operator   strategy     score trajectory (every 4th round)            final   alert tier
+    Alpha      honest      0.62  0.73  0.82  0.88  0.92      0.92    full
+    Beta       honest      0.67  0.78  0.79  0.82  0.88      0.88    full
+    Gamma      honest      0.65  0.77  0.82  0.88  0.84      0.84    full
+    Delta      free_rider  0.40  0.31  0.30  0.33  0.36      0.36    degraded
+    Epsilon    spoofer     0.41  0.30  0.31  0.40  0.41      0.41    degraded
+    Zeta       on_off      0.67  0.77  0.84  0.67  0.47      0.47    standard
+    (Zeta is the interesting one: it behaves exactly like an honest operator for 12 rounds,
+     peaks at 0.84, then defects -- and because reputation falls ~3.5x faster
+     than it rises, 8 rounds of lying cost more than 12 rounds of honesty bought. Banking
+     good behaviour to spend on one big lie is a net loss, which is the point.)
+
+    aggregation error vs. the honest operators' own truth, mean of the last 5 rounds:
+      plain mean            : 0.508
+      trimmed mean          : 0.417   (robust, but memoryless)
+      reputation-weighted   : 0.221   (carries history across rounds)
+
+    the same 6 reports from step [4], but aggregated with reputation weights
+    (the adversary has spent five rounds being caught, and no longer has influence)...
+      plain mean            : [11.66666667 10.83333333 11.66666667]   error = 13.725
+      trimmed mean          : [4.   3.25 4.5 ]   error = 0.783
+      reputation-weighted   : [3.6 2.8 4. ]   error = 0.000
+
+    reciprocity -- what each tier actually receives when an alert is shared:
+      full       ['counterparty_operator', 'deconfliction_eligible', 'encounter_id', 'geometry_class', 'involves_you', 'severity_tier', 'tca_offset_s', 'tier']
+      standard   ['encounter_id', 'involves_you', 'severity_tier', 'tca_offset_s', 'tier']
+      degraded   ['encounter_id', 'involves_you', 'tier']
+      suspended  ['encounter_id', 'tier']
+    ...and the hard safety floor: a CRITICAL alert is delivered in full to everyone,
+    whatever their reputation --
+      suspended operator, critical alert: ['counterparty_operator', 'deconfliction_eligible', 'encounter_id', 'geometry_class', 'involves_you', 'safety_override', 'severity_tier', 'tca_offset_s', 'tier']
+    (reputation allocates influence and privilege; it must never be a mechanism for
+     withholding a collision warning, because the debris harms third parties who had
+     no part in the misbehaviour. See README 'Trust model'.)
+
+[10] Plain-language summaries of everything above -- deterministic templates,
+     no language model anywhere: a safety summary has to be reproducible, auditable,
+     and incapable of inventing a number that was never computed...
+
+     the flagged encounter, as its OWN operator sees it (full fidelity):
+       Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+
+     the same encounter for a non-technical reader (audience='executive'):
+       Two satellites are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+
+     the same encounter as the COUNTERPARTY sees it, at three reputation tiers --
+     note the summary is rendered from the tailored alert dict, so a lower tier
+     cannot leak through a template edit (summaries.assert_no_undisclosed_terms):
+       [full] Encounter ENC-90000-99000-1800 involves one of your satellites. The federation rates it just over the level at which encounters are shared. Closest approach is in 30 minutes. The two objects are crossing paths at a wide angle. The other object is operated by Beta, who received the matching alert at the same moment. You are eligible to open a deconfliction plan for this encounter, which assigns both sides complementary escape directions without either of you sharing trajectory data.
+       [standard] Encounter ENC-90000-99000-1800 involves one of your satellites. The federation rates it just over the level at which encounters are shared. Closest approach is in 30 minutes. Some detail is held back at your current access tier (standard); it is released again as your reporting record improves.
+       [degraded] Encounter ENC-90000-99000-1800 involves one of your satellites. Some detail is held back at your current access tier (degraded); it is released again as your reporting record improves.
+
+     the agreed maneuver, written as an instruction for one side:
+       Agreed plan for encounter ENC-90000-99000-1800: Beta moves Beta-99000 away from the encounter along the agreed escape axis, while Alpha moves Alpha-90000 the opposite way along the same axis. Both sides worked this out independently from the encounter identifier alone, so neither had to send the other any trajectory data, and the two maneuvers are guaranteed to add up rather than cancel. Your action: move Alpha-90000 the opposite way along the same axis.
+
+     what step [4]'s federation round actually concluded:
+       6 operators reported this period. Taking every report at face value gives an average of 34.2 flagged encounters per operator; discounting reports that disagree with everyone else's gives 11.8. That gap is the signature of at least one operator reporting something the rest of the federation cannot corroborate — the robust figure is the one to act on. Adversary currently carries no weight in this result, having been quarantined on its own reporting record.
+
+     what the quarantined operator is told about its own standing:
+       Adversary has a reporting reputation of 0.12 (suspended tier). You carry no weight in federated results and receive identifiers only. Reputation rises by reporting the encounters your own satellites are party to, and falls faster than it rises when reports cannot be corroborated by the operator on the other side of the encounter. Critical collision warnings reach you in full at any reputation.
+
+     the whole thing as one incident report -- the detecting operator's own copy:
+       INCIDENT SUMMARY — ENC-90000-99000-1800
+         What happened   : Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+         What was shared : Encounter ENC-90000-99000-1800 involves one of your satellites. The federation rates it just over the level at which encounters are shared. Closest approach is in 30 minutes. The two objects are crossing paths at a wide angle. The other object is operated by Beta, who received the matching alert at the same moment. You are eligible to open a deconfliction plan for this encounter, which assigns both sides complementary escape directions without either of you sharing trajectory data.
+         What happens now: Agreed plan for encounter ENC-90000-99000-1800: Beta moves Beta-99000 away from the encounter along the agreed escape axis, while Alpha moves Alpha-90000 the opposite way along the same axis. Both sides worked this out independently from the encounter identifier alone, so neither had to send the other any trajectory data, and the two maneuvers are guaranteed to add up rather than cancel. Your action: move Beta-99000 away from the encounter along the agreed escape axis.
+         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 142be50928290a3a...
+
+     ...and the same incident as a DEGRADED counterparty receives it. The private
+     view isn't hidden from this copy, it was never passed in (conjunction=None):
+       INCIDENT SUMMARY — ENC-90000-99000-1800
+         What happened   : The operator on the other side of this encounter detected it in its own digital twin and shared an abstracted signal — never a trajectory — with the federation. What reached you is set out below.
+         What was shared : Encounter ENC-90000-99000-1800 involves one of your satellites. Some detail is held back at your current access tier (degraded); it is released again as your reporting record improves.
+         What happens now: A deconfliction plan exists for this encounter, but your current access tier does not include it. It is released as your reporting record improves.
+         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 142be50928290a3a...
 
 ==============================================================================
 Done. See README.md for what's built vs. future work, and
