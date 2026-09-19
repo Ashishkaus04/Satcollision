@@ -1,0 +1,5 @@
+scenario,accuracy,f1
+Centralized (pools raw data),0.9883,0.9919
+Local only (no sharing),0.9839,0.9888
+Federated (FedAvg),0.9883,0.9920
+Federated + DP-SGD,0.9617,0.9741

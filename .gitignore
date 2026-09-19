@@ -4,4 +4,3 @@ src/satcollision/__pycache__
 .env
 scripts/__pycache__
 tests/__pycache__
-tests/__pycache__/__init__.cpython-314.pyc

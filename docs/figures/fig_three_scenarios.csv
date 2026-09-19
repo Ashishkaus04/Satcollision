@@ -1,0 +1,4 @@
+scenario,lead_time_min,raw_data_exposed_pct,cross_operator_signal
+No Cooperation,10.83,0.0,False
+Full Data Sharing,30.00,100.0,True
+Federated (Proposed),30.00,0.0,True

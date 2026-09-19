@@ -123,6 +123,7 @@ src/satcollision/
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
 tests/                 pytest suite (107 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
+scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_distributed_demo.py  thin CLI wrapper around distributed_demo.run_demo()
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
 ```
@@ -332,6 +333,54 @@ timestep). `twin.py` now uses vectorized SGP4 propagation
 (`sgp4.api.SatrecArray`) and a KD-tree broad-phase screening pass
 (`scipy.spatial.cKDTree.query_pairs`) instead — a 24h/30s-step backtest
 against ~8,000-10,000 objects now runs in well under a minute.
+
+## Figures for the report
+
+```bash
+PYTHONPATH=src python3 scripts/make_figures.py                 # figures 1-5
+PYTHONPATH=src python3 scripts/make_figures.py --skip-fl       # skip the slow PyTorch one
+PYTHONPATH=src python3 scripts/make_figures.py \
+    --backtest data/starlink.tle Starlink data/kuiper.tle Kuiper --hours 24   # + the real-data figure
+```
+
+Each figure is written to `docs/figures/` three ways: a 300-dpi **PNG** for
+slides, a vector **PDF** for the report, and a **CSV** of the exact series
+behind it, so any number quoted in the text can be checked against the plot
+and the data survives even if the figure is later redrawn.
+
+| Figure | Shows |
+|---|---|
+| `fig_reputation_trajectories` | Reputation over 20 periods for honest / free-rider / spoofer / on-off operators, with the tier thresholds marked. The on-off line is the one to talk about: honest for 12 rounds, then below its own starting score within about 6 rounds of defecting. |
+| `fig_robustness_sweep` | Aggregation error vs. the share of dishonest operators, for plain mean / trimmed mean / Krum. |
+| `fig_weighted_aggregation_error` | The same error across rounds for plain mean, trimmed mean and reputation-weighted aggregation — the case for carrying reputation across rounds rather than re-deciding each round. |
+| `fig_three_scenarios` | No Cooperation vs. Full Data Sharing vs. Federated, on detection lead time and raw-data exposure. |
+| `fig_federated_learning` | Centralized / local-only / FedAvg / FedAvg+DP-SGD accuracy and F1 on the shared held-out set. |
+| `fig_backtest_<a>_<b>` | The real cross-operator miss-distance distribution from a genuine TLE catalog run. |
+
+Three decisions in that script are worth being able to defend, because
+they are the kind of thing an examiner notices:
+
+- **No dual-axis charts.** Detection lead time (minutes) and data exposure
+  (per cent) are different scales, so `fig_three_scenarios` gives them one
+  panel each instead of two y-axes on one plot. A dual axis lets the author
+  choose the visual conclusion by choosing the scales.
+- **The federated-learning figure is a dot plot, not bars.** Every score
+  sits between 0.96 and 0.99. Bars from zero would be four
+  indistinguishable full-height columns; bars from 0.95 would be a
+  truncated bar axis, which overstates the differences because a bar
+  encodes by *length*. A dot encodes by position, so a zoomed axis is
+  honest for it.
+- **The colours were validated, not chosen by eye.** The four series hues
+  clear the standard colour-vision-deficiency separation thresholds, and
+  every series also carries its own line style or a direct value label —
+  so nothing in the report depends on colour alone once it is printed in
+  greyscale.
+
+The backtest figure caches its screening result as JSON next to the figure.
+That is deliberate: TLE files are republished daily, so a figure
+regenerated next week would otherwise quietly disagree with the numbers
+quoted in the report text. The cache pins both the distances and the epoch
+they came from; delete it to force a fresh run.
 
 ## Next steps (see the Semester Implementation Plan, Sec. 10 of the project definition)
 
