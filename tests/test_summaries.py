@@ -59,12 +59,21 @@ def test_describe_duration_reads_like_a_person_wrote_it(seconds, expected):
 
 
 @pytest.mark.parametrize("km,expected", [
+    (0.0, "under 10 metres"),
+    (0.004, "under 10 metres"),
     (0.12, "120 metres"),
     (1.57, "1.6 kilometres"),
     (25.0, "25 kilometres"),
 ])
 def test_describe_distance_picks_a_unit_a_reader_can_picture(km, expected):
     assert describe_distance(km) == expected
+
+
+def test_a_zero_miss_distance_reads_as_intersecting_tracks_not_as_zero_metres():
+    """The demo's engineered encounter has a modelled miss distance of 0."""
+    text = summarize_conjunction(_Conjunction(miss_km=0.0))
+    assert "within 0 metres" not in text
+    assert "under 10 metres apart" in text
 
 
 def test_describe_odds_converts_probability_into_odds():

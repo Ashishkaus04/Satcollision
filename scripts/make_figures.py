@@ -99,7 +99,11 @@ def _save(fig, name: str, rows: list[list], header: list[str]) -> None:
     png, pdf, csv_path = (FIGURE_DIR / f"{name}.png", FIGURE_DIR / f"{name}.pdf",
                           FIGURE_DIR / f"{name}.csv")
     fig.savefig(png, dpi=300, bbox_inches="tight")
-    fig.savefig(pdf, bbox_inches="tight")
+    # ``CreationDate: None`` drops the timestamp matplotlib would otherwise
+    # embed in the PDF. Without it every re-render produces different bytes
+    # for an unchanged figure, so all six PDFs show up as modified in git on
+    # every run and a real change is impossible to spot among the noise.
+    fig.savefig(pdf, bbox_inches="tight", metadata={"CreationDate": None})
     plt.close(fig)
     with open(csv_path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)

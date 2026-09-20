@@ -43,18 +43,18 @@ End-to-end demonstration run
     (note: the adversary's SPOOFED CONTENT still verifies -- signing proves who sent
      a message and that it wasn't altered in transit, not that its contents are honest;
      that is what Byzantine-robust aggregation above, and secure aggregation, are for)...
-    hash-chained log: 8 entries, tail_hash=142be50928290a3a..., verify_chain() = True
+    hash-chained log: 8 entries, tail_hash=4cd7c192d3838748..., verify_chain() = True
     now simulating a cover-up: someone edits an already-logged entry after the fact...
     verify_chain() after the edit = False  reason: entry 2: stored hash does not match recomputed hash -- entry content was modified after logging
 
 [4b] Secure aggregation on the same 6 reports (Bonawitz-style pairwise-masked
      additive secret sharing over a 127-bit field, real X25519 key agreement)...
-      Op0        plaintext=[4. 4. 4.]   masked share (first coord) = 34464388249375727699765410081122555123
-      Op1        plaintext=[2. 2. 6.]   masked share (first coord) = 17701342439513775987390369047720407047
-      Op2        plaintext=[3. 4. 2.]   masked share (first coord) = 141661162020616596460590879517231011479
-      Op3        plaintext=[5. 3. 4.]   masked share (first coord) = 158237721566022071214737294666118668955
-      Op4        plaintext=[4. 1. 4.]   masked share (first coord) = 63270825961682499871937326137812234641
-      Adversary  plaintext=[52. 51. 50.]   masked share (first coord) = 95088110144197023960640631697717439936
+      Op0        plaintext=[4. 4. 4.]   masked share (first coord) = 98330982707702448472776076819229474871
+      Op1        plaintext=[2. 2. 6.]   masked share (first coord) = 49770138296130590944190751840133331477
+      Op2        plaintext=[3. 4. 2.]   masked share (first coord) = 73124072911393207890534644803836957974
+      Op3        plaintext=[5. 3. 4.]   masked share (first coord) = 7928042352156291319985561949697383158
+      Op4        plaintext=[4. 1. 4.]   masked share (first coord) = 95900344137616221295833351682610999732
+      Adversary  plaintext=[52. 51. 50.]   masked share (first coord) = 15228786515939703540054220336330064242
     plain mean_aggregate()      : [11.66666667 10.83333333 11.66666667]
     secure_mean_aggregate()     : [11.66666667 10.83333333 11.66666667]
     (identical result -- the aggregator computed the same mean, but its own
@@ -138,10 +138,10 @@ End-to-end demonstration run
      and incapable of inventing a number that was never computed...
 
      the flagged encounter, as its OWN operator sees it (full fidelity):
-       Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+       Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing through what the model puts at the same point, under 10 metres apart — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
 
      the same encounter for a non-technical reader (audience='executive'):
-       Two satellites are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+       Two satellites are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing through what the model puts at the same point, under 10 metres apart — about a 1 in 1,200 chance of a collision. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
 
      the same encounter as the COUNTERPARTY sees it, at three reputation tiers --
      note the summary is rendered from the tailored alert dict, so a lower tier
@@ -161,10 +161,10 @@ End-to-end demonstration run
 
      the whole thing as one incident report -- the detecting operator's own copy:
        INCIDENT SUMMARY — ENC-90000-99000-1800
-         What happened   : Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing within 0 metres of each other — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
+         What happened   : Alpha-90000 and Beta-99000 are crossing paths at a wide angle. Their closest approach is in 30 minutes, passing through what the model puts at the same point, under 10 metres apart — about a 1 in 1,200 chance of a collision. Closing speed is 14.5 km/s; modelled Pc is 8.00e-04. That figure is a model estimate, not a measurement: it assumes the simplified circular uncertainty model, so treat it as an order of magnitude rather than an exact number.
          What was shared : Encounter ENC-90000-99000-1800 involves one of your satellites. The federation rates it just over the level at which encounters are shared. Closest approach is in 30 minutes. The two objects are crossing paths at a wide angle. The other object is operated by Beta, who received the matching alert at the same moment. You are eligible to open a deconfliction plan for this encounter, which assigns both sides complementary escape directions without either of you sharing trajectory data.
          What happens now: Agreed plan for encounter ENC-90000-99000-1800: Beta moves Beta-99000 away from the encounter along the agreed escape axis, while Alpha moves Alpha-90000 the opposite way along the same axis. Both sides worked this out independently from the encounter identifier alone, so neither had to send the other any trajectory data, and the two maneuvers are guaranteed to add up rather than cancel. Your action: move Beta-99000 away from the encounter along the agreed escape axis.
-         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 142be50928290a3a...
+         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 4cd7c192d3838748...
 
      ...and the same incident as a DEGRADED counterparty receives it. The private
      view isn't hidden from this copy, it was never passed in (conjunction=None):
@@ -172,7 +172,7 @@ End-to-end demonstration run
          What happened   : The operator on the other side of this encounter detected it in its own digital twin and shared an abstracted signal — never a trajectory — with the federation. What reached you is set out below.
          What was shared : Encounter ENC-90000-99000-1800 involves one of your satellites. Some detail is held back at your current access tier (degraded); it is released again as your reporting record improves.
          What happens now: A deconfliction plan exists for this encounter, but your current access tier does not include it. It is released as your reporting record improves.
-         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 142be50928290a3a...
+         How to check    : Every signal and report behind this summary was signed by the operator that sent it and appended to a hash-chained log, so any later edit to the record is detectable. Current log tail: 4cd7c192d3838748...
 
 ==============================================================================
 Done. See README.md for what's built vs. future work, and

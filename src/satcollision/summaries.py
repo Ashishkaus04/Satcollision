@@ -103,8 +103,18 @@ def describe_duration(seconds: float) -> str:
 
 
 def describe_distance(km: float) -> str:
-    """Kilometres to metres-or-kilometres, whichever a reader pictures faster."""
+    """Kilometres to metres-or-kilometres, whichever a reader pictures faster.
+
+    Anything under 10 m is reported as "under 10 metres" rather than as a
+    figure: a screened conjunction whose modelled miss distance rounds to
+    zero (the demo's engineered encounter is exactly that) would otherwise
+    render as "0 metres", which reads like a broken template rather than
+    the two tracks genuinely intersecting. The propagation step size makes
+    single-metre precision meaningless at that scale anyway.
+    """
     km = float(km)
+    if km < 0.01:
+        return "under 10 metres"
     if km < 1.0:
         metres = int(round(km * 1000.0))
         return f"{metres} metre{'s' if metres != 1 else ''}"
@@ -165,9 +175,12 @@ def summarize_conjunction(conjunction, audience: str = "operator") -> str:
         raise ValueError(f"unknown audience: {audience!r}")
 
     when = describe_duration(conjunction.tca_offset_s)
-    distance = describe_distance(conjunction.miss_distance_km)
     odds = describe_odds(conjunction.pc)
     geometry = describe_geometry(conjunction.geometry_class)
+    if float(conjunction.miss_distance_km) < 0.01:
+        separation = "passing through what the model puts at the same point, under 10 metres apart"
+    else:
+        separation = f"passing within {describe_distance(conjunction.miss_distance_km)} of each other"
 
     if audience == "executive":
         subject = "Two satellites"
@@ -181,7 +194,7 @@ def summarize_conjunction(conjunction, audience: str = "operator") -> str:
 
     return (
         f"{subject} are {geometry}. Their closest approach is in {when}, "
-        f"passing within {distance} of each other — {odds} of a collision.{detail} "
+        f"{separation} — {odds} of a collision.{detail} "
         "That figure is a model estimate, not a measurement: it assumes the "
         "simplified circular uncertainty model, so treat it as an order of "
         "magnitude rather than an exact number."
