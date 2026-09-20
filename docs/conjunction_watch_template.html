@@ -1,0 +1,1356 @@
+<title>Conjunction Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Single, deliberate visual world: an operations console. Every colour is
+     painted explicitly so the page holds on either host ground. */
+  :root{
+    --bg:#0a0e17;
+    --panel:#121a2b;
+    --panel-2:#0e1524;
+    --border:#243252;
+    --border-soft:#1a2440;
+    --text:#e7ecf8;
+    --text-dim:#8793b3;
+    --text-faint:#5c6892;
+    --accent:#3ec6ff;
+    --accent-dim:#1e4a63;
+    --danger:#ff5468;
+    --danger-dim:#3a1620;
+    --success:#31d6a8;
+    --success-dim:#123028;
+    --warn:#ffc247;
+    --debris:#66708f;
+    /* Series colours validated for colour-vision-deficiency separation
+       against the panel surface; line style and direct labels carry the
+       same identity so nothing depends on hue alone. */
+    --s1:#3987e5;
+    --s2:#d95926;
+    --s3:#199e70;
+    --s4:#9085e9;
+    --fdisplay:'Big Shoulders Display',system-ui,sans-serif;
+    --fbody:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+    --fmono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 18% -10%, rgba(62,198,255,0.07), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(144,133,233,0.06), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--fbody);
+    padding-block:28px 60px;
+    padding-inline:20px;
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent);color:#04121c;}
+  .wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;
+    border-bottom:1px solid var(--border-soft);padding-bottom:18px;
+  }
+  .eyebrow{
+    font-family:var(--fmono);font-size:11.5px;letter-spacing:.14em;
+    color:var(--accent);text-transform:uppercase;margin-bottom:6px;
+  }
+  h1{
+    font-family:var(--fdisplay);font-weight:800;font-size:44px;line-height:.95;
+    letter-spacing:.005em;margin:0;text-wrap:balance;color:#fff;
+  }
+  .sub{color:var(--text-dim);font-size:14.5px;margin-top:8px;max-width:58ch;line-height:1.5;}
+  .provenance{
+    font-family:var(--fmono);font-size:11.5px;color:var(--text-dim);
+    border:1px solid var(--border);border-radius:10px;padding:10px 14px;
+    background:var(--panel);line-height:1.7;
+  }
+  .provenance b{color:var(--text);font-weight:500;}
+
+  /* ---------- section rhythm ---------- */
+  .section-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;}
+  .section-head h2{
+    font-family:var(--fdisplay);font-weight:700;font-size:27px;color:#fff;margin:0;letter-spacing:.01em;
+  }
+  .section-head p{margin:0;color:var(--text-dim);font-size:13.5px;max-width:62ch;line-height:1.55;}
+  .rule{height:1px;background:var(--border-soft);}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--border);border-radius:14px;
+    padding:18px 18px 20px;
+  }
+  .panel h3{
+    font-family:var(--fmono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--text-faint);margin:0 0 12px;font-weight:600;
+  }
+  .caption{font-size:12.5px;color:var(--text-faint);line-height:1.6;margin-top:10px;}
+  .caption b{color:var(--text-dim);font-weight:500;}
+
+  /* ---------- measured stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  @media (max-width:880px){.stats{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:460px){.stats{grid-template-columns:1fr;}}
+  .stat{
+    background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:15px 16px 16px;
+    display:flex;flex-direction:column;gap:5px;
+  }
+  .stat .k{font-family:var(--fmono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);}
+  .stat .v{
+    font-family:var(--fdisplay);font-weight:700;font-size:34px;line-height:1;color:#fff;
+    font-variant-numeric:tabular-nums;
+  }
+  .stat .v small{font-family:var(--fbody);font-weight:600;font-size:14px;color:var(--text-dim);margin-left:3px;}
+  .stat .n{font-size:12px;color:var(--text-dim);line-height:1.45;}
+  .stat.lead{border-color:var(--accent-dim);background:linear-gradient(180deg,rgba(62,198,255,.07),transparent 70%),var(--panel);}
+  .stat.lead .v{color:var(--accent);}
+
+  /* ---------- charts ---------- */
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:880px){.chart-grid{grid-template-columns:1fr;}}
+  .chart-box{width:100%;overflow-x:auto;}
+  svg.chart{display:block;width:100%;height:auto;font-family:var(--fbody);}
+  svg.chart text{fill:var(--text-dim);font-size:11px;}
+  svg.chart text.axis-title{fill:var(--text-faint);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;font-family:var(--fmono);}
+  svg.chart text.value{fill:var(--text);font-family:var(--fmono);font-size:11px;}
+  svg.chart .grid-line{stroke:var(--border-soft);stroke-width:1;}
+  svg.chart .axis-line{stroke:var(--border);stroke-width:1;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--text-dim);}
+  .legend span.key{display:inline-flex;align-items:center;gap:7px;}
+  .legend i{width:16px;height:0;border-top-width:2.5px;border-top-style:solid;display:inline-block;}
+
+  /* ---------- the real crossing ---------- */
+  .crossing{
+    border:1px solid var(--accent-dim);border-radius:14px;padding:18px;
+    background:linear-gradient(135deg,rgba(62,198,255,.08),rgba(18,26,43,.9) 55%),var(--panel);
+    display:grid;grid-template-columns:1.1fr 1fr;gap:20px;align-items:start;
+  }
+  @media (max-width:880px){.crossing{grid-template-columns:1fr;}}
+  .crossing .tag{
+    font-family:var(--fmono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+    color:#04121c;background:var(--accent);padding:3px 8px;border-radius:5px;display:inline-block;margin-bottom:10px;
+  }
+  .crossing h3{font-family:var(--fdisplay);font-weight:700;font-size:24px;color:#fff;margin:0 0 8px;letter-spacing:.01em;text-transform:none;}
+  .crossing p{margin:0;color:var(--text-dim);font-size:13.5px;line-height:1.6;}
+  .facts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 18px;}
+  .facts div{display:flex;flex-direction:column;gap:3px;}
+  .facts .k{font-family:var(--fmono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint);}
+  .facts .v{font-family:var(--fmono);font-size:15px;color:var(--text);font-variant-numeric:tabular-nums;}
+
+
+  /* ---------- 3D replay ---------- */
+  .replay{
+    position:relative;border:1px solid var(--border);border-radius:16px;overflow:hidden;
+    background:#05080f;min-height:420px;
+  }
+  .replay canvas{display:block;width:100%;height:auto;}
+  .replay .hud{
+    position:absolute;top:16px;left:16px;display:flex;flex-direction:column;gap:10px;
+    pointer-events:none;max-width:min(320px,52%);
+  }
+  .hud-card{
+    background:rgba(10,14,23,.82);border:1px solid var(--border);border-radius:10px;
+    padding:11px 13px;backdrop-filter:blur(3px);
+  }
+  .hud-card .k{font-family:var(--fmono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--text-faint);display:block;margin-bottom:4px;}
+  .hud-card .v{display:block;font-family:var(--fmono);font-size:20px;color:var(--accent);font-variant-numeric:tabular-nums;line-height:1.1;}
+  .hud-card .v.warn{color:var(--warn);}
+  .hud-card .v.danger{color:var(--danger);}
+  .hud-card .sub{display:block;font-family:var(--fmono);font-size:10.5px;color:var(--text-dim);margin-top:5px;line-height:1.5;}
+  .replay .inset-label{
+    position:absolute;right:16px;top:16px;font-family:var(--fmono);font-size:10px;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--text-faint);text-align:right;line-height:1.6;pointer-events:none;
+  }
+  .replay .scale-note{
+    position:absolute;left:16px;bottom:64px;font-family:var(--fmono);font-size:10px;
+    color:rgba(231,236,248,.4);letter-spacing:.03em;pointer-events:none;
+  }
+  .replay-controls{
+    position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;
+    padding:12px 16px;background:linear-gradient(0deg,rgba(5,8,15,.96),rgba(5,8,15,0));flex-wrap:wrap;
+  }
+  .replay-controls input[type=range]{flex:1 1 180px;min-width:140px;accent-color:var(--accent);cursor:pointer;}
+  .replay-controls .time{font-family:var(--fmono);font-size:12px;color:var(--text-dim);font-variant-numeric:tabular-nums;min-width:74px;}
+  .seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+  .seg button{
+    font-family:var(--fbody);font-weight:600;font-size:12px;color:var(--text-dim);background:var(--panel-2);
+    border:none;padding:8px 12px;cursor:pointer;
+  }
+  .seg button + button{border-left:1px solid var(--border);}
+  .seg button.on{background:var(--accent-dim);color:#fff;}
+  .replay-fallback{
+    padding:34px 20px;text-align:center;color:var(--text-dim);font-size:13.5px;line-height:1.6;
+  }
+  .replay-fallback code{font-family:var(--fmono);color:var(--text);font-size:12.5px;}
+
+  /* ---------- simulation ---------- */
+  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start;}
+  @media (max-width:880px){.grid{grid-template-columns:1fr;}}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .tab{
+    font-family:var(--fbody);font-weight:600;font-size:13px;color:var(--text-dim);
+    background:var(--panel-2);border:1px solid var(--border);border-radius:9px;
+    padding:9px 13px;cursor:pointer;transition:border-color .15s,color .15s,background .15s;
+    display:flex;align-items:center;gap:7px;
+  }
+  .tab:hover{color:var(--text);border-color:var(--border-soft);}
+  .tab.active{color:#fff;border-color:var(--accent);background:var(--accent-dim);}
+  .badge{
+    font-family:var(--fmono);font-size:9px;letter-spacing:.08em;background:var(--accent);
+    color:#04121c;padding:2px 6px;border-radius:5px;font-weight:600;
+  }
+  .track-label{
+    font-family:var(--fmono);font-size:11.5px;color:var(--text-faint);margin-bottom:10px;
+    display:flex;gap:14px;flex-wrap:wrap;
+  }
+  .track-label b{color:var(--text-dim);font-weight:500;}
+  .swatch{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .canvas-wrap{
+    position:relative;border-radius:10px;overflow:hidden;
+    background:radial-gradient(ellipse at 50% 42%, #0d1930 0%, #060a13 72%);
+    border:1px solid var(--border-soft);
+  }
+  canvas{display:block;width:100%;height:auto;}
+  .canvas-note{
+    position:absolute;left:12px;bottom:10px;font-family:var(--fmono);font-size:10.5px;
+    color:rgba(231,236,248,.35);letter-spacing:.03em;
+  }
+  .outcome-flash{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .35s;}
+  .outcome-flash.show{opacity:1;}
+  .outcome-pill{font-family:var(--fdisplay);font-weight:700;font-size:26px;letter-spacing:.03em;padding:10px 26px;border-radius:10px;}
+  .outcome-pill.bad{background:rgba(255,84,104,.16);color:var(--danger);border:1px solid rgba(255,84,104,.45);}
+  .outcome-pill.good{background:rgba(49,214,168,.14);color:var(--success);border:1px solid rgba(49,214,168,.45);}
+  .controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  button.primary{
+    font-family:var(--fbody);font-weight:600;font-size:13.5px;color:#04121c;
+    background:var(--accent);border:none;border-radius:9px;padding:11px 20px;cursor:pointer;transition:filter .15s,transform .05s;
+  }
+  button.primary:hover{filter:brightness(1.08);}
+  button.primary:active{transform:translateY(1px);}
+  button.primary:disabled{background:var(--border);color:var(--text-faint);cursor:not-allowed;filter:none;}
+  button.ghost{
+    font-family:var(--fbody);font-weight:600;font-size:13px;color:var(--text-dim);
+    background:transparent;border:1px solid var(--border);border-radius:9px;padding:10px 15px;cursor:pointer;
+  }
+  button.ghost:hover{color:var(--text);border-color:var(--border-soft);}
+  button:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  .mode-desc{font-size:13px;color:var(--text-dim);line-height:1.55;}
+  .side-stack{display:flex;flex-direction:column;gap:14px;}
+  .metric-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:10px;}
+  .metric-label{font-family:var(--fmono);font-size:11px;color:var(--text-faint);letter-spacing:.04em;}
+  .metric-value{font-family:var(--fmono);font-size:15px;color:var(--text);font-variant-numeric:tabular-nums;}
+  .metric-value.big{font-size:19px;color:var(--accent);}
+  .gauge{height:7px;border-radius:4px;background:var(--panel-2);border:1px solid var(--border);overflow:hidden;position:relative;}
+  .gauge-fill{height:100%;border-radius:4px;transition:width .25s linear,background-color .3s;}
+  .gauge-tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--warn);}
+  .log{font-family:var(--fmono);font-size:11.5px;line-height:1.85;color:var(--text-dim);max-height:160px;overflow-y:auto;padding-right:4px;}
+  .log div{white-space:pre-wrap;}
+  .log .t{color:var(--text-faint);}
+  .summary-card{border:1px dashed var(--border-soft);border-radius:9px;padding:12px 13px;font-size:13px;line-height:1.55;color:var(--text-dim);min-height:64px;}
+  .summary-card.filled{border-style:solid;border-color:var(--border);color:var(--text);background:var(--panel-2);}
+  .summary-card .who{font-family:var(--fmono);font-size:11px;color:var(--accent);letter-spacing:.04em;display:block;margin-bottom:5px;}
+  .compare{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;min-width:640px;}
+  th{
+    text-align:left;font-family:var(--fmono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--text-faint);font-weight:500;padding:0 12px 10px;border-bottom:1px solid var(--border-soft);
+  }
+  td{padding:11px 12px;border-bottom:1px solid var(--border-soft);font-size:13px;vertical-align:middle;}
+  td.mono{font-family:var(--fmono);font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--text-dim);}
+  tr.empty td{color:var(--text-faint);font-style:italic;}
+  .pill{font-family:var(--fbody);font-weight:600;font-size:11.5px;padding:3px 9px;border-radius:100px;display:inline-block;}
+  .pill.good{background:var(--success-dim);color:var(--success);}
+  .pill.bad{background:var(--danger-dim);color:var(--danger);}
+  footer{
+    padding-top:16px;border-top:1px solid var(--border-soft);
+    font-size:12px;color:var(--text-faint);line-height:1.7;max-width:80ch;
+  }
+  footer code{font-family:var(--fmono);font-size:11.5px;color:var(--text-dim);}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="eyebrow">Federated Digital Twins &middot; Space Traffic Coordination</div>
+      <h1>Conjunction&nbsp;Watch</h1>
+      <p class="sub">What a federated collision-avoidance layer measures on real orbital data &mdash; and, below, the mechanism it uses, run as a scenario you can step through.</p>
+    </div>
+    <div class="provenance" id="provenance"></div>
+  </header>
+
+
+  <div class="panel" style="padding:0;overflow:hidden" id="replayPanel">
+    <div class="replay" id="replay">
+      <canvas id="scene" width="1180" height="620" role="img"
+              aria-label="Three-dimensional replay of the measured conjunction: a textured Earth with real propagated orbits, and an encounter-plane inset showing the two satellites at closest approach"></canvas>
+      <div class="hud">
+        <div class="hud-card">
+          <span class="k">Separation</span>
+          <span class="v" id="hudSep">—</span>
+          <span class="sub" id="hudEncounter">—</span>
+        </div>
+        <div class="hud-card">
+          <span class="k">Time to closest approach</span>
+          <span class="v" id="hudTca">—</span>
+          <span class="sub" id="hudPc">—</span>
+        </div>
+      </div>
+      <div class="inset-label" id="insetLabel">Encounter plane<br>relative frame</div>
+      <div class="scale-note" id="scaleNote"></div>
+      <div class="replay-controls">
+        <div class="seg">
+          <button id="playScene" class="on">Play</button>
+          <button id="pauseScene">Pause</button>
+        </div>
+        <div class="seg">
+          <button id="camWide">Orbit</button>
+          <button id="camClose" class="on">Close pass</button>
+        </div>
+        <div class="seg" id="speedSeg">
+          <button data-speed="30">30&times;</button>
+          <button data-speed="200" class="on">200&times;</button>
+          <button data-speed="900">900&times;</button>
+        </div>
+        <input type="range" id="sceneTime" min="0" max="100" value="0" step="1" aria-label="Scrub the replay">
+        <span class="time" id="sceneClock">T−00:00</span>
+      </div>
+    </div>
+    <p class="caption" id="replayCaption" style="padding:14px 18px 16px;margin:0"></p>
+  </div>
+
+  <div class="section-head">
+    <h2>Measured</h2>
+    <p>Every number in this section comes from a run against a real CelesTrak catalogue. Nothing here is illustrative.</p>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="panel">
+    <h3>Warning time before closest approach</h3>
+    <div class="chart-box"><svg class="chart" id="ecdfChart" viewBox="0 0 760 320" role="img" aria-labelledby="ecdfTitle"><title id="ecdfTitle"></title></svg></div>
+    <div class="legend" id="ecdfLegend"></div>
+    <p class="caption" id="ecdfCaption"></p>
+  </div>
+
+  <div class="crossing" id="crossing"></div>
+
+  <div class="chart-grid">
+    <div class="panel">
+      <h3>Reputation, by reporting strategy</h3>
+      <div class="chart-box"><svg class="chart" id="repChart" viewBox="0 0 560 330" role="img" aria-labelledby="repTitle"><title id="repTitle"></title></svg></div>
+      <div class="legend" id="repLegend"></div>
+      <p class="caption" id="repCaption"></p>
+    </div>
+    <div class="panel">
+      <h3>Aggregation error under dishonest reporting</h3>
+      <div class="chart-box"><svg class="chart" id="robChart" viewBox="0 0 560 330" role="img" aria-labelledby="robTitle"><title id="robTitle"></title></svg></div>
+      <div class="legend" id="robLegend"></div>
+      <p class="caption" id="robCaption"></p>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <div class="section-head">
+    <h2>Mechanism</h2>
+    <p>A stylised scenario, not a propagator: three operators share an orbital neighbourhood, and the same close approach runs under four cooperation models. The measured section above is the evidence; this is the explanation.</p>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>Scenario &mdash; response model</h3>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Cooperation model">
+        <button class="tab active" data-mode="none" role="tab" aria-selected="true">No Cooperation</button>
+        <button class="tab" data-mode="full" role="tab" aria-selected="false">Full Data Sharing</button>
+        <button class="tab" data-mode="fed" role="tab" aria-selected="false">Federated <span class="badge">Proposed</span></button>
+        <button class="tab" data-mode="adv" role="tab" aria-selected="false">Adversarial Test</button>
+      </div>
+
+      <div class="track-label">
+        <span><span class="swatch" style="background:#3ec6ff"></span><b>Operator Alpha</b></span>
+        <span><span class="swatch" style="background:#9085e9"></span><b>Operator Beta</b></span>
+        <span><span class="swatch" style="background:#d95926"></span><b>Operator Gamma</b></span>
+        <span><span class="swatch" style="background:#66708f"></span><b>Tracked debris</b></span>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="orbit" width="800" height="540" role="img" aria-label="Animated view of three satellite constellations and debris orbiting Earth, with a highlighted close-approach event"></canvas>
+        <div class="canvas-note">Illustrative 2D orbital view &mdash; not to physical scale</div>
+        <div class="outcome-flash" id="flash"><div class="outcome-pill" id="flashPill"></div></div>
+      </div>
+
+      <div class="controls">
+        <button class="primary" id="playBtn">Run scenario</button>
+        <button class="ghost" id="resetBtn">Reset field</button>
+      </div>
+      <p class="mode-desc" id="modeDesc" style="margin-top:12px"></p>
+    </div>
+
+    <div class="side-stack">
+      <div class="panel">
+        <h3>Live telemetry</h3>
+        <div class="metric-row"><span class="metric-label">Time to closest approach</span><span class="metric-value big" id="tcaVal">&mdash;</span></div>
+        <div style="margin-top:10px">
+          <div class="metric-row"><span class="metric-label">Probability of collision (Pc)</span><span class="metric-value" id="pcVal">&mdash;</span></div>
+          <div class="gauge"><div class="gauge-tick" style="left:38%" title="Maneuver threshold: 1&times;10&#8315;&#8308;"></div><div class="gauge-fill" id="pcFill" style="width:0%;background:var(--accent)"></div></div>
+        </div>
+        <div style="margin-top:12px">
+          <div class="metric-row"><span class="metric-label">Raw trajectory data exposed</span><span class="metric-value" id="dataVal">&mdash;</span></div>
+          <div class="gauge"><div class="gauge-fill" id="dataFill" style="width:0%;background:var(--warn)"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Event log</h3>
+        <div class="log" id="log"><div class="t">Awaiting scenario &hellip;</div></div>
+      </div>
+
+      <div class="panel">
+        <h3>Auto-generated incident summary</h3>
+        <div class="summary-card" id="summary">Run a scenario to generate the plain-language summary an operations console would show.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel compare">
+    <h3>Run comparison</h3>
+    <table>
+      <thead><tr><th>Model</th><th>Outcome</th><th>Data shared</th><th>New debris</th><th>Notes</th></tr></thead>
+      <tbody id="compareBody">
+        <tr class="empty"><td colspan="5">No runs yet &mdash; try each model above and compare the row it adds here.</td></tr>
+      </tbody>
+    </table>
+    <p class="caption" id="compareCaption"></p>
+  </div>
+
+  <footer id="footer"></footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+var DASHBOARD_DATA = /*__DASHBOARD_DATA__*/{};
+</script>
+<script>
+(function(){
+  "use strict";
+  var D = DASHBOARD_DATA;
+  var SERIES = ['#3987e5','#d95926','#199e70','#9085e9'];
+  var INK = '#e7ecf8', DIM = '#8793b3', FAINT = '#5c6892', GRID = '#1a2440', ACCENT = '#3ec6ff';
+
+  function el(id){ return document.getElementById(id); }
+  function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c]; }); }
+  function fmt(n, d){ return Number(n).toFixed(d===undefined?1:d); }
+
+  // ---------------------------------------------------------------- SVG chart primitives
+  function svgEl(tag, attrs, text){
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function scale(dom0, dom1, ran0, ran1){
+    return function(v){
+      if (dom1 === dom0) return ran0;
+      return ran0 + (v - dom0) / (dom1 - dom0) * (ran1 - ran0);
+    };
+  }
+  function axes(svg, box, xTicks, yTicks, xFmt, yFmt, xTitle, yTitle){
+    yTicks.forEach(function(t){
+      svg.appendChild(svgEl('line', {x1:box.l, x2:box.r, y1:t.y, y2:t.y, class:'grid-line'}));
+      svg.appendChild(svgEl('text', {x:box.l-8, y:t.y+4, 'text-anchor':'end'}, yFmt(t.v)));
+    });
+    xTicks.forEach(function(t){
+      svg.appendChild(svgEl('text', {x:t.x, y:box.b+18, 'text-anchor':'middle'}, xFmt(t.v)));
+    });
+    svg.appendChild(svgEl('line', {x1:box.l, x2:box.r, y1:box.b, y2:box.b, class:'axis-line'}));
+    if (xTitle) svg.appendChild(svgEl('text', {x:(box.l+box.r)/2, y:box.b+38, 'text-anchor':'middle', class:'axis-title'}, xTitle));
+    if (yTitle){
+      var yc = (box.t+box.b)/2;
+      svg.appendChild(svgEl('text', {x:18, y:yc, 'text-anchor':'middle', class:'axis-title',
+        transform:'rotate(-90 18 '+yc+')'}, yTitle));
+    }
+  }
+  function ticksFor(min, max, count, sc, axis){
+    var out = [], step = (max-min)/count;
+    for (var i=0;i<=count;i++){
+      var v = min + step*i;
+      out.push(axis === 'y' ? {v:v, y:sc(v)} : {v:v, x:sc(v)});
+    }
+    return out;
+  }
+  function pathFrom(points){
+    return points.map(function(p,i){ return (i?'L':'M') + fmt(p[0],1) + ' ' + fmt(p[1],1); }).join(' ');
+  }
+  function legend(target, items){
+    target.innerHTML = items.map(function(it){
+      return '<span class="key"><i style="border-top-color:'+it.color+';border-top-style:'+(it.dash||'solid')+'"></i>'+esc(it.label)+'</span>';
+    }).join('');
+  }
+
+  // ---------------------------------------------------------------- provenance + stats
+  var h = D.headline, neg = D.negative;
+
+  el('provenance').innerHTML =
+    '<b>' + esc(h.catalog) + '</b> &middot; ' + h.n_objects.toLocaleString() + ' catalogued objects<br>' +
+    h.window_hours + ' h window &middot; ' + h.screening_horizon_h + ' h screening horizon<br>' +
+    'screened <b>' + esc(h.computed_at_utc.replace('T',' ').replace('+00:00',' UTC')) + '</b>';
+
+  var stats = [
+    { k:'Encounters scored', v:h.n_scored, n:h.n_above_threshold + ' crossed the risk threshold; ' + h.n_excluded_burn_in + ' excluded as window-clipped' },
+    { k:'Warning, no cooperation', v:fmt(h.median_lead_time_nocoop_h,1), unit:'h', n:'median across the set (' + fmt(h.min_lead_time_nocoop_h,1) + '&ndash;' + fmt(h.max_lead_time_nocoop_h,1) + ' h)' },
+    { k:'Warning, federated', v:fmt(h.median_lead_time_cooperative_h,0), unit:'h', n:'flagged on entry to the screening horizon', lead:true },
+    { k:'Raw data exposed', v:'0', unit:'%', n:'full sharing buys the same warning at 100%' }
+  ];
+  el('stats').innerHTML = stats.map(function(s){
+    return '<div class="stat' + (s.lead?' lead':'') + '">' +
+      '<span class="k">' + esc(s.k) + '</span>' +
+      '<span class="v">' + esc(String(s.v)) + (s.unit?'<small>'+esc(s.unit)+'</small>':'') + '</span>' +
+      '<span class="n">' + s.n + '</span></div>';
+  }).join('');
+
+  // ---------------------------------------------------------------- ECDF of warning time
+  (function(){
+    var svg = el('ecdfChart');
+    var box = {l:56, r:720, t:18, b:264};
+    var horizon = h.screening_horizon_h;
+    var xs = D.warning_hours.slice().sort(function(a,b){return a-b;});
+    var x = scale(0, horizon*1.02, box.l, box.r);
+    var y = scale(0, 100, box.b, box.t);
+
+    axes(svg, box,
+      ticksFor(0, horizon, 6, x, 'x'), ticksFor(0, 100, 5, y, 'y'),
+      function(v){ return fmt(v,0); }, function(v){ return fmt(v,0) + '%'; },
+      'Warning time before closest approach (hours)', '% of encounters');
+
+    var pts = [];
+    xs.forEach(function(v, i){
+      var pct = (i+1)/xs.length*100;
+      pts.push([x(v), y(i/xs.length*100)]);
+      pts.push([x(v), y(pct)]);
+    });
+    pts.push([x(Math.max.apply(null, xs)), y(100)]);
+    svg.appendChild(svgEl('path', {d:pathFrom(pts), fill:'none', stroke:SERIES[1], 'stroke-width':2.5, 'stroke-dasharray':'7 4'}));
+
+    var hx = x(horizon);
+    svg.appendChild(svgEl('line', {x1:hx, x2:hx, y1:box.t, y2:box.b, stroke:SERIES[0], 'stroke-width':3}));
+    svg.appendChild(svgEl('text', {x:hx-10, y:box.t+46, 'text-anchor':'end', class:'value'}, 'Federated / full sharing'));
+    svg.appendChild(svgEl('text', {x:hx-10, y:box.t+62, 'text-anchor':'end'}, 'flagged on entry at ' + fmt(horizon,0) + ' h'));
+
+    var med = h.median_lead_time_nocoop_h;
+    svg.appendChild(svgEl('line', {x1:x(med), x2:x(med), y1:box.t, y2:box.b, stroke:FAINT, 'stroke-width':1, 'stroke-dasharray':'2 3'}));
+    svg.appendChild(svgEl('text', {x:x(med)+6, y:box.b-8, class:'value'}, 'median ' + fmt(med,1) + ' h'));
+
+    svg.querySelector('title').textContent =
+      'Cumulative distribution of warning time across ' + h.n_scored + ' real encounters; no cooperation reaches a median of ' +
+      fmt(med,1) + ' hours against a ' + fmt(horizon,0) + '-hour horizon for the federated design.';
+
+    legend(el('ecdfLegend'), [
+      {label:'No cooperation', color:SERIES[1], dash:'dashed'},
+      {label:'Federated / full sharing', color:SERIES[0]}
+    ]);
+    el('ecdfCaption').innerHTML =
+      'Each step is one real threshold-crossing encounter. Cooperation buys a median <b>' +
+      fmt(h.median_lead_time_gain_h,1) + ' extra hours</b> of warning &mdash; federated at 0% raw-data exposure, full sharing at 100%. ' +
+      'The cooperative line is vertical by construction: cooperation flags an encounter the moment it enters the screening horizon, so what varies is how much later no-cooperation arrives.';
+  })();
+
+  // ---------------------------------------------------------------- the genuine crossing
+  (function(){
+    var host = el('crossing');
+    if (!neg || !neg.encounters || !neg.encounters.length){
+      host.innerHTML =
+        '<div><span class="tag">Cross-operator check</span>' +
+        '<h3>No genuine crossing in this catalogue</h3>' +
+        '<p>Across ' + esc(neg ? neg.catalog : 'two real operators') + ', ' +
+        (neg ? neg.n_cross_operator.toLocaleString() : '0') + ' cross-operator close approaches were screened and none crossed the risk threshold. ' +
+        'Megaconstellations are deliberately placed in separated altitude shells, so these events are rare &mdash; which is why the measured set above uses one real catalogue split into two operators.</p></div>';
+      return;
+    }
+    var e = neg.encounters[0];
+    host.innerHTML =
+      '<div><span class="tag">Genuine cross-operator encounter</span>' +
+      '<h3>Two real operators, ' + fmt(e.miss_distance_m,0) + ' m apart</h3>' +
+      '<p>Screened across ' + esc(neg.catalog) + ' with no ownership assigned of any kind: ' +
+      neg.n_cross_operator.toLocaleString() + ' cross-operator close approaches, of which <b>' + neg.n_above_threshold +
+      '</b> crossed the operational risk threshold. This is the scenario the project is premised on, occurring in the real sky. ' +
+      'One event is an existence proof rather than a distribution &mdash; the statistics above come from the split-catalogue run.</p></div>' +
+      '<div class="facts">' +
+      '<div><span class="k">Encounter</span><span class="v">' + esc(e.encounter_id) + '</span></div>' +
+      '<div><span class="k">Miss distance</span><span class="v">' + fmt(e.miss_distance_m,0) + ' m</span></div>' +
+      '<div><span class="k">Collision probability</span><span class="v">' + Number(e.pc).toExponential(2) + '</span></div>' +
+      '<div><span class="k">Geometry</span><span class="v">' + esc(e.geometry_class) + '</span></div>' +
+      '<div><span class="k">Warning, no cooperation</span><span class="v">' + fmt(e.lead_time_nocoop_min/60,1) + ' h</span></div>' +
+      '<div><span class="k">Warning, federated</span><span class="v">' + fmt(e.lead_time_cooperative_min/60,1) + ' h</span></div>' +
+      '</div>';
+  })();
+
+  // ---------------------------------------------------------------- reputation trajectories
+  (function(){
+    var svg = el('repChart');
+    var box = {l:62, r:470, t:16, b:268};
+    var rounds = D.reputation.rounds;
+    var x = scale(1, rounds, box.l, box.r), y = scale(0.1, 1.0, box.b, box.t);
+    axes(svg, box,
+      ticksFor(2, rounds, 4, x, 'x'), ticksFor(0.2, 1.0, 4, y, 'y'),
+      function(v){ return fmt(v,0); }, function(v){ return fmt(v,1); },
+      'Reporting period', 'Reputation');
+
+    D.reputation.thresholds.forEach(function(t){
+      svg.appendChild(svgEl('line', {x1:box.l, x2:box.r, y1:y(t.value), y2:y(t.value), stroke:FAINT, 'stroke-width':1, 'stroke-dasharray':'2 3'}));
+      svg.appendChild(svgEl('text', {x:box.l+4, y:y(t.value)-5, 'font-size':'10'}, t.label));
+    });
+
+    var styleFor = {honest:{c:SERIES[0], d:''}, free_rider:{c:SERIES[1], d:'6 4'},
+                    on_off:{c:SERIES[2], d:'2 3'}, spoofer:{c:SERIES[3], d:'8 3 2 3'}};
+    var seen = {}, placed = [];
+    D.reputation.series.forEach(function(s){
+      var st = styleFor[s.strategy] || {c:SERIES[0], d:''};
+      var pts = s.values.map(function(v,i){ return [x(i+1), y(v)]; });
+      var attrs = {d:pathFrom(pts), fill:'none', stroke:st.c, 'stroke-width':2};
+      if (st.d) attrs['stroke-dasharray'] = st.d;
+      svg.appendChild(svgEl('path', attrs));
+      var last = pts[pts.length-1];
+      if (!seen[s.strategy]){
+        seen[s.strategy] = true;
+        // Nudge a label down if it would land on one already placed: four
+        // strategies can finish within a few points of each other.
+        var ly = last[1] + 4;
+        placed.forEach(function(prev){ if (Math.abs(prev - ly) < 13) ly = prev + 13; });
+        placed.push(ly);
+        svg.appendChild(svgEl('text', {x:last[0]+6, y:ly, 'font-size':'10.5'}, s.strategy.replace('_','-')));
+      }
+    });
+    svg.querySelector('title').textContent = 'Reputation over ' + rounds + ' reporting periods for honest, free-riding, spoofing and on-off operators.';
+    legend(el('repLegend'), [
+      {label:'honest', color:SERIES[0]},
+      {label:'free-rider', color:SERIES[1], dash:'dashed'},
+      {label:'on-off', color:SERIES[2], dash:'dotted'},
+      {label:'spoofer', color:SERIES[3], dash:'dashed'}
+    ]);
+    el('repCaption').innerHTML = 'The on-off operator is the one to watch: honest for ' + D.reputation.defect_round +
+      ' periods, then defecting. Because reputation falls about 3.5&times; faster than it rises, it ends below where it started &mdash; banking good behaviour to spend on one lie is a net loss.';
+  })();
+
+  // ---------------------------------------------------------------- robustness sweep
+  (function(){
+    var svg = el('robChart');
+    var box = {l:62, r:470, t:16, b:268};
+    var rows = D.robustness;
+    var maxErr = Math.max.apply(null, rows.map(function(r){ return Math.max(r.mean, r.trimmed, r.krum); }));
+    var x = scale(0, 40, box.l, box.r), y = scale(0, Math.ceil(maxErr), box.b, box.t);
+    axes(svg, box,
+      ticksFor(0, 40, 4, x, 'x'), ticksFor(0, Math.ceil(maxErr), 5, y, 'y'),
+      function(v){ return fmt(v,0) + '%'; }, function(v){ return fmt(v,0); },
+      'Share of operators reporting dishonestly', 'Aggregation error');
+
+    [['mean', SERIES[1], ''], ['trimmed', SERIES[0], '6 4'], ['krum', SERIES[2], '2 3']].forEach(function(spec){
+      var pts = rows.map(function(r){ return [x(r.fraction*100), y(r[spec[0]])]; });
+      var attrs = {d:pathFrom(pts), fill:'none', stroke:spec[1], 'stroke-width':2};
+      if (spec[2]) attrs['stroke-dasharray'] = spec[2];
+      svg.appendChild(svgEl('path', attrs));
+      pts.forEach(function(p){ svg.appendChild(svgEl('circle', {cx:p[0], cy:p[1], r:3, fill:spec[1]})); });
+      var last = rows[rows.length-1];
+      svg.appendChild(svgEl('text', {x:pts[pts.length-1][0]+7, y:pts[pts.length-1][1]+4, class:'value'}, fmt(last[spec[0]],2)));
+    });
+    svg.querySelector('title').textContent = 'Aggregation error against the share of dishonest operators, for plain mean, trimmed mean and Krum.';
+    legend(el('robLegend'), [
+      {label:'Plain mean', color:SERIES[1]},
+      {label:'Trimmed mean', color:SERIES[0], dash:'dashed'},
+      {label:'Krum', color:SERIES[2], dash:'dotted'}
+    ]);
+    el('robCaption').innerHTML = 'A single dishonest reporter moves the plain mean; the robust rules barely register it. The plain mean is not monotone because adversaries cycle through three attack types, so raising the share changes the <b>mix</b> as well as the count.';
+  })();
+
+  // ---------------------------------------------------------------- captions that cite the real run
+  el('compareCaption').innerHTML =
+    'Outcomes here are scripted for the scenario. The measured equivalents are above: across ' + h.n_scored +
+    ' real encounters, no cooperation warned a median ' + fmt(h.median_lead_time_nocoop_h,1) +
+    ' hours ahead versus ' + fmt(h.median_lead_time_cooperative_h,0) + ' hours with cooperation.';
+
+  el('footer').innerHTML =
+    'The measured section is generated from <code>docs/figures/real_evaluation.json</code> and the figure data in the research prototype, ' +
+    'by <code>scripts/make_dashboard.py</code> &mdash; no number on this page is typed in by hand. ' +
+    'Orbits come from real CelesTrak two-line elements propagated with SGP4; collision probability uses the simplified circular model, so treat every Pc as an order of magnitude rather than an exact figure. ' +
+    'Ownership in the measured set is assigned by catalogue-number parity, stated plainly because genuine cross-operator threshold crossings are rare. ' +
+    'The scenario below the rule is a stylised 2D illustration of the mechanism, not a propagator.';
+
+
+  // ---------------------------------------------------------------- 3D replay
+  // Real propagated positions from the project's own SGP4 pipeline, embedded
+  // by scripts/make_dashboard.py. Two views share one renderer: the globe,
+  // where the encounter is a point on a 6,371 km sphere, and an encounter-plane
+  // inset in the relative frame, where a sub-kilometre miss is actually visible.
+  (function(){
+    var scene3d = D.scene || {available:false, reason:'no scene data in this build'};
+    var panel = el('replayPanel'), host = el('replay');
+    function degrade(message){
+      host.innerHTML = '<div class="replay-fallback">' + message + '</div>';
+      el('replayCaption').textContent =
+        'The measured figures below are unaffected — they come from the run data, not from this view.';
+    }
+    if (!scene3d.available){
+      degrade('The 3D replay needs the real catalogues: drop the CelesTrak <code>.tle</code> files into ' +
+              '<code>data/</code> and re-run <code>scripts/make_dashboard.py</code>.<br><span style="color:var(--text-faint)">' +
+              esc(scene3d.reason || '') + '</span>');
+      return;
+    }
+    if (typeof THREE === 'undefined'){
+      degrade('The 3D replay could not load its renderer. Everything else on this page is unaffected.');
+      return;
+    }
+
+    var enc = scene3d.encounter, bg = scene3d.background;
+    var KM = 1/1000;                 // scene units: 1 = 1,000 km
+    var EARTH_KM = 6371, EARTH = EARTH_KM*KM;
+    var OP_A = '#3ec6ff', OP_B = '#ffc247';
+
+    var canvas = el('scene');
+    var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.setClearColor(0x05080f, 1);
+    renderer.autoClear = false;
+
+    // ---- globe scene -------------------------------------------------
+    var world = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(42, 2, 0.5, 400);
+
+    var earthMat;
+    if (D.earth_texture){
+      var tex = new THREE.TextureLoader().load(D.earth_texture);
+      earthMat = new THREE.MeshPhongMaterial({map:tex, shininess:8, specular:0x1a2740});
+    } else {
+      earthMat = new THREE.MeshPhongMaterial({color:0x14324f, shininess:6, specular:0x0d1b2c});
+    }
+    var earth = new THREE.Mesh(new THREE.SphereGeometry(EARTH, 64, 48), earthMat);
+    world.add(earth);
+
+    if (!D.earth_texture){
+      var grat = new THREE.LineSegments(
+        new THREE.WireframeGeometry(new THREE.SphereGeometry(EARTH*1.001, 24, 16)),
+        new THREE.LineBasicMaterial({color:0x3ec6ff, transparent:true, opacity:0.12}));
+      world.add(grat);
+    }
+    world.add(new THREE.Mesh(
+      new THREE.SphereGeometry(EARTH*1.035, 48, 32),
+      new THREE.MeshBasicMaterial({color:0x3ec6ff, transparent:true, opacity:0.07, side:THREE.BackSide})));
+
+    world.add(new THREE.AmbientLight(0x2a3a55, 1.0));
+    var sun = new THREE.DirectionalLight(0xfff3e0, 1.15);
+    sun.position.set(-18, 6, 12);
+    world.add(sun);
+
+    (function stars(){
+      var n = 1400, pos = new Float32Array(n*3);
+      for (var i=0;i<n;i++){
+        var th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1), r = 120 + Math.random()*120;
+        pos[i*3]   = r*Math.sin(ph)*Math.cos(th);
+        pos[i*3+1] = r*Math.cos(ph);
+        pos[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+      }
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      world.add(new THREE.Points(g, new THREE.PointsMaterial({color:0x9fb2d8, size:0.35, sizeAttenuation:false, transparent:true, opacity:0.75})));
+    })();
+
+    function vec(p){ return new THREE.Vector3(p[0]*KM, p[2]*KM, -p[1]*KM); } // ECI z-up -> scene y-up
+
+    // background constellation: real tracks, animated by sample index
+    var bgTracks = bg.tracks.filter(function(t){ return t && t.length; });
+    var bgCount = bgTracks.length;
+    var bgGeom = new THREE.BufferGeometry();
+    bgGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(bgCount*3), 3));
+    world.add(new THREE.Points(bgGeom, new THREE.PointsMaterial({
+      color:0x8aa0c8, size:2.4, sizeAttenuation:false, transparent:true, opacity:0.85})));
+
+    function ribbon(track, colour){
+      var pts = [];
+      track.forEach(function(p){ if (p) pts.push(vec(p)); });
+      if (pts.length < 2) return;
+      var g = new THREE.BufferGeometry().setFromPoints(pts);
+      world.add(new THREE.Line(g, new THREE.LineBasicMaterial({color:colour, transparent:true, opacity:0.5})));
+    }
+    ribbon(enc.ribbon_a, OP_A);
+    ribbon(enc.ribbon_b, OP_B);
+
+    function marker(colour){
+      var m = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12),
+                              new THREE.MeshBasicMaterial({color:colour}));
+      world.add(m);
+      var halo = new THREE.Mesh(new THREE.SphereGeometry(0.085, 16, 12),
+                                 new THREE.MeshBasicMaterial({color:colour, transparent:true, opacity:0.22}));
+      world.add(halo);
+      return {core:m, halo:halo};
+    }
+    var markA = marker(OP_A), markB = marker(OP_B);
+
+    // ---- encounter-plane inset --------------------------------------
+    // Relative frame: object B sits at the origin, A moves along the real
+    // relative position vector. Scaled in metres, because that is the only
+    // scale on which a 828 m miss means anything.
+    var plane = new THREE.Scene();
+    var planeCam = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+    // Fixed 4 km frame. An inset that rescales to the separation looks frozen —
+    // the object sits in the same place on screen however close it gets.
+    planeCam.position.set(2.4, 1.6, 3.1);
+    planeCam.lookAt(0,0,0);
+    plane.add(new THREE.AmbientLight(0xffffff, 1.0));
+    var planeB = new THREE.Mesh(new THREE.SphereGeometry(0.11, 18, 14), new THREE.MeshBasicMaterial({color:OP_B}));
+    plane.add(planeB);
+    var planeA = new THREE.Mesh(new THREE.SphereGeometry(0.11, 18, 14), new THREE.MeshBasicMaterial({color:OP_A}));
+    plane.add(planeA);
+    // 500 m 1-sigma position uncertainty, the value twin.compute_pc assumes
+    plane.add(new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 14),
+      new THREE.MeshBasicMaterial({color:0x3ec6ff, transparent:true, opacity:0.10})));
+    plane.add(new THREE.LineSegments(
+      new THREE.WireframeGeometry(new THREE.SphereGeometry(0.5, 14, 10)),
+      new THREE.LineBasicMaterial({color:0x3ec6ff, transparent:true, opacity:0.16})));
+    var sepGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    plane.add(new THREE.Line(sepGeom, new THREE.LineBasicMaterial({color:0xff5468, transparent:true, opacity:0.85})));
+    var trailGeom = new THREE.BufferGeometry().setFromPoints(
+      enc.track_a.map(function(p,i){
+        var b = enc.track_b[i];
+        if (!p || !b) return new THREE.Vector3();
+        return new THREE.Vector3((p[0]-b[0])/1, (p[2]-b[2])/1, -(p[1]-b[1])/1);
+      }));
+    plane.add(new THREE.Line(trailGeom, new THREE.LineBasicMaterial({color:OP_A, transparent:true, opacity:0.35})));
+
+    // ---- camera control ---------------------------------------------
+    var camState = {theta:0.9, phi:1.05, dist:24, target:new THREE.Vector3(0,0,0), mode:'close'};
+    var want = {theta:0.9, phi:1.05, dist:3.2};
+    function applyCamera(){
+      camState.theta += (want.theta-camState.theta)*0.08;
+      camState.phi   += (want.phi-camState.phi)*0.08;
+      camState.dist  += (want.dist-camState.dist)*0.06;
+      var d = camState.dist;
+      camera.position.set(
+        camState.target.x + d*Math.sin(camState.phi)*Math.cos(camState.theta),
+        camState.target.y + d*Math.cos(camState.phi),
+        camState.target.z + d*Math.sin(camState.phi)*Math.sin(camState.theta));
+      camera.lookAt(camState.target);
+    }
+    var dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('pointerdown', function(e){ dragging = true; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointerup', function(e){ dragging = false; try{ canvas.releasePointerCapture(e.pointerId); }catch(err){} });
+    canvas.addEventListener('pointermove', function(e){
+      if (!dragging) return;
+      want.theta -= (e.clientX-lastX)*0.006;
+      want.phi = Math.max(0.15, Math.min(Math.PI-0.15, want.phi - (e.clientY-lastY)*0.006));
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    canvas.addEventListener('wheel', function(e){
+      e.preventDefault();
+      want.dist = Math.max(1.2, Math.min(90, want.dist * (e.deltaY > 0 ? 1.12 : 0.89)));
+    }, {passive:false});
+
+    // ---- playback ----------------------------------------------------
+    // Time is real seconds of orbital time, scaled. Everything on screen —
+    // both satellites, the whole background constellation, and the Earth's
+    // own rotation — advances off this one clock, interpolated between
+    // samples, so nothing snaps from one propagated point to the next.
+    var encStep = enc.step_s, encSamples = enc.track_a.length;
+    var encSpan = (encSamples-1)*encStep;                 // seconds of the dense clip
+    var ribbonStep = enc.ribbon_a.length > 1 ? (5700/(enc.ribbon_a.length-1)) : 30;
+    var ribbonSpan = (enc.ribbon_a.length-1)*ribbonStep;  // one full orbit
+    var bgStep = bg.step_s, bgLen = bgTracks.length ? bgTracks[0].length : 1;
+    var bgSpan = (bgLen-1)*bgStep;
+    var OMEGA_EARTH = 7.2921159e-5;                        // rad/s, sidereal
+
+    var simT = Math.max(0, (enc.tca_index*encStep) - 420); // start 7 min before closest approach
+    var playing = true, timeScale = 200;
+    var slider = el('sceneTime'), clock = el('sceneClock');
+    slider.max = String(Math.round(encSpan));
+    slider.step = '1';
+
+    function lerpTrack(track, step, t, wrap){
+      var span = (track.length-1)*step;
+      if (wrap) t = ((t % span) + span) % span;
+      t = Math.max(0, Math.min(span, t));
+      var f = t/step, i0 = Math.floor(f), i1 = Math.min(track.length-1, i0+1), a = f-i0;
+      var p0 = track[i0], p1 = track[i1];
+      if (!p0 || !p1) return null;
+      return [p0[0]+(p1[0]-p0[0])*a, p0[1]+(p1[1]-p0[1])*a, p0[2]+(p1[2]-p0[2])*a];
+    }
+    function lerpSeries(series, step, t){
+      var span = (series.length-1)*step;
+      t = Math.max(0, Math.min(span, t));
+      var f = t/step, i0 = Math.floor(f), i1 = Math.min(series.length-1, i0+1), a = f-i0;
+      return series[i0] + (series[i1]-series[i0])*a;
+    }
+
+    function setMode(mode){
+      camState.mode = mode;
+      el('camWide').classList.toggle('on', mode === 'wide');
+      el('camClose').classList.toggle('on', mode === 'close');
+      want.dist = mode === 'wide' ? 24 : 3.2;
+    }
+    el('camWide').addEventListener('click', function(){ setMode('wide'); });
+    el('camClose').addEventListener('click', function(){ setMode('close'); });
+    el('playScene').addEventListener('click', function(){
+      playing = true; el('playScene').classList.add('on'); el('pauseScene').classList.remove('on');
+    });
+    el('pauseScene').addEventListener('click', function(){
+      playing = false; el('pauseScene').classList.add('on'); el('playScene').classList.remove('on');
+    });
+    Array.prototype.forEach.call(el('speedSeg').children, function(btn){
+      btn.addEventListener('click', function(){
+        timeScale = Number(btn.getAttribute('data-speed'));
+        Array.prototype.forEach.call(el('speedSeg').children, function(b){ b.classList.toggle('on', b === btn); });
+      });
+    });
+    slider.addEventListener('input', function(){
+      simT = Number(slider.value); playing = false;
+      el('pauseScene').classList.add('on'); el('playScene').classList.remove('on');
+    });
+
+    function fmtSep(km){
+      if (km < 1) return Math.round(km*1000) + ' m';
+      if (km < 20) return km.toFixed(2) + ' km';
+      return Math.round(km).toLocaleString() + ' km';
+    }
+    function fmtCountdown(seconds){
+      var sign = seconds >= 0 ? '−' : '+';
+      var s = Math.abs(Math.round(seconds));
+      var m = Math.floor(s/60);
+      return 'T' + sign + String(m).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+    }
+
+    el('hudEncounter').textContent = enc.object_a.label + ' ↔ ' + enc.object_b.label;
+    el('hudPc').textContent = 'Pc ' + Number(enc.pc).toExponential(2) + ' · ' + enc.geometry_class;
+    el('scaleNote').textContent = 'Globe to scale, rotating at its real rate · inset: relative frame, 4 km across, ring = 500 m tracking uncertainty';
+
+    var sourceLine = scene3d.source === 'cross_operator'
+      ? 'This is the genuine cross-operator encounter between two different real operators — the one the measured set could not supply.'
+      : 'This is the highest-probability encounter from the split-catalogue run.';
+    el('replayCaption').innerHTML =
+      '<b>Real propagated positions.</b> ' + sourceLine + ' Both tracks come from the same SGP4 propagation the evaluation used, ' +
+      'sampled every ' + enc.step_s + ' s across ' + esc(scene3d.catalog) + ' at epoch ' +
+      esc(scene3d.run_epoch_utc.replace('T',' ').replace('+00:00',' UTC')) + ', with ' + bg.n_objects +
+      ' further catalogue objects on their own real tracks and the Earth turning at its sidereal rate. ' +
+      'Motion between samples is interpolated; the time scale is yours to set. Closest approach: <b>' +
+      fmtSep(enc.miss_distance_m/1000) + '</b>. Drag to orbit, scroll to zoom. ' +
+      'The only modelled element is the 500 m uncertainty sphere — the sigma the collision-probability model assumes.';
+
+    // trails: a fading ribbon of where each object has just been
+    function makeTrail(colour, n){
+      var g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3));
+      var line = new THREE.Line(g, new THREE.LineBasicMaterial({color:colour, transparent:true, opacity:0.75}));
+      world.add(line);
+      return {geom:g, n:n, filled:0};
+    }
+    var trailA = makeTrail(OP_A, 90), trailB = makeTrail(OP_B, 90);
+    function pushTrail(trail, v){
+      var pos = trail.geom.attributes.position, arr = pos.array;
+      for (var i=trail.n-1;i>0;i--){
+        arr[i*3] = arr[(i-1)*3]; arr[i*3+1] = arr[(i-1)*3+1]; arr[i*3+2] = arr[(i-1)*3+2];
+      }
+      arr[0] = v.x; arr[1] = v.y; arr[2] = v.z;
+      if (trail.filled < trail.n) {
+        trail.filled++;
+        for (var k=trail.filled;k<trail.n;k++){ arr[k*3]=v.x; arr[k*3+1]=v.y; arr[k*3+2]=v.z; }
+      }
+      pos.needsUpdate = true;
+    }
+
+    var lastFrame = null, idleSpin = 0;
+    function renderScene(ts){
+      requestAnimationFrame(renderScene);
+      if (lastFrame === null) lastFrame = ts;
+      var dt = Math.min(0.08, (ts - lastFrame)/1000); lastFrame = ts;
+
+      var span = (camState.mode === 'wide') ? ribbonSpan : encSpan;
+      if (playing){
+        simT += dt*timeScale;
+        if (simT > span) simT = 0;
+      }
+      if (slider.max !== String(Math.round(span))) slider.max = String(Math.round(span));
+      slider.value = String(Math.round(Math.min(simT, span)));
+
+      // Earth turns at its real rate against the inertial frame the orbits live in
+      earth.rotation.y = -OMEGA_EARTH * simT;
+
+      // background constellation: every object on its own real track, wrapped
+      var bgPos = bgGeom.attributes.position;
+      for (var k=0;k<bgCount;k++){
+        var p = lerpTrack(bgTracks[k], bgStep, simT, true);
+        if (!p){ bgPos.setXYZ(k, 0, 0, 0); continue; }
+        var bv = vec(p);
+        bgPos.setXYZ(k, bv.x, bv.y, bv.z);
+      }
+      bgPos.needsUpdate = true;
+
+      // the encounter pair: the dense clip close in, the full orbit when wide
+      var pa, pb;
+      if (camState.mode === 'wide'){
+        pa = lerpTrack(enc.ribbon_a, ribbonStep, simT, true);
+        pb = lerpTrack(enc.ribbon_b, ribbonStep, simT, true);
+      } else {
+        pa = lerpTrack(enc.track_a, encStep, simT, false);
+        pb = lerpTrack(enc.track_b, encStep, simT, false);
+      }
+
+      if (pa && pb){
+        var va = vec(pa), vb = vec(pb);
+        markA.core.position.copy(va); markA.halo.position.copy(va);
+        markB.core.position.copy(vb); markB.halo.position.copy(vb);
+        pushTrail(trailA, va); pushTrail(trailB, vb);
+        if (camState.mode === 'close') camState.target.lerp(va.clone().add(vb).multiplyScalar(0.5), 0.08);
+        else camState.target.lerp(new THREE.Vector3(0,0,0), 0.05);
+
+        // inset: relative frame at a FIXED 4 km scale, so the approach visibly closes
+        var rel = new THREE.Vector3((pa[0]-pb[0]), (pa[2]-pb[2]), -(pa[1]-pb[1]));
+        planeA.position.copy(rel);
+        sepGeom.attributes.position.setXYZ(0, 0,0,0);
+        sepGeom.attributes.position.setXYZ(1, rel.x, rel.y, rel.z);
+        sepGeom.attributes.position.needsUpdate = true;
+
+        var sepKm = camState.mode === 'wide'
+          ? Math.sqrt(Math.pow(pa[0]-pb[0],2)+Math.pow(pa[1]-pb[1],2)+Math.pow(pa[2]-pb[2],2))
+          : lerpSeries(enc.separation_km, encStep, simT);
+        var hud = el('hudSep');
+        hud.textContent = fmtSep(sepKm);
+        hud.className = 'v' + (sepKm < 1 ? ' danger' : (sepKm < 5 ? ' warn' : ''));
+        var tMinus = (enc.tca_index*encStep) - simT;
+        el('hudTca').textContent = fmtCountdown(tMinus);
+        clock.textContent = fmtCountdown(tMinus);
+      }
+
+      // a slow drift when nobody is driving, so the view never sits still
+      if (!dragging){
+        idleSpin += dt*0.012;
+        want.theta += Math.sin(idleSpin)*0.0009;
+      }
+      applyCamera();
+
+      var w = canvas.clientWidth || 1180, h = canvas.clientHeight || 620;
+      if (canvas.width !== Math.floor(w*renderer.getPixelRatio()) ){
+        renderer.setSize(w, h, false);
+      }
+      camera.aspect = w/h; camera.updateProjectionMatrix();
+
+      renderer.clear();
+      renderer.setViewport(0,0,w,h);
+      renderer.setScissorTest(false);
+      renderer.render(world, camera);
+
+      var side = Math.round(Math.min(w*0.32, h*0.46));
+      var ix = w - side - 16, iy = 56;
+      renderer.setScissorTest(true);
+      renderer.setScissor(ix, iy, side, side);
+      renderer.setViewport(ix, iy, side, side);
+      planeCam.aspect = 1; planeCam.updateProjectionMatrix();
+      renderer.clearDepth();
+      renderer.render(plane, planeCam);
+      renderer.setScissorTest(false);
+    }
+    setMode('close');
+    requestAnimationFrame(renderScene);
+  })();
+
+  // ---------------------------------------------------------------- scenario simulation
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas = el('orbit'), ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height, CX = W/2, CY = H/2 + 8;
+  var COLORS = { alpha:'#3ec6ff', beta:'#9085e9', gamma:'#d95926', debris:'#66708f', danger:'#ff5468' };
+  var RINGS = [
+    { key:'alpha', a:118, b:46, rot:-0.21, color:COLORS.alpha, speed: reduceMotion?0:0.11 },
+    { key:'beta',  a:168, b:64, rot: 0.31, color:COLORS.beta,  speed: reduceMotion?0:0.075 },
+    { key:'gamma', a:224, b:82, rot:-0.44, color:COLORS.gamma, speed: reduceMotion?0:0.05 }
+  ];
+  function ringPoint(ring, theta){
+    var px = ring.a*Math.cos(theta), py = ring.b*Math.sin(theta);
+    var cos=Math.cos(ring.rot), sin=Math.sin(ring.rot);
+    return { x: CX + px*cos - py*sin, y: CY + px*sin + py*cos };
+  }
+  var satellites = [];
+  RINGS.forEach(function(ring, ri){
+    for (var i=0;i<4;i++){
+      satellites.push({
+        ring: ring, theta0: (i/4)*Math.PI*2 + ri*0.4,
+        label: ring.key.charAt(0).toUpperCase()+ring.key.slice(1)+'-0'+(i+1),
+        isActor: (ring.key==='alpha' && i===1) || (ring.key==='beta' && i===2),
+        actorRole: (ring.key==='alpha' && i===1) ? 'alpha' : ((ring.key==='beta' && i===2) ? 'beta' : null)
+      });
+    }
+  });
+  var debris = [];
+  function seedDebris(){
+    debris.length = 0;
+    for (var i=0;i<16;i++){
+      var a = 95 + Math.random()*150, ecc = 0.3+Math.random()*0.35;
+      debris.push({ a:a, b:a*ecc, rot:Math.random()*Math.PI*2, theta0:Math.random()*Math.PI*2,
+        speed:(reduceMotion?0:1)*(0.02+Math.random()*0.05)*(Math.random()<0.3?-1:1),
+        spin:(reduceMotion?0:1)*(Math.random()*2-1)*0.03, size:2+Math.random()*2 });
+    }
+  }
+  seedDebris();
+  var particles = [];
+
+  var MODES = {
+    none: { label:'No Cooperation', desc:'Each operator relies only on its own tracking. There is no channel to warn the other side at all.' },
+    full: { label:'Full Data Sharing', desc:'Operators exchange complete raw trajectory data to resolve the risk — effective, and it exposes everything.' },
+    fed:  { label:'Federated (Proposed)', desc:'Each twin stays private. Only an abstracted, threshold-crossing risk signal ever leaves an operator boundary.' },
+    adv:  { label:'Adversarial Test', desc:'The federated model, plus an unverified third party attempting to inject a spoofed risk signal.' }
+  };
+  var currentMode = 'none', scenario = null, DUR = 22, TCA_FRAC = 0.55;
+  var PC_THRESHOLD = 1e-4, PC_PEAK = 4.6e-4;
+  function pcAt(tf){ var d = tf - TCA_FRAC; return PC_PEAK * Math.exp(-(d*d)/(2*0.11*0.11)); }
+  function smoothstep(a,b,v){ v=Math.max(0,Math.min(1,(v-a)/(b-a))); return v*v*(3-2*v); }
+  function dangerPoint(){ return { x: CX+64, y: CY-38 }; }
+
+  function actorPos(actor, ring, tScenario, mode){
+    var base = ringPoint(ring, actor.theta0 + ring.speed*(scenario? scenario.startClock + tScenario : 0));
+    if (!scenario) return base;
+    var tf = tScenario/DUR;
+    if (tf < 0.18 || tf > 0.95) return base;
+    var dp = dangerPoint();
+    var aT = smoothstep(0.18, TCA_FRAC, Math.min(tf, TCA_FRAC));
+    var bx = base.x + (dp.x-base.x)*aT, by = base.y + (dp.y-base.y)*aT;
+    if (tf <= TCA_FRAC) return { x:bx, y:by };
+    if (mode==='none') return dp;
+    var mag = actor.actorRole==='alpha' ? 46 : 20;
+    var devT = smoothstep(TCA_FRAC, 0.72, tf);
+    var perp = { x:(dp.y-CY), y:-(dp.x-CX) };
+    var pl = Math.hypot(perp.x,perp.y)||1; perp.x/=pl; perp.y/=pl;
+    var sign = actor.actorRole==='alpha' ? 1 : -1;
+    var ex = dp.x + perp.x*mag*sign*devT, ey = dp.y + perp.y*mag*sign*devT;
+    if (tf > 0.72){ var backT = smoothstep(0.72, 0.95, tf); return { x: ex + (base.x-ex)*backT, y: ey + (base.y-ey)*backT }; }
+    return { x:ex, y:ey };
+  }
+
+  function drawEarth(){
+    var grad = ctx.createRadialGradient(CX-16,CY-18,4,CX,CY,58);
+    grad.addColorStop(0,'#1f5f8f'); grad.addColorStop(0.55,'#12324f'); grad.addColorStop(1,'#081522');
+    ctx.beginPath(); ctx.arc(CX,CY,56,0,Math.PI*2); ctx.fillStyle=grad; ctx.fill();
+    ctx.strokeStyle='rgba(62,198,255,0.18)'; ctx.lineWidth=1;
+    for (var r=1;r<=2;r++){ ctx.beginPath(); ctx.ellipse(CX,CY,56,56*(r*0.32),0,0,Math.PI*2); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(CX,CY,56,0,Math.PI*2);
+    ctx.strokeStyle='rgba(62,198,255,0.35)'; ctx.lineWidth=1.4; ctx.stroke();
+  }
+  function drawRing(ring){
+    ctx.save(); ctx.translate(CX,CY); ctx.rotate(ring.rot);
+    ctx.beginPath(); ctx.ellipse(0,0,ring.a,ring.b,0,0,Math.PI*2);
+    ctx.strokeStyle = ring.color + '33'; ctx.lineWidth = 1; ctx.stroke(); ctx.restore();
+  }
+  function drawSat(pos, color, isActor, label){
+    ctx.save(); ctx.translate(pos.x,pos.y);
+    ctx.shadowColor=color; ctx.shadowBlur=isActor?14:7;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(0,0,isActor?4.4:3,0,Math.PI*2); ctx.fill(); ctx.restore();
+    if (isActor){
+      ctx.save(); ctx.strokeStyle = color+'aa'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,9,0,Math.PI*2); ctx.stroke();
+      ctx.font = "10px 'IBM Plex Mono', monospace"; ctx.fillStyle = 'rgba(231,236,248,0.55)';
+      ctx.fillText(label, pos.x+12, pos.y-8); ctx.restore();
+    }
+  }
+  function drawDebrisPiece(d, clk){
+    var theta = d.theta0 + d.speed*clk;
+    var px = CX + d.a*Math.cos(theta), py = CY + d.b*Math.sin(theta)*0.72;
+    ctx.save(); ctx.translate(px,py); ctx.rotate(d.rot + d.spin*clk);
+    ctx.fillStyle = COLORS.debris+'cc'; ctx.fillRect(-d.size, -d.size*0.4, d.size*2, d.size*0.8); ctx.restore();
+  }
+  function drawRogue(pf){
+    var start = {x:W-30,y:26}, end={x:CX,y:CY};
+    var windowStart=0.30, rejectAt=0.46;
+    if (pf<windowStart || pf>0.68) return;
+    var t = Math.min(1,(pf-windowStart)/(rejectAt-windowStart));
+    var rx = start.x+(end.x-start.x)*t, ry = start.y+(end.y-start.y)*t;
+    ctx.save();
+    if (pf < rejectAt){
+      ctx.fillStyle = COLORS.danger; ctx.beginPath(); ctx.arc(rx,ry,4,0,Math.PI*2); ctx.fill();
+      ctx.font = "10px 'IBM Plex Mono', monospace"; ctx.fillStyle='rgba(255,84,104,0.75)';
+      ctx.fillText('unverified signal', rx+8, ry-6);
+    } else {
+      var f = smoothstep(rejectAt, rejectAt+0.05, pf);
+      ctx.globalAlpha = Math.max(0,1-f*1.6);
+      ctx.strokeStyle = COLORS.danger; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(rx,ry, 4+f*16, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  function spawnBurst(pt){
+    for (var i=0;i<12;i++){
+      var ang = Math.random()*Math.PI*2, spd = 30+Math.random()*70;
+      particles.push({ x:pt.x, y:pt.y, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd, life:1.2+Math.random()*0.6 });
+    }
+  }
+
+  var clock = 0, lastTs = null;
+  function frame(ts){
+    if (lastTs==null) lastTs = ts;
+    var dt = Math.min(0.05,(ts-lastTs)/1000); lastTs = ts; clock += dt;
+    ctx.clearRect(0,0,W,H);
+    RINGS.forEach(drawRing); drawEarth();
+    debris.forEach(function(d){ drawDebrisPiece(d, clock); });
+    for (var i=particles.length-1;i>=0;i--){
+      var p = particles[i];
+      p.x += p.vx*dt; p.y += p.vy*dt; p.vx*=0.985; p.vy*=0.985; p.life -= dt;
+      ctx.save(); ctx.globalAlpha = Math.max(0,Math.min(1,p.life/1.4));
+      ctx.fillStyle = COLORS.danger; ctx.beginPath(); ctx.arc(p.x,p.y,1.8,0,Math.PI*2); ctx.fill(); ctx.restore();
+      if (p.life<=0){
+        debris.push({ a: Math.hypot(p.x-CX,p.y-CY)+(Math.random()*20-10), b:(Math.hypot(p.x-CX,p.y-CY))*0.5,
+          rot:Math.random()*Math.PI*2, theta0:Math.random()*Math.PI*2,
+          speed:(reduceMotion?0:1)*(0.02+Math.random()*0.05)*(Math.random()<0.5?-1:1),
+          spin:(reduceMotion?0:1)*(Math.random()*2-1)*0.03, size:1.6+Math.random()*1.6 });
+        particles.splice(i,1);
+      }
+    }
+    satellites.forEach(function(s){
+      var pos;
+      if (scenario && s.isActor){
+        pos = actorPos(s, s.ring, scenario.t, currentMode);
+        if (currentMode==='none' && scenario.t/DUR > TCA_FRAC){
+          if (!scenario.burst){ scenario.burst = true; spawnBurst(dangerPoint()); }
+          return;
+        }
+      } else {
+        pos = ringPoint(s.ring, s.theta0 + s.ring.speed*clock);
+      }
+      drawSat(pos, s.ring.color, s.isActor, s.isActor?s.label:null);
+    });
+    if (scenario && currentMode==='adv') drawRogue(scenario.t/DUR);
+    if (scenario) updateScenario(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  var els = {
+    tabs: document.querySelectorAll('.tab'),
+    playBtn: el('playBtn'), resetBtn: el('resetBtn'), modeDesc: el('modeDesc'),
+    tcaVal: el('tcaVal'), pcVal: el('pcVal'), pcFill: el('pcFill'),
+    dataVal: el('dataVal'), dataFill: el('dataFill'),
+    log: el('log'), summary: el('summary'), compareBody: el('compareBody'),
+    flash: el('flash'), flashPill: el('flashPill')
+  };
+  function setMode(mode){
+    currentMode = mode;
+    Array.prototype.forEach.call(els.tabs, function(t){
+      var active = t.getAttribute('data-mode')===mode;
+      t.classList.toggle('active', active);
+      t.setAttribute('aria-selected', active?'true':'false');
+    });
+    els.modeDesc.textContent = MODES[mode].desc;
+  }
+  Array.prototype.forEach.call(els.tabs, function(t){
+    t.addEventListener('click', function(){ if(!scenario) setMode(t.getAttribute('data-mode')); });
+  });
+  setMode('none');
+
+  function fmtMMSS(sec){
+    var s = Math.max(0,sec), sign = sec<0?'+':'-';
+    var m = Math.floor(s/60), r = Math.floor(s%60);
+    return 'T'+sign+String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
+  }
+  function toSup(n){
+    var map={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+    return String(n).split('').map(function(c){return map[c]||c;}).join('');
+  }
+  function fmtSci(v){
+    if (v<=0) return '0';
+    var e = Math.floor(Math.log10(v)), m = v/Math.pow(10,e);
+    return m.toFixed(1)+'×10'+toSup(e);
+  }
+  function logLine(html){
+    var t = scenario ? scenario.t.toFixed(1)+'s' : '0.0s';
+    var row = document.createElement('div');
+    row.innerHTML = '<span class="t">['+t+']</span> '+html;
+    els.log.appendChild(row); els.log.scrollTop = els.log.scrollHeight;
+  }
+  function startScenario(){
+    if (scenario) return;
+    els.log.innerHTML = '';
+    els.summary.className='summary-card'; els.summary.textContent='Scenario in progress …';
+    els.flash.classList.remove('show');
+    els.playBtn.disabled = true; els.playBtn.textContent='Running …';
+    scenario = { t:0, startClock: clock, logged:{}, burst:false };
+    logLine('Scenario started — tracking Alpha&#8209;02 / Beta&#8209;03 approach geometry.');
+  }
+  function updateScenario(dt){
+    scenario.t += dt;
+    var tf = scenario.t/DUR, pc = pcAt(Math.min(tf,1));
+    els.tcaVal.textContent = fmtMMSS((TCA_FRAC*DUR) - scenario.t);
+    els.pcVal.textContent = 'Pc = '+fmtSci(pc);
+    els.pcFill.style.width = Math.min(100,(pc/1e-3)*100)+'%';
+    els.pcFill.style.background = pc>=PC_THRESHOLD ? (pc>2.5e-4?'var(--danger)':'var(--warn)') : 'var(--accent)';
+    if (!scenario.logged.thresh && pc>=PC_THRESHOLD && tf<TCA_FRAC){
+      scenario.logged.thresh = true;
+      logLine('Threshold crossed — Pc exceeds 1×10⁻⁴.');
+      handleThreshold();
+    }
+    if (!scenario.logged.tca && tf>=TCA_FRAC){ scenario.logged.tca = true; handleTCA(); }
+    if (!scenario.logged.done && tf>=0.97){ scenario.logged.done = true; finishScenario(); }
+  }
+  function setData(pct){
+    els.dataFill.style.width = Math.max(1,pct)+'%';
+    els.dataFill.style.background = pct>50 ? 'var(--danger)' : (pct>1 ? 'var(--warn)' : 'var(--success)');
+    els.dataVal.textContent = pct>=1 ? pct+'%' : (pct===0?'0%':'~14 bytes');
+  }
+  function handleThreshold(){
+    if (currentMode==='none'){ logLine('No shared channel exists — Beta has no visibility into this risk.'); setData(0); }
+    else if (currentMode==='full'){ logLine('Full trajectory and state vector transmitted, Alpha → Beta (100% of raw orbital data).'); setData(100); }
+    else { logLine('Abstracted signal transmitted (threshold flag + geometry class, 14 bytes).'); setData(0.06); }
+  }
+  function handleTCA(){
+    if (currentMode==='none'){
+      logLine('<b style="color:var(--danger)">Closest approach — no avoidance action taken.</b>');
+      logLine('Collision confirmed — debris field expanding.');
+    } else if (currentMode==='full'){
+      logLine('Beta&#8209;03 executes avoidance maneuver (Δv 2.1 m/s radial).');
+      logLine('Closest approach — encounter cleared.');
+    } else if (currentMode==='fed'){
+      logLine('Deconfliction: Alpha&#8209;02 primary maneuver, Beta&#8209;03 confirms secondary offset.');
+      logLine('Closest approach — encounter cleared, no raw trajectories exposed.');
+    } else {
+      logLine('Byzantine filter: unverified signal <b style="color:var(--danger)">REJECTED</b> (inconsistent with independent geometry).');
+      logLine('Genuine Alpha&#8209;02 / Beta&#8209;03 risk handled normally — encounter cleared.');
+    }
+  }
+  function summaryText(){
+    if (currentMode==='none') return 'No warning was issued to either operator. Alpha-02 and Beta-03 collided at closest approach, adding an estimated 12 new tracked fragments to this orbital shell.';
+    if (currentMode==='full') return 'Alpha shared Alpha-02’s complete trajectory and state vector with Beta. Beta-03 maneuvered and the encounter was avoided — at the cost of exposing full raw orbital data between two operators.';
+    if (currentMode==='fed') return 'Only a 14-byte abstracted risk signal crossed the operator boundary. Recommended action: Alpha-02 maneuvers, Beta-03 confirms. Encounter avoided with no raw trajectory ever shared.';
+    return 'An unverified third party attempted to inject a spoofed high-risk signal. It was rejected by Byzantine-robust filtering. The genuine Alpha-02 / Beta-03 encounter was still detected and avoided through the federated protocol.';
+  }
+  function addCompareRow(mode, avoided, dataShared, fragments, notes){
+    var empty = els.compareBody.querySelector('.empty');
+    if (empty) empty.remove();
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+mode+'</td>' +
+      '<td><span class="pill '+(avoided?'good':'bad')+'">'+(avoided?'Avoided':'Collision')+'</span></td>' +
+      '<td class="mono">'+dataShared+'</td><td class="mono">'+fragments+'</td><td class="mono">'+notes+'</td>';
+    els.compareBody.appendChild(tr);
+  }
+  function finishScenario(){
+    var collided = currentMode==='none';
+    els.flashPill.textContent = collided ? 'COLLISION' : 'AVOIDED';
+    els.flashPill.className = 'outcome-pill '+(collided?'bad':'good');
+    els.flash.classList.add('show');
+    setTimeout(function(){ els.flash.classList.remove('show'); }, 2600);
+    var dataShared, fragments, notes;
+    if (currentMode==='none'){ dataShared='0%'; fragments='+12'; notes='No warning issued'; }
+    else if (currentMode==='full'){ dataShared='100%'; fragments='0'; notes='Full trajectory exposed'; }
+    else if (currentMode==='fed'){ dataShared='~14 B'; fragments='0'; notes='Abstracted signal only'; }
+    else { dataShared='~14 B'; fragments='0'; notes='Spoofed signal rejected'; }
+    addCompareRow(MODES[currentMode].label, !collided, dataShared, fragments, notes);
+    els.summary.className = 'summary-card filled';
+    els.summary.innerHTML = '<span class="who">Alpha-02 ↔ Beta-03 · crossing geometry · Pc '+fmtSci(PC_PEAK)+'</span>' + summaryText();
+    els.playBtn.disabled=false; els.playBtn.textContent='Run again';
+    scenario = null;
+  }
+  els.playBtn.addEventListener('click', startScenario);
+  els.resetBtn.addEventListener('click', function(){
+    if (scenario) return;
+    seedDebris();
+    els.compareBody.innerHTML = '<tr class="empty"><td colspan="5">No runs yet — try each model above and compare the row it adds here.</td></tr>';
+    els.log.innerHTML='<div class="t">Awaiting scenario …</div>';
+    els.summary.className='summary-card';
+    els.summary.textContent='Run a scenario to generate the plain-language summary an operations console would show.';
+    els.dataFill.style.width='0%'; els.pcFill.style.width='0%';
+    els.tcaVal.textContent='—'; els.pcVal.textContent='—'; els.dataVal.textContent='—';
+  });
+})();
+</script>

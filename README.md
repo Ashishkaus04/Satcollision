@@ -126,6 +126,7 @@ tests/                 pytest suite (124 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
+scripts/make_dashboard.py  builds docs/conjunction_watch.html from the measured run data
 scripts/run_distributed_demo.py  thin CLI wrapper around distributed_demo.run_demo()
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
 ```
@@ -410,6 +411,31 @@ encounter as soon as it enters the screening horizon, the cooperative lead
 time saturates at that horizon. The quantity that actually varies across
 encounters — and the one `fig_real_evaluation` plots — is how much later
 no-cooperation gets there.
+
+## The dashboard
+
+`docs/conjunction_watch.html` is the presentation surface: a measured
+section built from the project's own output, and below it the scripted
+scenario that explains the mechanism.
+
+```bash
+PYTHONPATH=src python3 scripts/make_dashboard.py          # writes docs/conjunction_watch.html
+PYTHONPATH=src python3 scripts/make_dashboard.py --check  # report what would be embedded
+```
+
+It was previously hand-scripted — every number on the page typed in by
+whoever wrote the HTML, which is fine for explaining a mechanism and
+worthless as evidence, since nothing stopped it drifting away from what the
+code actually produced. `make_dashboard.py` now injects the real run data
+(`docs/figures/real_evaluation.json`, the reputation trajectories and the
+robustness sweep) into `docs/conjunction_watch_template.html`, so the
+dashboard cannot disagree with the report. Design lives in the template;
+the script owns only the data. Re-run it after any run that changes the
+numbers.
+
+The page keeps the scenario animation, now explicitly labelled as the
+mechanism rather than the evidence, with the measured figures above it —
+including the genuine cross-operator encounter, when a run finds one.
 
 ## Figures for the report
 
