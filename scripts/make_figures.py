@@ -495,6 +495,78 @@ def figure_backtest_distribution(path_a: str, name_a: str, path_b: str, name_b: 
 
 
 # --------------------------------------------------------------------------
+# 7. Real-data three-scenario comparison
+# --------------------------------------------------------------------------
+
+def figure_real_evaluation(json_path: Path | None = None):
+    """Detection lead time across every real threshold-crossing encounter.
+
+    Drawn as two empirical cumulative distributions rather than a pair of
+    bars, because the interesting thing is not "the average went up" but
+    *how the whole distribution moves*: how many encounters get an hour of
+    warning, how many get minutes, and how many no-cooperation misses
+    entirely. A bar chart of two medians would hide all three.
+
+    Reads the JSON written by ``scripts/run_real_evaluation.py``.
+    """
+    path = json_path or (FIGURE_DIR / "real_evaluation.json")
+    if not path.exists():
+        print(f"  skipped: {path.name} not found — run scripts/run_real_evaluation.py first.")
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    head = data["headline"]
+    rows = head.get("encounters", [])
+    if not rows:
+        print("  skipped: the run found no threshold-crossing encounters to plot.")
+        return
+
+    summary = head.get("summary", {})
+    horizon_h = float(head.get("screening_horizon_h", 72.0))
+    nocoop_h = np.sort(np.array([r["lead_time_nocoop_min"] for r in rows], dtype=float) / 60.0)
+    fractions = np.arange(1, len(nocoop_h) + 1) / len(nocoop_h) * 100.0
+    median_nocoop = float(np.median(nocoop_h))
+
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    # One measured distribution, one reference line. The cooperative curve is
+    # deliberately not drawn as a series: it is a constant at the screening
+    # horizon (cooperation flags an encounter as soon as it is screened), and
+    # drawing a flat step at the axis limit would imply a measurement where
+    # there is an architectural property.
+    ax.step(nocoop_h, fractions, where="post", color=ORANGE, ls="--",
+            label="No cooperation", zorder=3)
+    ax.axvline(horizon_h, color=BLUE, lw=2.0, zorder=3)
+    ax.annotate(f"Federated / full sharing\nflagged on entry at {horizon_h:.0f} h",
+                (horizon_h, 50), textcoords="offset points", xytext=(-10, 0),
+                ha="right", va="center", fontsize=8.5, color=INK)
+
+    ax.axvline(median_nocoop, color=INK_FAINT, lw=0.9, ls=(0, (2, 3)), zorder=2)
+    ax.annotate(f"median {median_nocoop:.1f} h", (median_nocoop, 2), textcoords="offset points",
+                xytext=(5, 0), fontsize=8, color=INK_SOFT, ha="left", va="bottom")
+
+    ax.set_xlabel("Warning time before closest approach (hours)")
+    ax.set_ylabel("% of encounters with this much warning or less")
+    ax.set_ylim(0, 102)
+    ax.set_xlim(0, horizon_h * 1.04)
+    ax.set_title(f"How late no-cooperation is, across {len(rows)} real threshold-crossing encounters")
+    ax.legend(loc="upper left")
+
+    ax.text(0.5, -0.30,
+            f"{head['n_objects']:,} real {head['catalog']} objects over {head['window_hours']:.0f}h, "
+            f"screened {head['computed_at_utc']}. Orbits, geometry and Pc unmodified; ownership assigned "
+            "by NORAD parity.\nCooperation buys a median "
+            f"{summary.get('median_lead_time_gain_h', 0):.1f} extra hours of warning — federated at 0% "
+            "raw-data exposure, full sharing at 100%.",
+            transform=ax.transAxes, ha="center", fontsize=8, color=INK_SOFT)
+
+    csv_rows = [[r["encounter_id"], r["miss_distance_m"], r["pc"],
+                 r["lead_time_nocoop_min"], r["lead_time_cooperative_min"], r["lead_time_gain_min"]]
+                for r in sorted(rows, key=lambda r: -r["pc"])]
+    _save(fig, "fig_real_evaluation", csv_rows,
+          ["encounter_id", "miss_distance_m", "pc", "lead_time_nocoop_min",
+           "lead_time_cooperative_min", "lead_time_gain_min"])
+
+
+# --------------------------------------------------------------------------
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
@@ -536,6 +608,9 @@ def main() -> int:
         figure_backtest_distribution(*args.backtest, hours=args.hours)
     else:
         print("[6] real backtest distribution — skipped (pass --backtest to render it)")
+
+    print("[7] real-data three-scenario comparison")
+    figure_real_evaluation()
 
     print("\nDone. Each figure is written as .png (slides), .pdf (report) and .csv (the data).")
     return 0

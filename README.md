@@ -11,7 +11,7 @@ direct panel questioning.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 107 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 124 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
 ```
 
@@ -116,14 +116,16 @@ src/satcollision/
   federated_learning.py  real FedAvg + DP-SGD training (PyTorch + Opacus)
   reputation.py        incentive/reputation layer (scores, weighted aggregation, alert tiers)
   summaries.py         plain-language incident summaries (tier-aware, template-based)
+  real_evaluation.py   the 3-scenario comparison run across a real catalogue
   evaluate.py          3-scenario comparison + robustness sweep
   wire.py              length-prefixed TCP message framing for the distributed demo
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (107 tests) covering the above
+tests/                 pytest suite (124 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
+scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
 scripts/run_distributed_demo.py  thin CLI wrapper around distributed_demo.run_demo()
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
 ```
@@ -316,14 +318,16 @@ catalogs:
 | Starlink against itself (10,713 objects) | 24h | 173,356 raw conjunctions inside the 25 km screening volume, 19 of them above the operational Pc threshold (1e-4) |
 | Starlink × OneWeb | 24h | Closest approach 11.35 km, Pc ~1e-115 — an honest negative: the two shells are genuinely separated in altitude |
 | Starlink × Kuiper | 24h | Closest approach 3.1 km, Pc ~3.4e-12 |
-| Starlink × Kuiper | 168h (1 week) | Closest approach 1.57 km, Pc ~5.7e-6 — still below threshold, but a real distribution of close approaches between two genuine megaconstellations |
+| Starlink × Kuiper | 168h (1 week) | Closest approach 1.57 km, Pc ~5.7e-6 — below threshold, but a real distribution of close approaches between two genuine megaconstellations |
+| Starlink × Kuiper (20 Sep catalogue) | 168h (1 week) | **Closest approach 828 m, Pc 2.03e-4 — above the operational threshold.** One genuine cross-operator crossing out of 32 close approaches; see `docs/real_evaluation.md` |
 
-Nothing above crossed the operational threshold across operators, which is
-the correct and expected result for today's catalogs: genuine
-cross-operator conjunctions above 1e-4 are rare events, and reporting one
-that wasn't there would be the failure mode to worry about. The single-
-operator Starlink run is what demonstrates the pipeline does flag real
-threshold crossings when they exist. TLE files change daily and `data/` is
+Cross-operator threshold crossings are rare but not absent: three of these
+runs found none, and the 20 Sep catalogue produced one at 828 m. Both
+outcomes are reported as they came, because inventing a crossing that
+wasn't there is the failure mode that matters here — and because one
+event, while it proves the scenario is real, supports no statistics at all.
+`docs/real_evaluation.md` carries the distribution, built on a real
+catalogue with an assigned ownership boundary. TLE files change daily and `data/` is
 gitignored, so re-running these scripts will produce different numbers;
 `docs/sample_run.md` is the reproducible synthetic-data walkthrough.
 
@@ -333,6 +337,79 @@ timestep). `twin.py` now uses vectorized SGP4 propagation
 (`sgp4.api.SatrecArray`) and a KD-tree broad-phase screening pass
 (`scipy.spatial.cKDTree.query_pairs`) instead — a 24h/30s-step backtest
 against ~8,000-10,000 objects now runs in well under a minute.
+
+## The three-scenario comparison, on real data
+
+`evaluate.run_three_scenario_comparison` answers the project's central
+question on **one engineered** conjunction. `real_evaluation.py` runs the
+same comparison across every threshold-crossing conjunction in a real
+CelesTrak catalogue, so the headline becomes a distribution measured on
+genuine orbits:
+
+```bash
+PYTHONPATH=src python3 scripts/run_real_evaluation.py \
+    --catalog data/starlink.tle Starlink \
+    --cross data/kuiper.tle Kuiper \
+    --hours 168
+PYTHONPATH=src python3 scripts/make_figures.py        # renders fig_real_evaluation
+```
+
+It writes `docs/real_evaluation.md` (a report-ready section) and
+`docs/figures/real_evaluation.json` (the data behind it).
+
+**The honest problem it has to solve.** Genuine cross-operator threshold
+crossings are rare. Two week-long Starlink x Kuiper runs a day apart
+measured a closest approach of 3.45 km (Pc ~ 1e-14) and then **828 m, Pc
+2.03e-4 — one genuine crossing**, out of 32 cross-operator close approaches
+in the week. Megaconstellations are deliberately shelled apart, so whether
+a given week contains such an event depends on the catalogue of the day.
+One event is an existence proof that the scenario is real; it is not a
+distribution, and nothing about medians or spreads can rest on it. So the
+script does two runs and the report should carry both:
+
+- **Split catalogue (headline).** One real catalogue, its satellites
+  assigned to two operators by NORAD parity, keeping only conjunctions that
+  cross the assigned boundary. Orbits, geometry, miss distance, Pc and
+  timing are all real and unmodified; the *ownership boundary* is the one
+  assigned element, which is stated in the generated document rather than
+  buried. Parity is the right split because catalogue numbers follow launch
+  order, so it is uncorrelated with orbital shell — splitting by altitude
+  would have drawn the boundary along a line the orbits themselves respect,
+  reproducing the empty result by construction.
+- **Cross-constellation (the existence check).** Two genuinely different
+  operators, unmodified, reported with whatever it finds intact. A zero is
+  what justifies the split; a crossing — as the 20 Sep run found — is the
+  motivating scenario caught in the real sky, and the generated document
+  switches framing accordingly rather than calling a hit a null.
+
+**A modelling bug this work surfaced.** `evaluate.sigma_no_cooperation`
+scales degraded public-tracking precision as a *fraction* of each
+encounter's own time-to-TCA. That is harmless for the demo's single
+30-minute encounter and wrong across a week-long catalogue run: it makes
+tracking quality depend on how far ahead the propagation window happened to
+open, so an encounter six days out appears to be detected days in advance
+and the "lead time" measured is really the window length. The real-data
+path therefore uses `real_evaluation.sigma_public_tracking`, anchored to
+*absolute* time before TCA, and caps lead time at a rolling 72-hour
+screening horizon — the window inside which operators actually screen
+conjunctions and decide on maneuvers. The demo path is unchanged, so
+`docs/sample_run.md` still shows the original walkthrough.
+
+**A second correction the real data forced.** An encounter whose closest
+approach falls inside the first 72 hours of the propagation window cannot
+be given a full horizon of warning by any scenario — the window did not
+open early enough. On the first real run, 194 of 432 threshold crossings
+fell in that burn-in period and scored an identical lead time under both
+regimes (gain exactly zero), because both were clipped by the window rather
+than by tracking quality. Including them mixes "no-cooperation was late"
+with "we started watching late", so both runs now exclude them and report
+how many were set aside.
+
+One consequence worth stating in the report: because cooperation flags an
+encounter as soon as it enters the screening horizon, the cooperative lead
+time saturates at that horizon. The quantity that actually varies across
+encounters — and the one `fig_real_evaluation` plots — is how much later
+no-cooperation gets there.
 
 ## Figures for the report
 
