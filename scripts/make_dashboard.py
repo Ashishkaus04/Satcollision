@@ -10,7 +10,8 @@ data into the page, so the dashboard cannot disagree with the report.
 
 Inputs (all produced by other scripts in this repo):
 
-* ``docs/figures/real_evaluation.json``       -- scripts/run_real_evaluation.py
+* ``docs/figures/real_evaluation_foster.json`` -- scripts/run_real_evaluation.py --pc-model foster
+  (the report's headline model; ``--run circular`` uses real_evaluation.json instead)
 * ``docs/figures/fig_reputation_trajectories.csv`` -- scripts/make_figures.py
 * ``docs/figures/fig_robustness_sweep.csv``       -- scripts/make_figures.py
 * ``data/*.tle`` (optional)                   -- the real catalogues, for the 3D view
@@ -85,7 +86,7 @@ def _reputation_thresholds() -> list[dict]:
 
 def _load_real_evaluation() -> tuple[dict, dict | None, list[float]]:
     """Headline summary, the cross-operator run, and the warning-time series."""
-    payload = json.loads(_require(FIGURE_DIR / "real_evaluation.json").read_text(encoding="utf-8"))
+    payload = json.loads(_require(RUN_JSON).read_text(encoding="utf-8"))
     run = payload["headline"]
     summary = run["summary"]
 
@@ -104,6 +105,8 @@ def _load_real_evaluation() -> tuple[dict, dict | None, list[float]]:
         "min_lead_time_nocoop_h": summary["min_lead_time_nocoop_h"],
         "max_lead_time_nocoop_h": summary["max_lead_time_nocoop_h"],
         "median_miss_distance_m": summary["median_miss_distance_m"],
+        "pc_model": run.get("pc_model", "circular"),
+        "source_file": RUN_JSON.name,
     }
     # One decimal is plenty for an hours axis, and it keeps the embedded
     # series small enough that the page stays comfortably under any size cap.
@@ -348,7 +351,7 @@ def earth_texture_data_uri() -> str | None:
 
 def build() -> str:
     headline, negative, warning_hours = _load_real_evaluation()
-    payload = json.loads((FIGURE_DIR / "real_evaluation.json").read_text(encoding="utf-8"))
+    payload = json.loads(RUN_JSON.read_text(encoding="utf-8"))
     scene = build_scene(payload)
     texture = earth_texture_data_uri()
     data = {
@@ -367,12 +370,22 @@ def build() -> str:
     return template.replace(MARKER, json.dumps(data, separators=(",", ":")))
 
 
+# Which evaluation run the dashboard embeds. The report headlines the Foster
+# (anisotropic) collision-probability model, so that is the default.
+RUN_FILES = {"foster": "real_evaluation_foster.json", "circular": "real_evaluation.json"}
+RUN_JSON = FIGURE_DIR / RUN_FILES["foster"]
+
+
 def main() -> int:
+    global RUN_JSON
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--check", action="store_true",
                         help="build in memory and report what would be embedded, without writing")
+    parser.add_argument("--run", choices=sorted(RUN_FILES), default="foster",
+                        help="which evaluation run to embed (default foster, the report's headline)")
     args = parser.parse_args()
+    RUN_JSON = FIGURE_DIR / RUN_FILES[args.run]
 
     html = build()
     headline, negative, warning = _load_real_evaluation()
@@ -386,7 +399,7 @@ def main() -> int:
         print(f"  genuine cross-operator crossings in {negative['catalog']}: "
               f"{negative['n_above_threshold']}")
 
-    payload = json.loads((FIGURE_DIR / "real_evaluation.json").read_text(encoding="utf-8"))
+    payload = json.loads(RUN_JSON.read_text(encoding="utf-8"))
     scene = build_scene(payload)
     if scene.get("available"):
         enc = scene["encounter"]
