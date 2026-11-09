@@ -41,7 +41,7 @@ from pathlib import Path
 
 import numpy as np
 
-from satcollision.fleets import load_tle_file, _epoch_from_calendar
+from satcollision.fleets import load_tle_file, _epoch_from_calendar, catalogue_epoch
 from satcollision.twin import propagate_window, screen_conjunctions, compute_pc, DEFAULT_PC_THRESHOLD
 from satcollision.signal import abstract_conjunction
 from satcollision.deconfliction import negotiate_maneuver
@@ -72,7 +72,9 @@ def main():
     objects = objects_a + objects_b
     print(f"  combined catalog: {len(objects)} real tracked objects\n")
 
-    now = datetime.datetime.now(datetime.timezone.utc)
+    # Start at the catalogue's own epoch, not the wall clock (see run_backtest.py).
+    now = catalogue_epoch(objects)
+    print(f"Window starts at the catalogue epoch, {now:%Y-%m-%d %H:%M} UTC")
     epoch_days, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
 
     duration_s = duration_hours * 60 * 60
