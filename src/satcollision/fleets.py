@@ -27,6 +27,8 @@ propagated with :func:`propagate`.
 
 from __future__ import annotations
 
+import datetime
+
 import math
 from dataclasses import dataclass, field
 from typing import Iterable
@@ -225,6 +227,27 @@ def load_tle_file(path: str, operator_name: str = "REAL") -> list[TrackedObject]
             )
         )
     return objects
+
+
+def tle_epoch_utc(obj: TrackedObject) -> datetime.datetime:
+    """The UTC epoch of one object's element set."""
+    jd = obj.satrec.jdsatepoch + obj.satrec.jdsatepochF
+    return (datetime.datetime(2000, 1, 1, 12, tzinfo=datetime.timezone.utc)
+            + datetime.timedelta(days=jd - 2451545.0))
+
+
+def catalogue_epoch(objects: list[TrackedObject]) -> datetime.datetime:
+    """Start time that keeps a run inside the catalogue's own validity.
+
+    The newest element-set epoch in the file, rounded down to the minute.
+    Propagating from here means a run starts where the data was measured,
+    rather than wherever the wall clock happens to be when the script runs.
+    That is both more accurate (a TLE degrades quickly with age, mostly
+    along-track) and reproducible: the same TLE file gives the same numbers
+    next month.
+    """
+    newest = max(tle_epoch_utc(o) for o in objects)
+    return newest.replace(second=0, microsecond=0)
 
 
 def inject_actor_encounter(

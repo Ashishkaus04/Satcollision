@@ -97,7 +97,8 @@ from dataclasses import dataclass, replace
 from .evaluate import (
     SIGMA_GOOD_KM, SIGMA_NOCOOP_FAR_KM, SIGMA_NOCOOP_NEAR_KM, detection_lead_time,
 )
-from .fleets import TrackedObject, load_tle_file, _epoch_from_calendar
+from .fleets import (TrackedObject, load_tle_file, _epoch_from_calendar,
+                     catalogue_epoch, tle_epoch_utc)
 from .signal import abstract_conjunction
 from .twin import DEFAULT_PC_THRESHOLD, propagate_window, screen_conjunctions
 from .pc import EncounterGeometry, pc_model_name
@@ -338,15 +339,46 @@ def _split_out_burn_in(conjunctions: list, horizon_s: float) -> tuple[list, list
     return scorable, burn_in
 
 
+# A TLE is only trustworthy for a few days either side of its own epoch: SGP4
+# error grows roughly with the square of the age, mostly along-track, and for
+# a drag-heavy LEO shell like Starlink a week-old element set can be kilometres
+# out. Warn above this age at the start of a run.
+STALE_TLE_WARNING_DAYS = 3.0
+
+
+def resolve_epoch(objects: list[TrackedObject], epoch=None) -> datetime.datetime:
+    """``None``/``"now"`` -> wall clock, ``"catalogue"`` -> :func:`catalogue_epoch`,
+    a ``datetime`` -> itself (made UTC-aware if naive)."""
+    if epoch is None or epoch == "now":
+        return datetime.datetime.now(datetime.timezone.utc).replace(second=0, microsecond=0)
+    if epoch == "catalogue":
+        return catalogue_epoch(objects)
+    if isinstance(epoch, datetime.datetime):
+        return epoch if epoch.tzinfo else epoch.replace(tzinfo=datetime.timezone.utc)
+    raise ValueError(f"epoch must be None, 'now', 'catalogue' or a datetime, not {epoch!r}")
+
+
+def median_tle_age_days(objects: list[TrackedObject], at: datetime.datetime) -> float:
+    """Median age, in days, of the catalogue's element sets at time ``at``."""
+    return statistics.median((at - tle_epoch_utc(o)).total_seconds() / 86400.0 for o in objects)
+
+
 def _screen_real_catalogue(objects, hours: float, step_s: float, screening_km: float,
-                           pc_model=None):
-    """Propagate and screen a real catalogue from now, returning conjunctions."""
-    now = datetime.datetime.now(datetime.timezone.utc)
-    _, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
+                           pc_model=None, epoch=None):
+    """Propagate and screen a real catalogue, returning (conjunctions, start time).
+
+    ``epoch=None`` keeps the original behaviour (start now). Pass
+    ``"catalogue"`` to start at the catalogue's own epoch; see
+    :func:`catalogue_epoch` for why that is the better default for any run
+    whose numbers will be reported.
+    """
+    start = resolve_epoch(objects, epoch)
+    _, jd0, fr0 = _epoch_from_calendar(start.year, start.month, start.day,
+                                       start.hour + start.minute / 60.0)
     propagation = propagate_window(objects, jd0, fr0, duration_s=hours * 3600.0, step_s=step_s)
     conjunctions = screen_conjunctions(objects, propagation, screening_distance_km=screening_km,
                                        pc_model=pc_model)
-    return conjunctions, now
+    return conjunctions, start
 
 
 def run_split_catalog_evaluation(
@@ -358,6 +390,7 @@ def run_split_catalog_evaluation(
     threshold: float = DEFAULT_PC_THRESHOLD,
     horizon_s: float = SCREENING_HORIZON_S,
     pc_model=None,
+    epoch=None,
 ) -> dict:
     """Headline run: one real catalogue, split into two operators by parity.
 
@@ -368,7 +401,7 @@ def run_split_catalog_evaluation(
     """
     objects = assign_two_operators(load_tle_file(tle_path, operator_name=catalog_name))
     conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
-                                                      pc_model=pc_model)
+                                                      pc_model=pc_model, epoch=epoch)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
@@ -389,6 +422,8 @@ def run_split_catalog_evaluation(
         "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,
         "computed_at_utc": computed_at.isoformat(timespec="seconds"),
+        "window_start_utc": computed_at.isoformat(timespec="seconds"),
+        "median_tle_age_at_start_days": round(median_tle_age_days(objects, computed_at), 2),
         "n_conjunctions_screened": len(conjunctions),
         "n_cross_operator": len(cross_operator),
         "n_above_threshold": len(above_threshold),
@@ -412,6 +447,7 @@ def run_cross_constellation_evaluation(
     threshold: float = DEFAULT_PC_THRESHOLD,
     horizon_s: float = SCREENING_HORIZON_S,
     pc_model=None,
+    epoch=None,
 ) -> dict:
     """The honest negative: two genuinely different operators, unmodified.
 
@@ -423,7 +459,7 @@ def run_cross_constellation_evaluation(
     objects = (load_tle_file(tle_path_a, operator_name=name_a)
                + load_tle_file(tle_path_b, operator_name=name_b))
     conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
-                                                      pc_model=pc_model)
+                                                      pc_model=pc_model, epoch=epoch)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
@@ -444,6 +480,8 @@ def run_cross_constellation_evaluation(
         "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,
         "computed_at_utc": computed_at.isoformat(timespec="seconds"),
+        "window_start_utc": computed_at.isoformat(timespec="seconds"),
+        "median_tle_age_at_start_days": round(median_tle_age_days(objects, computed_at), 2),
         "n_conjunctions_screened": len(conjunctions),
         "n_cross_operator": len(cross_operator),
         "n_above_threshold": len(above_threshold),

@@ -413,12 +413,13 @@ def _backtest_miss_distances(path_a: str, name_a: str, path_b: str, name_b: str,
         return json.loads(cache.read_text(encoding="utf-8"))
 
     import datetime
-    from satcollision.fleets import load_tle_file, _epoch_from_calendar
+    from satcollision.fleets import load_tle_file, _epoch_from_calendar, catalogue_epoch
     from satcollision.twin import propagate_window, screen_conjunctions, DEFAULT_PC_THRESHOLD
 
     objects = (load_tle_file(path_a, operator_name=name_a)
                + load_tle_file(path_b, operator_name=name_b))
-    now = datetime.datetime.now(datetime.timezone.utc)
+    # Catalogue epoch, not the wall clock: see real_evaluation.resolve_epoch.
+    now = catalogue_epoch(objects)
     _, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
     print(f"  propagating {len(objects):,} real objects across {hours:.0f}h (this takes a moment)...")
     prop = propagate_window(objects, jd0, fr0, duration_s=hours * 3600.0, step_s=30.0)
@@ -498,7 +499,7 @@ def figure_backtest_distribution(path_a: str, name_a: str, path_b: str, name_b: 
 # 7. Real-data three-scenario comparison
 # --------------------------------------------------------------------------
 
-def figure_real_evaluation(json_path: Path | None = None):
+def figure_real_evaluation(json_path: Path | None = None, name: str = "fig_real_evaluation"):
     """Detection lead time across every real threshold-crossing encounter.
 
     Drawn as two empirical cumulative distributions rather than a pair of
@@ -536,8 +537,8 @@ def figure_real_evaluation(json_path: Path | None = None):
             label="No cooperation", zorder=3)
     ax.axvline(horizon_h, color=BLUE, lw=2.0, zorder=3)
     ax.annotate(f"Federated / full sharing\nflagged on entry at {horizon_h:.0f} h",
-                (horizon_h, 50), textcoords="offset points", xytext=(-10, 0),
-                ha="right", va="center", fontsize=8.5, color=INK)
+                (horizon_h, 8), textcoords="offset points", xytext=(-10, 0),
+                ha="right", va="bottom", fontsize=8.5, color=INK)
 
     ax.axvline(median_nocoop, color=INK_FAINT, lw=0.9, ls=(0, (2, 3)), zorder=2)
     ax.annotate(f"median {median_nocoop:.1f} h", (median_nocoop, 2), textcoords="offset points",
@@ -552,7 +553,8 @@ def figure_real_evaluation(json_path: Path | None = None):
 
     ax.text(0.5, -0.30,
             f"{head['n_objects']:,} real {head['catalog']} objects over {head['window_hours']:.0f}h, "
-            f"screened {head['computed_at_utc']}. Orbits, geometry and Pc unmodified; ownership assigned "
+            f"window from {head.get('window_start_utc', head['computed_at_utc'])}, "
+            f"Pc model: {head.get('pc_model', 'circular')}. Orbits and geometry unmodified; ownership assigned "
             "by NORAD parity.\nCooperation buys a median "
             f"{summary.get('median_lead_time_gain_h', 0):.1f} extra hours of warning — federated at 0% "
             "raw-data exposure, full sharing at 100%.",
@@ -561,7 +563,7 @@ def figure_real_evaluation(json_path: Path | None = None):
     csv_rows = [[r["encounter_id"], r["miss_distance_m"], r["pc"],
                  r["lead_time_nocoop_min"], r["lead_time_cooperative_min"], r["lead_time_gain_min"]]
                 for r in sorted(rows, key=lambda r: -r["pc"])]
-    _save(fig, "fig_real_evaluation", csv_rows,
+    _save(fig, name, csv_rows,
           ["encounter_id", "miss_distance_m", "pc", "lead_time_nocoop_min",
            "lead_time_cooperative_min", "lead_time_gain_min"])
 
@@ -611,6 +613,10 @@ def main() -> int:
 
     print("[7] real-data three-scenario comparison")
     figure_real_evaluation()
+    foster_json = FIGURE_DIR / "real_evaluation_foster.json"
+    if foster_json.exists():
+        print("[8] real-data three-scenario comparison, Foster Pc model")
+        figure_real_evaluation(foster_json, name="fig_real_evaluation_foster")
 
     print("\nDone. Each figure is written as .png (slides), .pdf (report) and .csv (the data).")
     return 0

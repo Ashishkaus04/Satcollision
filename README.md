@@ -11,7 +11,7 @@ direct panel questioning.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 124 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 195 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
 ```
 
@@ -30,13 +30,16 @@ The demo script prints a run through every layer below and also writes
 | Cryptographic identity, signing & tamper-evident log | `src/satcollision/identity.py` | **Built.** Real Ed25519 keypairs per operator (`cryptography` library, not a placeholder), genuine sign/verify of every `AbstractedSignal` and `OperatorReport` against a trusted-key registry (never against a key bundled with the message itself — that would let an attacker self-verify), and a hash-chained append-only log (`SignedLog`) that detects tampering, reordering, or deletion of past entries. `scripts/run_demo.py` step `[3b]` exercises all three failure modes live (tamper, impersonation, post-hoc log edit) and shows each one caught. See "Trust model" below for exactly what this layer does and does not guarantee. |
 | Secure aggregation (MPC) | `src/satcollision/secure_aggregation.py` | **Built.** Pairwise-masked additive secret sharing (Bonawitz et al., CCS 2017 — the technique behind Google's production federated learning) over a 127-bit prime field, with real X25519 Diffie-Hellman key agreement (not a shared-out-of-band secret) deriving each pair's mask. The aggregator combines masked shares that are individually indistinguishable from random field elements and still recovers the exact plaintext sum/mean — `scripts/run_demo.py` step `[4b]` runs the same 6 reports from `[4]` through it side-by-side with `mean_aggregate`, printing both the masked shares an aggregator would actually see and the reconstructed mean, which matches exactly. See "Trust model" for why this does not compose for free with the Byzantine-robust aggregation in `federation.py`. |
 | Kalman-filter state estimation | `src/satcollision/kalman.py` | **Built.** A real linear Kalman filter (constant-velocity process model, position-only measurement model, standard predict/update equations) tracking each object against its own SGP4 ground truth with simulated periodic noisy measurements, producing a combined sigma that actually grows between tracking updates and shrinks right after one — a genuine replacement for `twin.py`'s fixed `DEFAULT_COMBINED_SIGMA_KM=0.5km` constant. `refine_pc_for_conjunction` re-evaluates an already-screened conjunction's Pc with this time-varying sigma; `scripts/run_demo.py` step `[2b]` runs it on the walkthrough's flagged encounter and prints both Pc values side by side (they differ by two orders of magnitude on that encounter — see the module docstring for why this is applied per-encounter rather than inside the broad-phase screening pass). |
-| Historical backtesting | `scripts/run_backtest.py`, `scripts/run_cross_operator_backtest.py` | **Built.** Runs the full pipeline against real, independently-downloaded CelesTrak TLE catalogs via `fleets.load_tle_file()` — see "Historical backtesting: real results so far" below for actual numbers from a real Starlink run. |
+| Historical backtesting | `scripts/run_backtest.py`, `scripts/run_cross_operator_backtest.py` | **Built.** Runs the full pipeline against real, independently-downloaded CelesTrak TLE catalogs via `fleets.load_tle_file()` — see "Historical backtesting: real results so far" below for actual numbers from a real Starlink run. Every real-data run now starts at the catalogue's own epoch (see "Start the clock at the catalogue epoch" below). |
+| Documented-event replay | `src/satcollision/historical_replay.py`, `scripts/run_historical_replay.py` | **Built, waiting on data.** Replays a documented past close approach (the two 2021 China Space Station / Starlink events reported to the UN in A/AC.105/1262 are registered) from several as-of times, using only element sets published before each one, and reports how early the pipeline would have flagged it. Needs the historical element sets from Space-Track's `gp_history` (free account); the script's docstring has the exact query. Verified on the engineered encounter in `tests/test_historical_replay.py`. |
+| Refined Pc model | `src/satcollision/pc.py`, `scripts/run_pc_model_comparison.py` | **Built and run.** Foster/Estes 2D encounter-plane Pc with a full 3x3 covariance per object, validated against the closed-form non-central chi-squared answer and Monte Carlo. Selectable everywhere through a `pc_model` argument; the circular model remains the default. See "Refined Pc: what changes" below for the four-way comparison on the real catalogue. |
+| Step-through simulation environment | `src/satcollision/environment.py`, `notebooks/satellite_environment.ipynb`, `scripts/run_environment_demo.py` | **Built.** A Jupyter-friendly clock you step, seek and reset, with snapshots, NumPy arrays and a conjunction table at each instant. Starts at the fleet epoch (synthetic) or the catalogue epoch (real TLEs), so the engineered encounter appears 30 minutes in. |
 | Real federated learning (FedAvg + DP-SGD) | `src/satcollision/federated_learning.py` | **Built.** A real PyTorch risk classifier trained across operators via FedAvg (McMahan et al.) with DP-SGD (Abadi et al., via `opacus`) in the local training step — genuine multi-round weight averaging and a formally computed per-operator (epsilon, delta), not count-vector aggregation dressed up as "federated learning." `scripts/run_demo.py` step `[8]` runs centralized / local-only / federated-no-DP / federated-DP side by side on the same held-out test set. See "Trust model" for what the reported epsilon does and doesn't mean, and the module docstring for why the label is a synthetic composite risk index rather than a direct call to `twin.compute_pc`. |
 | Real distributed system | `src/satcollision/wire.py`, `hub.py`, `operator_node.py`, `distributed_demo.py` | **Built.** Every earlier layer above runs inside one Python process calling plain functions on shared objects — this is the one place that's actually architecturally distributed. Each operator (Alpha, Beta, Gamma) and a federation hub run as genuinely separate OS processes (`subprocess.Popen`, real `python3` interpreters, not threads or asyncio tasks sharing a process), exchanging real bytes over real TCP sockets on `127.0.0.1` with a length-prefixed wire format (`wire.py`). The hub (`hub.py`) is a deliberately "dumb pipe" — it relays every message verbatim and never checks a signature; each operator (`operator_node.py`) builds a real SGP4-propagated, Pc-screened conjunction, signs it with its own Ed25519 key loaded from a file, and verifies everything it receives against a pre-distributed public-key registry, exactly as `identity.py`'s in-process tests do — except this time the guarantee has to survive a real process and network boundary. A fifth process, an attacker impersonating "Alpha" with its own freshly generated keypair, proves the forgery is still caught: `scripts/run_distributed_demo.py` runs the whole thing and reports every legitimate operator rejecting the forged message (the real Alpha included, when it receives a message claiming to be itself signed by someone else's key). See "Trust model" below for why the hub replays full history to every client rather than only live-broadcasting. |
 | Incentive/reputation mechanism | `src/satcollision/reputation.py` | **Built.** Per-round reputation built only from behaviour the federation can already observe: *corroboration* (an encounter id names both NORAD objects, so every operator can answer one boolean — "am I a party to this?" — locally, which makes both withholding and fabrication detectable without any catalogue crossing a boundary), *consensus agreement* (distance from the median report, penalised only in excess of the round's own median deviation), and *participation* (contributing something another operator vouches for, so neither an empty report nor fabricated volume earns credit). Scores update as an asymmetric EWMA — rising at 0.10, falling at 0.35 — and feed back in two ways: `reputation_weighted_aggregate` gives influence over the federated result in proportion to score (quarantining anyone below 0.25), and `alert_tier`/`tailor_alert` make the *detail* an operator receives back proportional to its score, which is what makes it an incentive rather than a scoreboard. `scripts/run_demo.py` step `[9]` runs 20 reporting periods with honest / free-rider / spoofer / on-off strategies. See "Reputation: what it buys and what it must never do" below. |
 | Plain-language incident summaries | `src/satcollision/summaries.py` | **Built.** Deterministic template rendering (no language model anywhere — see "Why the summaries are templates" below) of every layer's output into sentences a duty officer, regulator or non-technical reader can act on: `Pc=8.00e-04` becomes "about a 1 in 1,200 chance", `tca_offset_s=1800.0` becomes "in 30 minutes", and every quoted probability carries the caveat that it is a model estimate rather than a measurement. Cross-operator summaries are rendered from the *tailored alert dict* produced by `reputation.tailor_alert`, never from the underlying signal, so a lower-tier reader's summary structurally cannot mention what that reader was not sent; `assert_no_undisclosed_terms` checks the rendered prose against the alert it came from, the prose-level counterpart of `signal.assert_no_raw_state`. `build_incident_report` assembles the four-section narrative (what happened / what was shared / what happens now / how to check), with the detecting operator's private view passed in only for its own copy. `scripts/run_demo.py` step `[10]` prints all of it. |
 | Presentation | `conjunction_watch.html` (project root) | **Built separately** as an illustrative, scripted interactive demo for panel presentations — see that file and Section 12 of the project definition. This codebase's `scripts/run_demo.py` is the *technical* presentation layer (plain-language console output); wiring its real numbers into a live visual dashboard is listed as future work below. |
-| 3-scenario evaluation harness | `src/satcollision/evaluate.py` | **Built.** Compares No-Cooperation / Full-Sharing / Federated on detection lead time and raw-data exposure on one engineered conjunction, plus a separate robustness sweep of aggregation error vs. adversary fraction. |
+| 3-scenario evaluation harness | `src/satcollision/evaluate.py`, `src/satcollision/real_evaluation.py` | **Built.** Compares No-Cooperation / Full-Sharing / Federated on detection lead time and raw-data exposure on one engineered conjunction, plus a separate robustness sweep of aggregation error vs. adversary fraction. |
 
 ## Why the walkthrough runs on synthetic fleets (and where the real data is)
 
@@ -73,8 +76,10 @@ works on `TrackedObject` instances identically either way.
   rather than the full non-circular Foster/Estes double integral with each
   operator's actual covariance. The simplified form is standard for
   illustrative/first-pass work and responds correctly to the variables
-  that matter (miss distance, combined uncertainty, object size); the full
-  integral is listed as a natural "if time permits" refinement. The other
+  that matter (miss distance, combined uncertainty, object size). The full
+  integral is now implemented in `pc.py` and compared against this one in
+  "Refined Pc: what changes" below; the circular model stays the default so
+  earlier results remain reproducible. The other
   half of this simplification — where the constant `sigma` itself comes
   from — is no longer purely assumed: `kalman.py` derives a real
   time-varying sigma from an actual tracking history (see the layer table
@@ -118,16 +123,24 @@ src/satcollision/
   summaries.py         plain-language incident summaries (tier-aware, template-based)
   real_evaluation.py   the 3-scenario comparison run across a real catalogue
   evaluate.py          3-scenario comparison + robustness sweep
+  pc.py                refined Foster/Estes Pc model + selectable Pc models
+  environment.py       step-through simulation environment (Jupyter-friendly)
+  historical_replay.py replay a documented past close approach from as-of times
   wire.py              length-prefixed TCP message framing for the distributed demo
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (124 tests) covering the above
+tests/                 pytest suite (195 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
 scripts/make_dashboard.py  builds docs/conjunction_watch.html from the measured run data
 scripts/run_distributed_demo.py  thin CLI wrapper around distributed_demo.run_demo()
+scripts/run_pc_model_comparison.py  circular vs Foster, four columns, writes docs/pc_model_comparison.md
+scripts/run_historical_replay.py  replays a documented event, writes docs/historical_replay_<event>.md
+scripts/run_environment_demo.py  console walkthrough of environment.py
+scripts/run_midsem_demo.py  the mid-semester walkthrough (real catalogue, ~20 s)
+notebooks/satellite_environment.ipynb  environment.py in a notebook
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
 ```
 
@@ -320,13 +333,14 @@ catalogs:
 | Starlink × OneWeb | 24h | Closest approach 11.35 km, Pc ~1e-115 — an honest negative: the two shells are genuinely separated in altitude |
 | Starlink × Kuiper | 24h | Closest approach 3.1 km, Pc ~3.4e-12 |
 | Starlink × Kuiper | 168h (1 week) | Closest approach 1.57 km, Pc ~5.7e-6 — below threshold, but a real distribution of close approaches between two genuine megaconstellations |
-| Starlink × Kuiper (20 Sep catalogue) | 168h (1 week) | **Closest approach 828 m, Pc 2.03e-4 — above the operational threshold.** One genuine cross-operator crossing out of 32 close approaches; see `docs/real_evaluation.md` |
+| ~~Starlink × Kuiper ("20 Sep catalogue")~~ | 168h (1 week) | ~~Closest approach 828 m, Pc 2.03e-4~~ **Withdrawn.** This run propagated 10 Sep element sets from 20 Sep onward (10-17 days stale); see "Start the clock at the catalogue epoch" below |
+| Starlink × Kuiper, from the catalogue epoch (10 Sep 07:58 UTC) | 168h (1 week) | Closest approach 1,573 m, Pc 5.7e-6, 0 of 30 cross-operator close approaches above threshold — the same answer as the earlier fresh-data week-long run |
 
-Cross-operator threshold crossings are rare but not absent: three of these
-runs found none, and the 20 Sep catalogue produced one at 828 m. Both
-outcomes are reported as they came, because inventing a crossing that
-wasn't there is the failure mode that matters here — and because one
-event, while it proves the scenario is real, supports no statistics at all.
+On fresh element sets, no genuine Starlink × Kuiper approach crossed the
+threshold in any run. The 828 m "crossing" reported earlier came from
+propagating element sets 10-17 days past their epoch and has been
+withdrawn; it is kept, struck through, above because the correction is
+part of the result.
 `docs/real_evaluation.md` carries the distribution, built on a real
 catalogue with an assigned ownership boundary. TLE files change daily and `data/` is
 gitignored, so re-running these scripts will produce different numbers;
@@ -359,14 +373,12 @@ It writes `docs/real_evaluation.md` (a report-ready section) and
 `docs/figures/real_evaluation.json` (the data behind it).
 
 **The honest problem it has to solve.** Genuine cross-operator threshold
-crossings are rare. Two week-long Starlink x Kuiper runs a day apart
-measured a closest approach of 3.45 km (Pc ~ 1e-14) and then **828 m, Pc
-2.03e-4 — one genuine crossing**, out of 32 cross-operator close approaches
-in the week. Megaconstellations are deliberately shelled apart, so whether
-a given week contains such an event depends on the catalogue of the day.
-One event is an existence proof that the scenario is real; it is not a
-distribution, and nothing about medians or spreads can rest on it. So the
-script does two runs and the report should carry both:
+crossings are rare. Week-long Starlink x Kuiper runs on fresh element sets
+measured closest approaches of 3.45 km and 1.57 km, with nothing above
+threshold. Megaconstellations are deliberately shelled apart. (An earlier
+run reported an 828 m crossing; it came from stale element sets and has been
+withdrawn, see below.) So the script does two runs and the report should
+carry both:
 
 - **Split catalogue (headline).** One real catalogue, its satellites
   assigned to two operators by NORAD parity, keeping only conjunctions that
@@ -379,9 +391,9 @@ script does two runs and the report should carry both:
   reproducing the empty result by construction.
 - **Cross-constellation (the existence check).** Two genuinely different
   operators, unmodified, reported with whatever it finds intact. A zero is
-  what justifies the split; a crossing — as the 20 Sep run found — is the
-  motivating scenario caught in the real sky, and the generated document
-  switches framing accordingly rather than calling a hit a null.
+  what justifies the split; a crossing, if a future catalogue produces one,
+  is the motivating scenario caught in the real sky, and the generated
+  document switches framing accordingly rather than calling a hit a null.
 
 **A modelling bug this work surfaced.** `evaluate.sigma_no_cooperation`
 scales degraded public-tracking precision as a *fraction* of each
@@ -411,6 +423,50 @@ encounter as soon as it enters the screening horizon, the cooperative lead
 time saturates at that horizon. The quantity that actually varies across
 encounters — and the one `fig_real_evaluation` plots — is how much later
 no-cooperation gets there.
+
+**A third correction: start the clock at the catalogue epoch.** Every
+real-data script used to propagate from the wall clock ("now"). That is
+only right on the day the TLE file was downloaded. A TLE degrades quickly
+with age, mostly along-track, and the published headline run had been made
+on 20 Sep from element sets dated 9-10 Sep, so every orbit in it was 10-17
+days stale. `real_evaluation.resolve_epoch` and `fleets.catalogue_epoch` now
+start the window at the newest element-set epoch in the file (the scripts
+default to `--epoch catalogue`; `--epoch now` or an ISO time are still
+available), and each run records the median element-set age at its start.
+The re-run moved the headline very little (237 scored encounters, median
+gain 49.3 h instead of 49.5 h), but it removed the Starlink x Kuiper
+"crossing", which turned out to be an artefact of the stale orbits. Re-runs
+of the same file now also give the same numbers on any day.
+
+## Refined Pc: what changes
+
+`scripts/run_pc_model_comparison.py` screens the real catalogue once and
+re-scores the same 237 encounters four ways (full output in
+`docs/pc_model_comparison.md`):
+
+| Column | Median Pc | Median gain | Both regimes flag | Only no-coop flags | Neither flags |
+|---|---|---|---|---|---|
+| `circular` (today's default) | 2.33e-4 | 49.28 h | 237 | 0 | 0 |
+| `circular-in-plane` | 3.96e-4 | 47.60 h | 237 | 0 | 0 |
+| `foster(k=1)` (isotropic) | 3.96e-4 | 47.60 h | 237 | 0 | 0 |
+| `foster(k=8)` (along-track 8x) | 5.22e-6 | 0.00 h (19.13 h where both flag) | 81 | 73 | 83 |
+
+`circular-in-plane` and `foster(k=1)` agree to 0.01%, so the decomposition
+holds: projecting the miss onto the encounter plane costs about 1.7 h of
+the gain, and the along-track anisotropy does the rest. Under the
+anisotropic model the single median is not the number to quote, because it
+mixes three outcomes: on the 81 encounters both regimes flag, cooperation
+still buys a median 19.1 h; on 73, only degraded public tracking crosses the
+threshold, which is a false alarm (an unnecessary manoeuvre) that precise,
+cooperative tracking avoids; and 83 that the circular model flagged are
+below threshold for both once the error ellipsoid has its real shape. So
+the circular model overstated the warning-time benefit, and understated a
+benefit it could not see at all: fewer false alarms.
+
+`scripts/run_real_evaluation.py --pc-model foster` runs the full
+three-scenario evaluation with the anisotropic model on its own admitted
+population and writes `docs/real_evaluation_foster.md` beside the circular
+one.
 
 ## The dashboard
 
@@ -501,18 +557,20 @@ they came from; delete it to force a fresh run.
    agreed to), which needs an attestation path that doesn't exist yet, and
    stress it against a colluding coalition rather than independent
    adversaries.
-4. Wire `evaluate.py`'s real computed numbers into a live version of
-   `conjunction_watch.html` (currently a standalone, hand-scripted demo).
-5. Full non-circular Pc integral with per-operator covariance, if time
-   permits.
-6. Verifiable secret sharing / range proofs on top of `secure_aggregation.py`
+4. Verifiable secret sharing / range proofs on top of `secure_aggregation.py`
    so secure aggregation and Byzantine-robust aggregation can run in the
    same round (see "Trust model" above for why they currently can't).
-7. A total privacy-budget accountant across the whole federation's
+5. A total privacy-budget accountant across the whole federation's
    lifetime in `federated_learning.py`, rather than the current per-round
    epsilon — real deployments cap cumulative epsilon across many rounds,
    not just report each round's individually.
-8. Run the distributed demo's operators and hub across genuinely separate
+6. Run the distributed demo's operators and hub across genuinely separate
    machines on a real LAN (currently all on `127.0.0.1`) — the wire
    protocol and signature verification don't change, only `--host`/`--port`
    would need to point somewhere other than loopback.
+7. Download the 2021 element-set histories from Space-Track and run
+   `scripts/run_historical_replay.py` for both registered China Space
+   Station events, with the exact times from A/AC.105/1262.
+8. Decide which Pc model the final report's headline uses (the anisotropic
+   one is the more defensible) and regenerate the figures and dashboard
+   from that run.
