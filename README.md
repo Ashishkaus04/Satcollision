@@ -477,6 +477,7 @@ scenario that explains the mechanism.
 ```bash
 PYTHONPATH=src python3 scripts/make_dashboard.py          # writes docs/conjunction_watch.html
 PYTHONPATH=src python3 scripts/make_dashboard.py --check  # report what would be embedded
+PYTHONPATH=src python3 scripts/make_dashboard.py --run circular  # embed the circular-model run instead
 ```
 
 It was previously hand-scripted — every number on the page typed in by
@@ -485,7 +486,7 @@ worthless as evidence, since nothing stopped it drifting away from what the
 code actually produced. `make_dashboard.py` now injects the real run data
 (`docs/figures/real_evaluation.json`, the reputation trajectories and the
 robustness sweep) into `docs/conjunction_watch_template.html`, so the
-dashboard cannot disagree with the report. Design lives in the template;
+dashboard cannot disagree with the report. By default it embeds the Foster-model run (`real_evaluation_foster.json`), the report's headline model. Design lives in the template;
 the script owns only the data. Re-run it after any run that changes the
 numbers.
 

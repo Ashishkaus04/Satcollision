@@ -672,9 +672,9 @@ var DASHBOARD_DATA = /*__DASHBOARD_DATA__*/{};
     ' hours ahead versus ' + fmt(h.median_lead_time_cooperative_h,0) + ' hours with cooperation.';
 
   el('footer').innerHTML =
-    'The measured section is generated from <code>docs/figures/real_evaluation.json</code> and the figure data in the research prototype, ' +
+    'The measured section is generated from <code>docs/figures/' + esc(h.source_file || 'real_evaluation.json') + '</code> and the figure data in the research prototype, ' +
     'by <code>scripts/make_dashboard.py</code> &mdash; no number on this page is typed in by hand. ' +
-    'Orbits come from real CelesTrak two-line elements propagated with SGP4; collision probability uses the simplified circular model, so treat every Pc as an order of magnitude rather than an exact figure. ' +
+    'Orbits come from real CelesTrak two-line elements propagated with SGP4; collision probability uses ' + (String(h.pc_model || 'circular').indexOf('foster') === 0 ? 'the Foster encounter-plane model with an along-track-elongated uncertainty ellipsoid' : 'the simplified circular model') + ', so treat every Pc as an order of magnitude rather than an exact figure. ' +
     'Ownership in the measured set is assigned by catalogue-number parity, stated plainly because genuine cross-operator threshold crossings are rare. ' +
     'The scenario below the rule is a stylised 2D illustration of the mechanism, not a propagator.';
 
@@ -932,7 +932,7 @@ var DASHBOARD_DATA = /*__DASHBOARD_DATA__*/{};
       ' further catalogue objects on their own real tracks and the Earth turning at its sidereal rate. ' +
       'Motion between samples is interpolated; the time scale is yours to set. Closest approach: <b>' +
       fmtSep(enc.miss_distance_m/1000) + '</b>. Drag to orbit, scroll to zoom. ' +
-      'The only modelled element is the 500 m uncertainty sphere — the sigma the collision-probability model assumes.';
+      'The only modelled element is the 500 m uncertainty sphere — the overall sigma the collision-probability model assumes.';
 
     // trails: a fading ribbon of where each object has just been
     function makeTrail(colour, n){
