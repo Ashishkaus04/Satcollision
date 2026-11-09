@@ -35,6 +35,7 @@ import numpy as np
 
 from .fleets import build_synthetic_fleets, inject_actor_encounter, _epoch_from_calendar
 from .twin import propagate_window, screen_conjunctions, compute_pc, DEFAULT_PC_THRESHOLD
+from .pc import EncounterGeometry, resolve_pc_model
 from .federation import (
     OperatorReport,
     mean_aggregate,
@@ -65,18 +66,53 @@ def detection_lead_time(
     sigma_fn,
     threshold: float = DEFAULT_PC_THRESHOLD,
     step_s: float = 10.0,
+    pc_model=None,
+    geometry=None,
 ) -> tuple[float, float]:
     """Scan forward from t=0 toward TCA; return (lead_time_s, first_detect_offset_s)
     for the first screening instant whose Pc estimate (using that regime's
     ``sigma_fn(lead_time_s)``) crosses ``threshold``. If it never crosses in
     time, lead_time_s is 0 (detected only at/after the event, i.e. too late
     to act).
+
+    This is where the headline warning-time numbers are actually produced, so
+    it is the call that matters most for a Pc-model comparison — swapping the
+    model only in the screening pass would change which encounters are listed
+    but not how much warning each one gets.
+
+    ``pc_model=None`` is the circular estimator on the original code path.
+    ``geometry`` carries the encounter's state vectors for a model that needs
+    them; without it, only the miss distance is available and a non-circular
+    model will say so rather than guess. The scan is unchanged in both cases:
+    same instants, same sigma sequence, same threshold test.
+
+    Note on cost: this walks the whole window at ``step_s`` for every encounter
+    and regime. Under the circular model that is arithmetic; under Foster each
+    step is a quadrature, so a whole-catalogue run takes minutes rather than
+    seconds. That is a one-off comparison cost, not a per-query one.
     """
+    if pc_model is None:
+        def evaluate_pc(sigma):
+            return compute_pc(true_miss_distance_km, combined_sigma_km=sigma)
+    else:
+        model = resolve_pc_model(pc_model)
+        if geometry is None:
+            geometry = EncounterGeometry(miss_distance_km=true_miss_distance_km)
+        elif abs(geometry.miss_distance_km - true_miss_distance_km) > 1.0e-9:
+            raise ValueError(
+                f"geometry miss distance {geometry.miss_distance_km} km disagrees with "
+                f"true_miss_distance_km {true_miss_distance_km} km; they describe the "
+                "same encounter and must match"
+            )
+
+        def evaluate_pc(sigma):
+            return model.pc(geometry, sigma)
+
     t = 0.0
     while t <= tca_offset_s:
         lead = tca_offset_s - t
         sigma = sigma_fn(lead)
-        pc = compute_pc(true_miss_distance_km, combined_sigma_km=sigma)
+        pc = evaluate_pc(sigma)
         if pc >= threshold:
             return lead, t
         t += step_s
