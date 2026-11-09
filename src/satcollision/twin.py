@@ -70,9 +70,39 @@ class Conjunction:
     relative_speed_km_s: float
     meta: dict = field(default_factory=dict)
 
+    # Full ECI state of both objects at the TCA sample (km, km/s). Populated by
+    # ``screen_conjunctions``; ``None`` on a Conjunction built by hand from a
+    # scalar miss distance.
+    #
+    # The scalar miss distance is enough for the circular Pc model and for
+    # nothing else. A non-circular model needs the relative position and
+    # velocity (the velocity defines the encounter plane) and each object's own
+    # position and velocity (each error ellipsoid is built in that object's own
+    # RTN frame) — all of which the screening pass has in hand at the moment it
+    # records the closest sample, and all of which were being thrown away.
+    position_a_km: np.ndarray | None = None
+    position_b_km: np.ndarray | None = None
+    velocity_a_km_s: np.ndarray | None = None
+    velocity_b_km_s: np.ndarray | None = None
+
     @property
     def pair_label(self) -> str:
         return f"{self.object_a.label} <-> {self.object_b.label}"
+
+    @property
+    def has_state_vectors(self) -> bool:
+        return all(v is not None for v in (self.position_a_km, self.position_b_km,
+                                           self.velocity_a_km_s, self.velocity_b_km_s))
+
+    @property
+    def r_rel_km(self) -> np.ndarray:
+        """Relative position at TCA, object A minus object B."""
+        return np.asarray(self.position_a_km, dtype=float) - np.asarray(self.position_b_km, dtype=float)
+
+    @property
+    def v_rel_km_s(self) -> np.ndarray:
+        """Relative velocity at TCA, object A minus object B."""
+        return np.asarray(self.velocity_a_km_s, dtype=float) - np.asarray(self.velocity_b_km_s, dtype=float)
 
 
 def propagate_window(objects: list[TrackedObject], jd0: float, fr0: float,
@@ -146,6 +176,7 @@ def screen_conjunctions(
     combined_sigma_km: float = DEFAULT_COMBINED_SIGMA_KM,
     combined_hbr_km: float = DEFAULT_COMBINED_HBR_KM,
     include_debris_debris: bool = False,
+    pc_model=None,
 ) -> list[Conjunction]:
     """Screen every object pair across the time grid for close approaches.
 
@@ -165,6 +196,17 @@ def screen_conjunctions(
     grid resolution is an accepted simplification; a production system
     would refine TCA with a local quadratic/Brent search between grid
     points.
+
+    ``pc_model`` selects the probability-of-collision estimator. ``None`` —
+    the default — is the circular ``compute_pc`` on exactly the code path it
+    used before, so every existing result is unchanged. Passing a model from
+    ``pc.py`` swaps only the estimator; the screening, the TCA search and the
+    geometry classification are identical either way, which is what makes a
+    both-ways comparison a comparison rather than two experiments.
+
+    Either way the TCA state vectors are now recorded on each Conjunction, so
+    an encounter screened under the default model can still be re-scored under
+    a non-circular one afterwards without re-propagating.
     """
     by_id = {o.norad_id: o for o in objects}
     object_ids = propagation.object_ids
@@ -191,20 +233,42 @@ def screen_conjunctions(
             d = float(np.linalg.norm(coords[a_local] - coords[b_local]))
             key = (min(ida, idb), max(ida, idb))
             if key not in best or d < best[key]["dist"]:
+                # Copied rather than stored as views: ``coords`` is rebuilt
+                # every timestep, and a view would keep the whole timestep's
+                # position array alive for as long as the pair stays the best
+                # one. Three floats each is cheaper than that.
                 best[key] = {
                     "dist": d,
                     "t": t_offset_s,
-                    "vel_a": propagation.velocities[a_glob, t_idx, :],
-                    "vel_b": propagation.velocities[b_glob, t_idx, :],
+                    "pos_a": np.array(coords[a_local]),
+                    "pos_b": np.array(coords[b_local]),
+                    "vel_a": np.array(propagation.velocities[a_glob, t_idx, :]),
+                    "vel_b": np.array(propagation.velocities[b_glob, t_idx, :]),
                     "obj_a": obj_a,
                     "obj_b": obj_b,
                 }
+
+    if pc_model is not None:
+        # Imported here rather than at module scope: ``pc`` imports this module
+        # for the circular formula, so a top-level import either way would be a
+        # cycle. The default path never reaches this line.
+        from .pc import EncounterGeometry
 
     conjunctions = []
     for rec in best.values():
         vrel = rec["vel_a"] - rec["vel_b"]
         rel_speed = float(np.linalg.norm(vrel))
-        pc = compute_pc(rec["dist"], combined_sigma_km, combined_hbr_km)
+        if pc_model is None:
+            pc = compute_pc(rec["dist"], combined_sigma_km, combined_hbr_km)
+        else:
+            pc = pc_model.pc(
+                EncounterGeometry(
+                    miss_distance_km=rec["dist"],
+                    position_a_km=rec["pos_a"], position_b_km=rec["pos_b"],
+                    velocity_a_km_s=rec["vel_a"], velocity_b_km_s=rec["vel_b"],
+                ),
+                combined_sigma_km,
+            )
         geometry = _classify_geometry(rec["vel_a"], rec["vel_b"])
         conjunctions.append(
             Conjunction(
@@ -215,6 +279,10 @@ def screen_conjunctions(
                 pc=pc,
                 geometry_class=geometry,
                 relative_speed_km_s=rel_speed,
+                position_a_km=rec["pos_a"],
+                position_b_km=rec["pos_b"],
+                velocity_a_km_s=rec["vel_a"],
+                velocity_b_km_s=rec["vel_b"],
             )
         )
     conjunctions.sort(key=lambda c: -c.pc)

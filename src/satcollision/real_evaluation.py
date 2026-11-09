@@ -100,6 +100,7 @@ from .evaluate import (
 from .fleets import TrackedObject, load_tle_file, _epoch_from_calendar
 from .signal import abstract_conjunction
 from .twin import DEFAULT_PC_THRESHOLD, propagate_window, screen_conjunctions
+from .pc import EncounterGeometry, pc_model_name
 
 # A threshold crossing needs a sub-kilometre miss distance: with the
 # simplified circular Pc model (HBR 20 m, sigma 0.5 km) the crossing point of
@@ -181,6 +182,10 @@ class EncounterEvaluation:
     geometry_class: str
     lead_time_nocoop_s: float
     lead_time_cooperative_s: float  # identical for full-sharing and federated
+    # Which Pc estimator produced this row. Carried through to the output so a
+    # results file can never be mistaken for the other model's run — the whole
+    # point of running both is that the two sets of numbers sit side by side.
+    pc_model: str = "circular"
 
     @property
     def lead_time_gain_s(self) -> float:
@@ -200,6 +205,7 @@ class EncounterEvaluation:
             "tca_offset_min": round(self.tca_offset_s / 60.0, 2),
             "miss_distance_m": round(self.miss_distance_km * 1000.0, 1),
             "pc": self.pc,
+            "pc_model": self.pc_model,
             "geometry_class": self.geometry_class,
             "lead_time_nocoop_min": round(self.lead_time_nocoop_s / 60.0, 2),
             "lead_time_cooperative_min": round(self.lead_time_cooperative_s / 60.0, 2),
@@ -211,6 +217,7 @@ def evaluate_encounter(
     conjunction,
     threshold: float = DEFAULT_PC_THRESHOLD,
     horizon_s: float = SCREENING_HORIZON_S,
+    pc_model=None,
 ) -> EncounterEvaluation:
     """Score one real conjunction under no-cooperation and cooperative tracking.
 
@@ -223,9 +230,16 @@ def evaluate_encounter(
     Both are measured inside the same rolling screening horizon, so an
     encounter that happens to sit far out in the propagation window is not
     credited with days of imaginary warning.
+
+    ``pc_model=None`` is the circular estimator, unchanged. A model passed here
+    is applied to both regimes — it has to be, or the comparison would be
+    measuring the estimator against itself.
     """
     tca_s = conjunction.tca_offset_s
     miss_km = conjunction.miss_distance_km
+    # Built once and shared by both regime scans: the geometry is a property of
+    # the encounter, not of how well either operator happens to be tracking it.
+    geometry = EncounterGeometry.from_conjunction(conjunction)
     # Scan the last `window` seconds before TCA. detection_lead_time counts
     # lead time from the value it is given, so passing the window (rather
     # than the raw TCA offset) is what anchors both regimes to the horizon.
@@ -235,11 +249,13 @@ def evaluate_encounter(
     # would be ~26,000 Pc evaluations per encounter per regime for a precision
     # nobody reports, since lead times are quoted in minutes.
     lead_cooperative, _ = detection_lead_time(
-        miss_km, window, sigma_fn=lambda lead: SIGMA_GOOD_KM, threshold=threshold, step_s=60.0
+        miss_km, window, sigma_fn=lambda lead: SIGMA_GOOD_KM, threshold=threshold, step_s=60.0,
+        pc_model=pc_model, geometry=geometry,
     )
     lead_nocoop, _ = detection_lead_time(
         miss_km, window, sigma_fn=lambda lead: sigma_public_tracking(lead, horizon_s),
         threshold=threshold, step_s=60.0,
+        pc_model=pc_model, geometry=geometry,
     )
 
     signals = abstract_conjunction(conjunction, threshold=threshold)
@@ -257,6 +273,7 @@ def evaluate_encounter(
         geometry_class=conjunction.geometry_class,
         lead_time_nocoop_s=lead_nocoop,
         lead_time_cooperative_s=lead_cooperative,
+        pc_model=pc_model_name(pc_model),
     )
 
 
@@ -321,12 +338,14 @@ def _split_out_burn_in(conjunctions: list, horizon_s: float) -> tuple[list, list
     return scorable, burn_in
 
 
-def _screen_real_catalogue(objects, hours: float, step_s: float, screening_km: float):
+def _screen_real_catalogue(objects, hours: float, step_s: float, screening_km: float,
+                           pc_model=None):
     """Propagate and screen a real catalogue from now, returning conjunctions."""
     now = datetime.datetime.now(datetime.timezone.utc)
     _, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
     propagation = propagate_window(objects, jd0, fr0, duration_s=hours * 3600.0, step_s=step_s)
-    conjunctions = screen_conjunctions(objects, propagation, screening_distance_km=screening_km)
+    conjunctions = screen_conjunctions(objects, propagation, screening_distance_km=screening_km,
+                                       pc_model=pc_model)
     return conjunctions, now
 
 
@@ -338,6 +357,7 @@ def run_split_catalog_evaluation(
     screening_km: float = DEFAULT_EVALUATION_SCREEN_KM,
     threshold: float = DEFAULT_PC_THRESHOLD,
     horizon_s: float = SCREENING_HORIZON_S,
+    pc_model=None,
 ) -> dict:
     """Headline run: one real catalogue, split into two operators by parity.
 
@@ -347,12 +367,14 @@ def run_split_catalog_evaluation(
     in exactly those words.
     """
     objects = assign_two_operators(load_tle_file(tle_path, operator_name=catalog_name))
-    conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km)
+    conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
+                                                      pc_model=pc_model)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
     scorable, burn_in = _split_out_burn_in(above_threshold, horizon_s)
-    evaluations = [evaluate_encounter(c, threshold=threshold, horizon_s=horizon_s)
+    evaluations = [evaluate_encounter(c, threshold=threshold, horizon_s=horizon_s,
+                                      pc_model=pc_model)
                     for c in scorable]
 
     return {
@@ -364,6 +386,7 @@ def run_split_catalog_evaluation(
         "step_s": step_s,
         "screening_km": screening_km,
         "pc_threshold": threshold,
+        "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,
         "computed_at_utc": computed_at.isoformat(timespec="seconds"),
         "n_conjunctions_screened": len(conjunctions),
@@ -388,6 +411,7 @@ def run_cross_constellation_evaluation(
     screening_km: float = DEFAULT_EVALUATION_SCREEN_KM,
     threshold: float = DEFAULT_PC_THRESHOLD,
     horizon_s: float = SCREENING_HORIZON_S,
+    pc_model=None,
 ) -> dict:
     """The honest negative: two genuinely different operators, unmodified.
 
@@ -398,12 +422,14 @@ def run_cross_constellation_evaluation(
     """
     objects = (load_tle_file(tle_path_a, operator_name=name_a)
                + load_tle_file(tle_path_b, operator_name=name_b))
-    conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km)
+    conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
+                                                      pc_model=pc_model)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
     scorable, burn_in = _split_out_burn_in(above_threshold, horizon_s)
-    evaluations = [evaluate_encounter(c, threshold=threshold, horizon_s=horizon_s)
+    evaluations = [evaluate_encounter(c, threshold=threshold, horizon_s=horizon_s,
+                                      pc_model=pc_model)
                     for c in scorable]
 
     return {
@@ -415,6 +441,7 @@ def run_cross_constellation_evaluation(
         "step_s": step_s,
         "screening_km": screening_km,
         "pc_threshold": threshold,
+        "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,
         "computed_at_utc": computed_at.isoformat(timespec="seconds"),
         "n_conjunctions_screened": len(conjunctions),
