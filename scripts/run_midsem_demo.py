@@ -81,13 +81,14 @@ def check(path: str) -> str:
 
 def layer_1_and_2(tle_path: str, name: str, hours: float, step_s: float, screening_km: float):
     """Propagate a real catalogue and screen it, live."""
-    from satcollision.fleets import _epoch_from_calendar, load_tle_file
+    from satcollision.fleets import _epoch_from_calendar, catalogue_epoch, load_tle_file
     from satcollision.real_evaluation import assign_two_operators
     from satcollision.twin import DEFAULT_PC_THRESHOLD, propagate_window, screen_conjunctions
 
     step(1, "ORBITAL PROPAGATION — real catalogue, real SGP4")
     objects = assign_two_operators(load_tle_file(tle_path, operator_name=name))
-    now = datetime.datetime.now(datetime.timezone.utc)
+    # Start at the catalogue's own epoch: TLEs go stale within days.
+    now = catalogue_epoch(objects)
     _, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
 
     print(f"  Catalogue            {name}")

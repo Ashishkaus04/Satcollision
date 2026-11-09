@@ -26,7 +26,7 @@ import sys
 import datetime
 from pathlib import Path
 
-from satcollision.fleets import load_tle_file, _epoch_from_calendar
+from satcollision.fleets import load_tle_file, _epoch_from_calendar, catalogue_epoch
 from satcollision.twin import propagate_window, screen_conjunctions, DEFAULT_PC_THRESHOLD
 from satcollision.signal import abstract_conjunction
 
@@ -48,9 +48,11 @@ def main():
     objects = load_tle_file(tle_path, operator_name="Starlink")
     print(f"  loaded {len(objects)} real tracked objects")
 
-    # Use "now" (UTC) as the propagation epoch — TLE epochs are all close to
-    # their download time, so this keeps the propagation window valid.
-    now = datetime.datetime.now(datetime.timezone.utc)
+    # Start at the catalogue's own epoch (the newest element set in the file),
+    # not the wall clock: a TLE is only accurate for a few days around its
+    # epoch, so a file downloaded weeks ago propagated from "now" gives
+    # kilometre-level errors. This also makes the run reproducible.
+    now = catalogue_epoch(objects)
     epoch_days, jd0, fr0 = _epoch_from_calendar(now.year, now.month, now.day, now.hour + now.minute / 60.0)
 
     duration_s = duration_hours * 60 * 60

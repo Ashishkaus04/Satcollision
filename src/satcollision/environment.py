@@ -62,6 +62,7 @@ from sgp4.api import jday
 from .fleets import (
     TrackedObject,
     build_synthetic_fleets,
+    catalogue_epoch,
     inject_actor_encounter,
     load_tle_file,
     _epoch_from_calendar,
@@ -120,10 +121,12 @@ class EnvironmentSnapshot:
         :func:`satcollision.fleets.propagate_all` returns."""
         return {s.norad_id: (s.position_km, s.velocity_km_s) for s in self.satellites}
 
+    pc_threshold: float = DEFAULT_PC_THRESHOLD
+
     @property
     def active_conjunctions(self) -> List[Conjunction]:
-        """Conjunctions above :data:`~satcollision.twin.DEFAULT_PC_THRESHOLD`."""
-        return [c for c in self.conjunctions if c.pc >= DEFAULT_PC_THRESHOLD]
+        """Conjunctions at or above the environment's Pc threshold."""
+        return [c for c in self.conjunctions if c.pc >= self.pc_threshold]
 
     def get_operator_satellites(self, operator: str) -> List[SatelliteSnapshot]:
         return [s for s in self.satellites if s.operator == operator]
@@ -153,6 +156,23 @@ class EnvironmentSnapshot:
                     f"geom={c.geometry_class}"
                 )
         return "\n".join(lines)
+
+
+# The calendar epoch the built-in synthetic fleets and the engineered encounter
+# are constructed at (``fleets.build_synthetic_fleets`` / ``inject_actor_encounter``
+# default). The encounter only happens relative to this instant, so a
+# synthetic environment has to start its clock here to ever show it.
+SYNTHETIC_EPOCH = (2026, 9, 9, 0.0)
+
+
+def _jd_fr_from_datetime(when: datetime) -> Tuple[float, float]:
+    return jday(when.year, when.month, when.day,
+                when.hour, when.minute, when.second + when.microsecond / 1e6)
+
+
+def _calendar_tuple(when: datetime) -> Tuple[int, int, int, float]:
+    return (when.year, when.month, when.day,
+            when.hour + when.minute / 60.0 + when.second / 3600.0)
 
 
 # ---------------------------------------------------------------------------
@@ -232,6 +252,7 @@ class SyntheticEnvironment:
         inject_encounter: bool = True,
         step_size_s: float = 60.0,
         screening_window_s: float = 3600.0,
+        epoch: datetime | str | None = "catalogue",
         **kwargs,
     ) -> "SyntheticEnvironment":
         """Build an environment from one or more real TLE files.
@@ -245,7 +266,15 @@ class SyntheticEnvironment:
             If ``True``, also inject the engineered close-approach pair
             from the built-in synthetic fleets so that at least one
             guaranteed conjunction exists in the environment regardless
-            of what the real data produces.
+            of what the real data produces. The pair is built at the
+            environment's own epoch, so the encounter happens 30 minutes
+            after the clock starts.
+        epoch : datetime, ``"catalogue"`` or ``"now"``
+            Where the simulation clock starts. The default, ``"catalogue"``,
+            is the newest TLE epoch in the loaded files: a TLE is only
+            accurate for a few days around its epoch, so starting "now" with
+            a catalogue downloaded weeks ago would show orbits that are
+            kilometres off.
         """
         objects: List[TrackedObject] = []
         for op_name, path in tle_files.items():
@@ -253,13 +282,26 @@ class SyntheticEnvironment:
             objects.extend(loaded)
             print(f"[env] Loaded {len(loaded):,} satellites from '{path}' as operator '{op_name}'")
 
+        if not objects:
+            raise ValueError("no satellites loaded from tle_files")
+        if epoch == "catalogue":
+            start = catalogue_epoch(objects)
+        elif epoch is None or epoch == "now":
+            start = datetime.now(tz=timezone.utc).replace(microsecond=0)
+        elif isinstance(epoch, datetime):
+            start = epoch if epoch.tzinfo else epoch.replace(tzinfo=timezone.utc)
+        else:
+            raise ValueError(f"epoch must be a datetime, 'catalogue' or 'now', not {epoch!r}")
+        print(f"[env] Clock starts {start.strftime('%Y-%m-%d %H:%M UTC')}")
+
         if inject_encounter:
             # Inject the synthetic close-approach pair into a minimal
             # synthetic set so the actor objects are available even when
             # the real TLE fleets don't happen to produce a conjunction
-            # in the current time window.
-            synthetic = build_synthetic_fleets()
-            actor_a, actor_b = inject_actor_encounter(synthetic)
+            # in the current time window. Built at the environment's own
+            # epoch: the encounter is defined relative to that instant.
+            synthetic = build_synthetic_fleets(epoch=_calendar_tuple(start))
+            actor_a, actor_b = inject_actor_encounter(synthetic, epoch=_calendar_tuple(start))
             objects.append(actor_a)
             objects.append(actor_b)
             print(f"[env] Injected engineered encounter: {actor_a.label} <-> {actor_b.label}")
@@ -267,6 +309,7 @@ class SyntheticEnvironment:
         print(f"[env] Total objects: {len(objects):,}")
         return cls(
             objects=objects,
+            epoch_jd=_jd_fr_from_datetime(start),
             step_size_s=step_size_s,
             screening_window_s=screening_window_s,
             **kwargs,
@@ -283,14 +326,21 @@ class SyntheticEnvironment:
         **kwargs,
     ) -> "SyntheticEnvironment":
         """Build an environment from the built-in synthetic fleets only
-        (Alpha/Beta/Gamma + ambient debris). No TLE files required."""
-        objects = build_synthetic_fleets(seed=seed, n_debris=n_debris)
+        (Alpha/Beta/Gamma + ambient debris). No TLE files required.
+
+        The clock starts at :data:`SYNTHETIC_EPOCH`, the instant the fleets
+        and the engineered encounter are built at, so the encounter shows up
+        30 minutes in.
+        """
+        objects = build_synthetic_fleets(epoch=SYNTHETIC_EPOCH, seed=seed, n_debris=n_debris)
         if inject_encounter:
-            actor_a, actor_b = inject_actor_encounter(objects)
+            actor_a, actor_b = inject_actor_encounter(objects, epoch=SYNTHETIC_EPOCH)
             print(f"[env] Injected engineered encounter: {actor_a.label} <-> {actor_b.label}")
         print(f"[env] Synthetic fleet: {len(objects)} objects")
+        y, m, d, h = SYNTHETIC_EPOCH
         return cls(
             objects=objects,
+            epoch_jd=jday(y, m, d, h, 0, 0.0),
             step_size_s=step_size_s,
             screening_window_s=screening_window_s,
             **kwargs,
@@ -419,6 +469,7 @@ class SyntheticEnvironment:
             n_debris=n_debris,
             n_operators=len(operator_names),
             operator_names=operator_names,
+            pc_threshold=self._pc_threshold,
         )
         self._last_snapshot = snap
         return snap
@@ -508,7 +559,7 @@ class SyntheticEnvironment:
                 "operator_b": c.object_b.operator,
                 "miss_distance_km": round(c.miss_distance_km, 4),
                 "pc": c.pc,
-                "pc_above_threshold": c.pc >= DEFAULT_PC_THRESHOLD,
+                "pc_above_threshold": c.pc >= self._pc_threshold,
                 "geometry": c.geometry_class,
                 "tca_offset_s": c.tca_offset_s,
                 "rel_speed_km_s": round(c.relative_speed_km_s, 4),
