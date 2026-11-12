@@ -251,8 +251,9 @@ def evaluate_round(
     operators: list[str],
     signals: list[AbstractedSignal],
     reports: list[OperatorReport],
-    ownership: dict[str, set[int]],
+    ownership: dict[str, set[int]] | None,
     params: ReputationParams = ReputationParams(),
+    attested: dict[str, set[str]] | None = None,
 ) -> dict[str, RoundEvidence]:
     """Turn one reporting period into per-operator evidence.
 
@@ -260,9 +261,18 @@ def evaluate_round(
     (from all senders), ``reports`` the period count vectors, and
     ``ownership`` the attestation oracle — in a deployment, the operators
     themselves answering :func:`attest_participation`.
+
+    A federation running in its own process has no ownership table to
+    consult: it asks each operator's node over the network and passes the
+    answers in as ``attested`` (operator -> encounter ids it vouched for),
+    with ``ownership=None``.
     """
     encounter_ids = sorted({sig.encounter_id for sig in signals})
-    attested = gather_attestations(encounter_ids, ownership)
+    if attested is None:
+        attested = gather_attestations(encounter_ids, ownership or {})
+    else:
+        wanted = set(encounter_ids)
+        attested = {op: set(attested.get(op, set())) & wanted for op in operators}
     reports_by_operator = {r.operator: r for r in reports}
     # An encounter nobody attests owning is a phantom: it was reported into
     # existence by whoever sent it.
