@@ -36,7 +36,7 @@ from .fleets import TrackedObject
 # Industry-realistic defaults (see project definition, Sec. 3):
 # ~1e-4 is the common threshold for standard maneuver planning,
 # tighter (~1e-5) for high-value missions.
-DEFAULT_PC_THRESHOLD = 1.0e-4
+from .constants import DEFAULT_PC_THRESHOLD  # noqa: E402  (re-exported)
 DEFAULT_SCREENING_DISTANCE_KM = 25.0  # coarse-pass "worth looking closer at" radius
 DEFAULT_COMBINED_SIGMA_KM = 0.5  # assumed combined position uncertainty (1-sigma)
 DEFAULT_COMBINED_HBR_KM = 0.02  # ~20 m combined hard-body radius (typical smallsat + margin)

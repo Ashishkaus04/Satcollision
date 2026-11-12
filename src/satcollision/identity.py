@@ -126,6 +126,11 @@ class OperatorIdentity:
         """
         return self._private_key.private_bytes_raw()
 
+    def sign_bytes(self, message: bytes) -> bytes:
+        """Sign an arbitrary short message (an operator node uses this to
+        prove a request to the federation comes from it)."""
+        return self._private_key.sign(message)
+
     def public_key_bytes(self) -> bytes:
         return self._private_key.public_key().public_bytes(
             encoding=serialization.Encoding.Raw,

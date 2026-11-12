@@ -1,0 +1,42 @@
+{
+  "name": "real_leo",
+  "title": "Real LEO",
+  "description": "Every active LEO satellite from CelesTrak's active catalogue (about 15,000), with six operators in the federation: Starlink, Kuiper, OneWeb, Planet, Spire and ICEYE, grouped by satellite name. Everything else is in the sky but belongs to no member. Foster Pc. Nothing is engineered: every encounter is real TLE geometry, and a day holds a few real cross-operator close approaches (mostly Planet with Starlink) among many in-house ones. TLEs go stale within days, so the clock replays the first 7 days and then starts that week again.",
+  "fleet": {
+    "type": "catalogue",
+    "file": "data/active.tle",
+    "max_altitude_km": 2000,
+    "operators": {
+      "Starlink": [
+        "STARLINK"
+      ],
+      "Kuiper": [
+        "KUIPER"
+      ],
+      "OneWeb": [
+        "ONEWEB"
+      ],
+      "Planet": [
+        "FLOCK",
+        "SKYSAT",
+        "PELICAN",
+        "TANAGER"
+      ],
+      "Spire": [
+        "LEMUR"
+      ],
+      "ICEYE": [
+        "ICEYE"
+      ]
+    }
+  },
+  "speed": 30,
+  "tick_sim_s": 150,
+  "screening_step_s": 30,
+  "lookahead_s": 7200,
+  "pc_model": "foster",
+  "federation_period_s": 21600,
+  "cycle_days": 7,
+  "max_tracks": 900,
+  "seed": 7
+}
