@@ -9,3 +9,4 @@ app/frontend/node_modules/
 app/frontend/dist/
 __pycache__/
 *.tsbuildinfo
+data/historical/
