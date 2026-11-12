@@ -17,7 +17,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, fields
 
-from .twin import Conjunction, DEFAULT_PC_THRESHOLD
+from typing import TYPE_CHECKING
+
+from .constants import DEFAULT_PC_THRESHOLD
+
+if TYPE_CHECKING:  # only for the annotation: importing twin would load sgp4,
+    from .twin import Conjunction  # which the federation process must never do
 
 # Fields an AbstractedSignal is allowed to carry. Anything resembling a
 # state vector, orbital element, or raw coordinate is deliberately absent.

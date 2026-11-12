@@ -11,8 +11,10 @@ direct panel questioning.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 195 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 239 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
+python3 scripts/run_worlds.py                      # always-running worlds + live dashboard
+docker compose up --build                          # full-stack app: operator / federation / observer views
 ```
 
 The demo script prints a run through every layer below and also writes
@@ -34,6 +36,8 @@ The demo script prints a run through every layer below and also writes
 | Documented-event replay | `src/satcollision/historical_replay.py`, `scripts/run_historical_replay.py` | **Built, waiting on data.** Replays a documented past close approach (the two 2021 China Space Station / Starlink events reported to the UN in A/AC.105/1262 are registered) from several as-of times, using only element sets published before each one, and reports how early the pipeline would have flagged it. Needs the historical element sets from Space-Track's `gp_history` (free account); the script's docstring has the exact query. Verified on the engineered encounter in `tests/test_historical_replay.py`. |
 | Refined Pc model | `src/satcollision/pc.py`, `scripts/run_pc_model_comparison.py` | **Built and run.** Foster/Estes 2D encounter-plane Pc with a full 3x3 covariance per object, validated against the closed-form non-central chi-squared answer and Monte Carlo. Selectable everywhere through a `pc_model` argument; the circular model remains the default. See "Refined Pc: what changes" below for the four-way comparison on the real catalogue. |
 | Step-through simulation environment | `src/satcollision/environment.py`, `notebooks/satellite_environment.ipynb`, `scripts/run_environment_demo.py` | **Built.** A Jupyter-friendly clock you step, seek and reset, with snapshots, NumPy arrays and a conjunction table at each instant. Starts at the fleet epoch (synthetic) or the catalogue epoch (real TLEs), so the engineered encounter appears 30 minutes in. |
+| Always-running worlds | `src/satcollision/world.py`, `scripts/run_worlds.py`, `scripts/run_world.py`, `worlds/*.json`, `docs/live_worlds.html` | **Built.** Three persistent worlds (sandbox, adversarial, real LEO), each its own supervised process running the full pipeline on every tick, with per-tick checkpoints, a signed ledger that is re-verified on resume, deterministic restarts and a live dashboard with a world switcher. See "Always-running worlds" below. |
+| Full-stack app (per-party views) | `src/satcollision/views.py`, `app/backend/`, `app/frontend/`, `Dockerfile` | **Built.** Logins for each operator, the federation server and an observer; every API response is filtered server-side to what that party may see (the server's view contains no positions at all), live over WebSocket, with a side-by-side comparison of one encounter from every party. Each operator's twin and the federation run as separate OS processes (the federation never loads orbit code; each private key exists only in its operator's process). Runs with `docker compose up`. See "Full-stack app" below. |
 | Real federated learning (FedAvg + DP-SGD) | `src/satcollision/federated_learning.py` | **Built.** A real PyTorch risk classifier trained across operators via FedAvg (McMahan et al.) with DP-SGD (Abadi et al., via `opacus`) in the local training step — genuine multi-round weight averaging and a formally computed per-operator (epsilon, delta), not count-vector aggregation dressed up as "federated learning." `scripts/run_demo.py` step `[8]` runs centralized / local-only / federated-no-DP / federated-DP side by side on the same held-out test set. See "Trust model" for what the reported epsilon does and doesn't mean, and the module docstring for why the label is a synthetic composite risk index rather than a direct call to `twin.compute_pc`. |
 | Real distributed system | `src/satcollision/wire.py`, `hub.py`, `operator_node.py`, `distributed_demo.py` | **Built.** Every earlier layer above runs inside one Python process calling plain functions on shared objects — this is the one place that's actually architecturally distributed. Each operator (Alpha, Beta, Gamma) and a federation hub run as genuinely separate OS processes (`subprocess.Popen`, real `python3` interpreters, not threads or asyncio tasks sharing a process), exchanging real bytes over real TCP sockets on `127.0.0.1` with a length-prefixed wire format (`wire.py`). The hub (`hub.py`) is a deliberately "dumb pipe" — it relays every message verbatim and never checks a signature; each operator (`operator_node.py`) builds a real SGP4-propagated, Pc-screened conjunction, signs it with its own Ed25519 key loaded from a file, and verifies everything it receives against a pre-distributed public-key registry, exactly as `identity.py`'s in-process tests do — except this time the guarantee has to survive a real process and network boundary. A fifth process, an attacker impersonating "Alpha" with its own freshly generated keypair, proves the forgery is still caught: `scripts/run_distributed_demo.py` runs the whole thing and reports every legitimate operator rejecting the forged message (the real Alpha included, when it receives a message claiming to be itself signed by someone else's key). See "Trust model" below for why the hub replays full history to every client rather than only live-broadcasting. |
 | Incentive/reputation mechanism | `src/satcollision/reputation.py` | **Built.** Per-round reputation built only from behaviour the federation can already observe: *corroboration* (an encounter id names both NORAD objects, so every operator can answer one boolean — "am I a party to this?" — locally, which makes both withholding and fabrication detectable without any catalogue crossing a boundary), *consensus agreement* (distance from the median report, penalised only in excess of the round's own median deviation), and *participation* (contributing something another operator vouches for, so neither an empty report nor fabricated volume earns credit). Scores update as an asymmetric EWMA — rising at 0.10, falling at 0.35 — and feed back in two ways: `reputation_weighted_aggregate` gives influence over the federated result in proportion to score (quarantining anyone below 0.25), and `alert_tier`/`tailor_alert` make the *detail* an operator receives back proportional to its score, which is what makes it an incentive rather than a scoreboard. `scripts/run_demo.py` step `[9]` runs 20 reporting periods with honest / free-rider / spoofer / on-off strategies. See "Reputation: what it buys and what it must never do" below. |
@@ -126,11 +130,22 @@ src/satcollision/
   pc.py                refined Foster/Estes Pc model + selectable Pc models
   environment.py       step-through simulation environment (Jupyter-friendly)
   historical_replay.py replay a documented past close approach from as-of times
+  world.py             always-running worlds: look-ahead screening, checkpoint/resume, persistent ledger
+  views.py             role-based views: what each operator, the federation server and the observer may see
+  processes.py         runs a world as separate processes: sky here, one twin per operator, the federation
+  twin_node.py         one operator's digital twin as its own process (own key, own screening, own decisions)
+  federation_node.py   the federation server as its own process (HTTP), no orbit code loaded
+  federation_service.py  the federation's ledger, pinned keys, attestations, reputation and alert tailoring
+  node_http.py         the small JSON-over-HTTP layer those processes use (stdlib only)
+  constants.py         shared constants with no heavy imports
+app/backend/           FastAPI backend (logins, role views, WebSocket live updates, serves the frontend)
+app/frontend/          React + TypeScript + three.js frontend (Vite)
+Dockerfile, docker-compose.yml  one-container build of the app
   wire.py              length-prefixed TCP message framing for the distributed demo
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (195 tests) covering the above
+tests/                 pytest suite (239 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
@@ -139,6 +154,9 @@ scripts/run_distributed_demo.py  thin CLI wrapper around distributed_demo.run_de
 scripts/run_pc_model_comparison.py  circular vs Foster, four columns, writes docs/pc_model_comparison.md
 scripts/run_historical_replay.py  replays a documented event, writes docs/historical_replay_<event>.md
 scripts/run_environment_demo.py  console walkthrough of environment.py
+scripts/run_worlds.py  starts every world in worlds/, restarts crashed ones, serves docs/live_worlds.html
+scripts/run_world.py   runs one world (normally started by run_worlds.py)
+worlds/*.json          the three world definitions (sandbox, adversarial, real_leo)
 scripts/run_midsem_demo.py  the mid-semester walkthrough (real catalogue, ~20 s)
 notebooks/satellite_environment.ipynb  environment.py in a notebook
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
@@ -493,6 +511,174 @@ numbers.
 The page keeps the scenario animation, now explicitly labelled as the
 mechanism rather than the evidence, with the measured figures above it —
 including the genuine cross-operator encounter, when a run finds one.
+
+## Always-running worlds
+
+Everything above runs once and stops. `src/satcollision/world.py` asks the
+other question a federation has to answer: what happens if it is left
+running? A *world* is one self-contained simulated sky with its own
+operators, a clock that keeps moving, and the whole pipeline on every step:
+look-ahead screening, Pc, signal abstraction, Ed25519 signing into the
+hash-chained ledger, deconfliction, periodic federation rounds and
+reputation. Three ship in `worlds/`:
+
+| World | Fleet | What it shows |
+|---|---|---|
+| `sandbox` | Alpha / Beta / Gamma + 25 debris (synthetic), 60x | The federated path working: a new satellite is launched onto a crossing path every 45 simulated minutes, both operators sign, a joint plan is agreed every time. |
+| `adversarial` | Same fleets, Gamma is a spoofer, 60x | Gamma withholds most of its own encounters (its partner must move alone) and invents fake ones. Its reputation falls to the degraded/suspended tiers within a few rounds, and reputation-weighted aggregation stops listening to it while the plain mean is pulled off. |
+| `real_leo` | Every active LEO satellite in CelesTrak's `active` catalogue (`data/active.tle`, 15,079 objects below 2,000 km), grouped by name into six members: Starlink, Kuiper, OneWeb, Planet (FLOCK, SKYSAT, PELICAN, TANAGER), Spire (LEMUR) and ICEYE. The other 2,646 objects belong to no member. Foster Pc, 30x | Nothing engineered. It starts at the catalogue epoch and replays its first 7 days on a loop, because TLEs go stale within days. Screening the first 24 hours found 3 real cross-operator approaches above the Pc threshold (all Planet x Starlink), plus 49 within one operator and 14 with non-members. The cross-operator ones go through the federation. With only Starlink, Kuiper and OneWeb (the old setup) there were none: their shells don't overlap. |
+
+```bash
+python scripts/run_worlds.py              # starts all three + the live dashboard at http://127.0.0.1:8765/
+python scripts/run_worlds.py sandbox      # just one
+python scripts/run_worlds.py --reset      # start every world from scratch
+python scripts/run_world.py --world worlds/adversarial.json --ticks 720 --fast   # one simulated day, no pacing
+```
+
+How it stays running:
+
+* **One OS process per world**, supervised by `run_worlds.py`, which
+  restarts a world that exits (backing off 2 s, 4 s ... 60 s) and serves the
+  live page (`docs/live_worlds.html`) on 127.0.0.1 only. "Always running"
+  means for as long as the launcher is up; stop it and every world resumes
+  from the same tick next time.
+* **Look-ahead screening.** Each tick screens only the slice of time
+  `lookahead_s` ahead (30 min for the synthetic worlds, 2 h for real LEO), so
+  every encounter is found once, with a fixed warning time, and then counts
+  down. Consecutive slices overlap by two steps and duplicates are dropped by
+  pair and time.
+* **Checkpoint every tick.** Ledger and events are appended first, then an
+  atomic `checkpoint.json` records how much of them is valid, then
+  `state.json` for the dashboard. All output lives in `runs/<world>/`
+  (git-ignored).
+* **Deterministic.** Every random choice is keyed by what it decides (world,
+  seed, encounter id, round) rather than by call order, and ledger
+  timestamps are simulated time. Running 200 ticks straight and running 100,
+  stopping, and running 100 more produce the same ledger hash for hash
+  (`tests/test_world.py`). A tick that wrote ledger lines but died before
+  its checkpoint is rolled back and redone, never duplicated.
+* **Tamper-evident on disk.** On resume the ledger is rebuilt from
+  `ledger.jsonl`, every hash re-derived and every signature re-checked
+  against the operators' public keys. Editing one entry flags the world as
+  tampered on the dashboard.
+* **Config changes are explicit.** A checkpoint records a fingerprint of the
+  settings that define the world; changing the fleet or the rules refuses
+  to resume until `--reset`. `speed` (pacing only) can be changed freely.
+
+Measured, one simulated day per world (720 / 720 / 576 ticks):
+
+| World | Shared encounters | Joint plans | Partner moved alone | Private / in-house | Final reputation | Time per tick |
+|---|---|---|---|---|---|---|
+| sandbox | 19 | 19 | 0 | 12 | Alpha 0.83, Beta 0.81, Gamma 0.74 | ~1 ms |
+| adversarial | 42 | 24 | 18 | 6 | Alpha 0.85, Beta 0.86, **Gamma 0.27** | ~1 ms |
+| real_leo | 0 | 0 | 0 | 445 | all 0.67 (nothing to judge) | ~0.35 s |
+
+Simplifications, stated plainly: agreed manoeuvres are recorded but never
+applied to the orbits; the miss distance is the closest 30 s grid sample,
+as everywhere else in the project; simulated operators' signing keys are
+derived from the world name and seed so a restarted world reproduces its
+own signatures (a real operator generates its key locally); and the
+engineered encounters use `fleets.inject_actor_encounter`, whose closed-form
+inversion often misses at steep crossing angles, so each injection is
+verified against SGP4 and retried at another angle or satellite until the
+two objects really meet.
+
+## Full-stack app: what each party sees
+
+`app/` turns the always-running worlds into a web application whose point is
+the federation's privacy claim: **the same encounter looks different to each
+party, and the central server never sees a single position.** Each login gets
+a different view, filtered on the server (`src/satcollision/views.py`) before
+anything is sent:
+
+| Login | Sees | Never gets |
+|---|---|---|
+| Operator (`alpha`, `beta`, `gamma`; `starlink`, `kuiper`, `oneweb`, `planet`, `spire`, `iceye` in Real LEO) | Its own digital twin: its satellites' exact positions, speeds and orbits; its own close approaches with exact miss distance and Pc; its agreed manoeuvre; the alerts the federation forwarded, cut to its reputation tier (`reputation.tailor_alert`) | Anyone else's precise state (others appear as the public catalogue shows them, rounded to 0.5 deg, about 50 km), close approaches it isn't in, others' reputations |
+| `federation` | Exactly what the central server holds: signed abstracted signals, count reports, the hash-chained ledger, reputation and the aggregate. Its globe is deliberately empty. | Any position, velocity, orbit, miss distance or exact Pc |
+| `observer` | Ground truth, for the demo, plus **Compare**: one encounter side by side as each operator's twin and the server hold it, built from the same filters as their own logins | |
+
+The filtering is enforced, not cosmetic: an operator token asking for another
+operator's orbit, for the observer's comparison, or for a world it does not
+operate in gets 403 (`tests/test_app.py`, including one that walks every key
+of the federation view to check no position-like field appears). Every one of
+those tests runs twice: once with one process playing every part, once with
+the separate processes described next.
+
+Stack: FastAPI backend (JWT logins, live updates over a WebSocket per world),
+React + TypeScript + three.js frontend built with Vite, served by the backend
+as static files.
+
+### Every operator and the federation as separate processes
+
+By default (`APP_PROCESSES=1`) the app does not compute everyone's view from
+one shared simulation. Each world runs as separate OS processes
+(`src/satcollision/processes.py`):
+
+| Process | Module | Holds | Never has |
+|---|---|---|---|
+| One per operator (Alpha, Beta, Gamma; Starlink, Kuiper, OneWeb) | `twin_node.py` | Its own private Ed25519 key (generated there on first start, kept in `runs/<world>/nodes/<op>/identity.key`); its twin's screening of its own satellites against the public catalogue, with exact miss distance and Pc; its own decisions (share or not, what to report) | Any other operator's key, results or decisions |
+| The federation | `federation_node.py` + `federation_service.py` | Pinned public keys, the signed hash-chained ledger, attestations, reputation, rounds | Any orbit code at all: it never imports sgp4, scipy, the fleets or the world, and `GET /health` lists what it has loaded (tests check it is nothing) |
+| The app | `app/backend` + `World(mode="sky")` | The simulation's ground truth (only the observer login sees it) and the clock | Any operator's private key |
+
+Each tick runs in lockstep. The sky ticks. Every twin ticks to the same
+point, then signs what it decided to share and posts it to the federation.
+The federation then asks every twin which of the new encounter ids involve
+it, one yes or no per operator and encounter. When a reporting period ends,
+each twin signs its count report and the federation scores the round. An
+operator's dashboard is served by its own process, which fetches its alerts
+from the federation with a request signed by its own key. The federation
+cuts those alerts to that operator's tier before they leave its process.
+
+The federation pins the first key each operator registers, and later refuses
+a different key for that operator. A message that doesn't verify against the
+pinned key gets a 403. All traffic stays on 127.0.0.1 and needs a per-start
+internal token. Each process checkpoints into its own folder, so after a
+restart a twin that fell behind catches up, and if a process dies the app
+restarts the group.
+
+With the same seed, both modes produce identical reputations, ledgers,
+encounters and manoeuvre plans. `tests/test_nodes.py` (8 tests) checks this,
+along with the key isolation, the forgery refusals and resume.
+`APP_PROCESSES=0` runs everything in one process. It is faster, and
+`scripts/run_worlds.py` still uses it.
+
+```bash
+# Option 1: Docker (nothing else to install)
+docker compose up --build          # http://localhost:8000, demo password "demo"
+
+# Option 2: plain Python (the frontend build in app/frontend/dist is served as-is)
+pip install -r app/requirements.txt
+python -m app.backend              # http://127.0.0.1:8000
+
+# Frontend development (hot reload on :5173, API proxied to :8000)
+cd app/frontend && npm install && npm run dev
+```
+
+The app and `scripts/run_worlds.py` both advance the worlds in `runs/`; run one
+or the other, not both at once. Configuration is by environment variable
+(`APP_HOST`, `APP_PORT`, `APP_SECRET`, `APP_USERS_FILE`, `APP_SPEED`,
+`APP_WORLDS`, `APP_RESET`, `APP_PROCESSES`; see `app/backend/main.py`).
+
+**Deploying later.** The Docker image is the deployable unit; any host that
+runs a container (a small VPS, Render, Railway, Fly.io) works. Before
+exposing it: set `APP_SECRET` to a long random string, and point
+`APP_USERS_FILE` at a JSON file of real accounts
+(`{"alpha": {"role": "operator", "operator": "Alpha", "password": "..."}}`),
+which also switches off the one-click demo logins. Put it behind HTTPS (the
+host's TLS or a reverse proxy); the WebSocket follows automatically. The Real
+LEO world needs `data/active.tle` in the build context. Download it with
+`curl -o data/active.tle "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle"`
+and refresh it now and then, because TLEs go stale. When the world's definition
+changes, the app moves the old run aside to `runs/<world>.old-<time>` and starts fresh.
+
+Simplifications: passwords in the users file are compared as plain text
+(fine for a demo, hash them before real users); "public catalogue" positions
+are the true positions rounded, standing in for the km-level error of real
+public TLEs. All the processes run on one computer and talk over localhost,
+where a real deployment would put each twin on its operator's own machine.
+Each twin screens against the same public TLEs that everyone can download, so
+its "private" knowledge is its results and decisions, not better orbits. The
+key file stands in for a hardware key store.
 
 ## Figures for the report
 
