@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Worlds · Conjunction Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<!--
+  Live view of the always-running worlds (scripts/run_worlds.py).
+  It polls runs/index.json and runs/<world>/state.json, which the world
+  processes rewrite after every tick. Served by the launcher; opening this
+  file straight from disk cannot read those files.
+-->
+<style>
+  :root{
+    --bg:#0a0e17; --panel:#121a2b; --panel-2:#0f1626; --border:#243252; --border-soft:#1a2440;
+    --text:#e7ecf8; --text-dim:#8793b3; --text-faint:#5c6892;
+    --accent:#3ec6ff; --danger:#ff5468; --success:#31d6a8; --warn:#ffc247; --debris:#66708f;
+    --fdisplay:'Big Shoulders Display',system-ui,sans-serif;
+    --fbody:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+    --fmono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--fbody);font-size:14px;line-height:1.45}
+  .wrap{max-width:1360px;margin:0 auto;padding:20px 16px 48px}
+  header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .eyebrow{font-family:var(--fmono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  h1{font-family:var(--fdisplay);font-weight:800;font-size:40px;line-height:.95;margin:4px 0 0;letter-spacing:.01em}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:var(--panel);border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:8px 14px;
+       font:500 14px var(--fbody);cursor:pointer;display:flex;align-items:center;gap:8px}
+  .tab:hover{color:var(--text)}
+  .tab[aria-selected="true"]{color:var(--text);border-color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--text-faint);flex:none}
+  .dot.on{background:var(--success);box-shadow:0 0 0 3px rgba(49,214,168,.18)}
+  .dot.off{background:var(--danger)}
+  .panel{background:var(--panel);border:1px solid var(--border-soft);border-radius:12px;padding:16px}
+  .panel h2{font:600 12px var(--fmono);letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);margin:0 0 12px}
+  .intro{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;margin-bottom:16px}
+  .intro p{margin:0;color:var(--text-dim);max-width:820px}
+  .clock{font-family:var(--fmono);text-align:right;white-space:nowrap}
+  .clock .big{font-size:22px;color:var(--text)}
+  .clock .small{font-size:12px;color:var(--text-faint)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+  .tile{background:var(--panel);border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px}
+  .tile .v{font:700 26px var(--fdisplay);letter-spacing:.02em}
+  .tile .l{font-size:12px;color:var(--text-dim)}
+  .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+  .stack{display:grid;gap:16px;align-content:start}
+  canvas{display:block;width:100%;border-radius:8px;background:#06101f}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:12px;color:var(--text-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:10px;height:10px;border-radius:50%}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{font:500 11px var(--fmono);letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+  td{padding:7px 8px;border-bottom:1px solid var(--border-soft);vertical-align:top}
+  td.num{font-family:var(--fmono);text-align:right;white-space:nowrap}
+  .scroll{max-height:340px;overflow:auto}
+  .pill{display:inline-block;font:500 11px var(--fmono);padding:2px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .p-federated{color:var(--accent)} .p-internal{color:var(--text-dim)} .p-private{color:var(--text-faint)}
+  .p-unilateral{color:var(--danger)} .p-maneuver{color:var(--success)} .p-federation_round{color:var(--warn)}
+  .p-injection{color:#b48cff} .p-cycle,.p-start,.p-resume{color:var(--text-dim)} .p-private_watch{color:var(--text-faint)}
+  .feed{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
+  .feed li{padding:9px 2px;border-bottom:1px solid var(--border-soft);display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+  .feed .t{font:12px var(--fmono);color:var(--text-faint);grid-column:1/-1;display:flex;gap:10px;align-items:center}
+  .feed .x{grid-column:1/-1;color:var(--text)}
+  .reps{display:grid;gap:8px;margin-bottom:12px}
+  .rep{display:grid;grid-template-columns:90px 1fr 54px 82px;gap:10px;align-items:center;font-size:13px}
+  .bar{height:8px;background:var(--panel-2);border-radius:4px;overflow:hidden;border:1px solid var(--border-soft)}
+  .bar i{display:block;height:100%}
+  .tier{font:11px var(--fmono);text-transform:uppercase;letter-spacing:.06em}
+  .t-full{color:var(--success)} .t-standard{color:var(--accent)} .t-degraded{color:var(--warn)} .t-suspended{color:var(--danger)}
+  .muted{color:var(--text-faint)}
+  .note{font-size:12px;color:var(--text-faint);margin-top:10px}
+  .banner{display:none;background:#2a1a10;border:1px solid #6b4314;color:#ffd9a8;border-radius:10px;padding:12px 14px;margin-bottom:16px}
+  .banner.show{display:block}
+  .banner code{font-family:var(--fmono)}
+  svg text{font-family:var(--fmono);font-size:10px;fill:var(--text-faint)}
+  .mono{font-family:var(--fmono)}
+  @media (max-width:980px){.grid{grid-template-columns:1fr}.intro{grid-template-columns:1fr}.clock{text-align:left}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="eyebrow">Federated digital twins · always running</div>
+      <h1>Live Worlds</h1>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist"></nav>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <section class="intro">
+    <p id="desc">Waiting for the worlds to report in…</p>
+    <div class="clock">
+      <div class="big" id="simtime">—</div>
+      <div class="small" id="clockline">—</div>
+      <div class="small" id="health">—</div>
+    </div>
+  </section>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="grid">
+    <div class="stack">
+      <div class="panel">
+        <h2>Sky now <span class="muted" id="mapnote"></span></h2>
+        <canvas id="map" width="1200" height="600" aria-label="Map of satellite positions"></canvas>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="panel">
+        <h2>Upcoming encounters <span class="muted" id="upcount"></span></h2>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>In</th><th>Pair</th><th>Miss</th><th>Pc</th><th>Handling</th><th>Plan</th></tr></thead>
+            <tbody id="upcoming"></tbody>
+          </table>
+        </div>
+        <p class="note">Found by look-ahead screening, so each one appears with the same warning time and counts down. Miss distance is the closest 30 s sample.</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="panel">
+        <h2>Reputation</h2>
+        <div class="reps" id="reps"></div>
+        <svg id="repchart" viewBox="0 0 400 150" width="100%" height="150" role="img" aria-label="Reputation over federation rounds"></svg>
+      </div>
+      <div class="panel">
+        <h2>Last federation round</h2>
+        <div id="round" class="muted">No round yet.</div>
+      </div>
+      <div class="panel">
+        <h2>What happened</h2>
+        <ul class="feed" id="feed"></ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const POLL_MS = 2000;
+  const COLORS = ["#3ec6ff", "#31d6a8", "#ffc247", "#b48cff", "#ff8fb1", "#7dd3fc"];
+  const DEBRIS = "#66708f";
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  let index = null, current = null, state = null, runsPath = "/runs";
+  try { current = localStorage.getItem("liveWorld"); } catch (e) {}
+
+  // Optional Earth background: data/earth_texture.jpg (equirectangular) if present.
+  const earth = new Image(); let earthOk = false;
+  earth.onload = () => { earthOk = true; draw(); };
+  earth.src = "/data/earth_texture.jpg";
+
+  const fmtDur = s => {
+    s = Math.max(0, Math.round(s));
+    if (s >= 86400) return (s / 86400).toFixed(1) + " d";
+    if (s >= 3600) return Math.floor(s / 3600) + " h " + String(Math.floor(s % 3600 / 60)).padStart(2, "0") + " m";
+    if (s >= 60) return Math.floor(s / 60) + " m " + String(s % 60).padStart(2, "0") + " s";
+    return s + " s";
+  };
+  const fmtMiss = km => km < 1 ? Math.round(km * 1000) + " m" : km.toFixed(2) + " km";
+  const colorOf = op => op === "DEBRIS" ? DEBRIS : COLORS[Math.max(0, (state ? state.world.operators : []).indexOf(op)) % COLORS.length];
+  const ago = iso => (Date.now() - Date.parse(iso)) / 1000;
+
+  async function getJSON(url) {
+    const r = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), {cache: "no-store"});
+    if (!r.ok) throw new Error(r.status + " " + url);
+    return r.json();
+  }
+
+  function renderTabs() {
+    const tabs = $("tabs");
+    tabs.innerHTML = "";
+    for (const w of index.worlds) {
+      const b = document.createElement("button");
+      b.className = "tab"; b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", w.name === current ? "true" : "false");
+      b.innerHTML = `<span class="dot ${w.running ? "on" : "off"}"></span>${esc(w.title)}`;
+      b.onclick = () => { current = w.name; try { localStorage.setItem("liveWorld", current); } catch (e) {} state = null; renderTabs(); poll(); };
+      tabs.appendChild(b);
+    }
+  }
+
+  function banner(html) { const b = $("banner"); b.innerHTML = html || ""; b.classList.toggle("show", !!html); }
+
+  async function poll() {
+    try {
+      index = await getJSON("/runs/index.json");
+      runsPath = index.runs_path || "/runs";
+    } catch (e) {
+      banner("Can't reach the launcher. Start it from the project folder with <code>python scripts/run_worlds.py</code> and open the address it prints.");
+      return;
+    }
+    if (!index.worlds.length) return;
+    if (!current || !index.worlds.some(w => w.name === current)) current = index.worlds[0].name;
+    renderTabs();
+    const meta = index.worlds.find(w => w.name === current);
+    try {
+      state = await getJSON(`${runsPath}/${current}/state.json`);
+    } catch (e) {
+      banner(`<b>${esc(meta.title)}</b> hasn't written its first state yet.` +
+             (meta.log_tail && meta.log_tail.length ? `<br><code>${esc(meta.log_tail.slice(-2).join(" | "))}</code>` : ""));
+      return;
+    }
+    const stale = ago(state.clock.wall_updated);
+    if (!meta.running) {
+      banner(`<b>${esc(meta.title)}</b> is not running right now (restarts so far: ${meta.restarts}). Showing its last saved state.` +
+             (meta.log_tail && meta.log_tail.length ? `<br><code>${esc(meta.log_tail.slice(-2).join(" | "))}</code>` : ""));
+    } else if (!state.ledger.verified_on_load) {
+      banner("The signed ledger failed verification when this world resumed: entries on disk were changed.");
+    } else banner("");
+    render(stale);
+  }
+
+  function tile(v, l) { return `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`; }
+
+  function render(stale) {
+    const s = state, w = s.world, c = s.counters, k = s.clock;
+    $("desc").textContent = w.description;
+    $("simtime").textContent = k.sim_time.replace("T", " ").replace("Z", " UTC");
+    const days = k.total_sim_s / 86400;
+    $("clockline").textContent = `${w.speed}× · tick ${k.tick} · ${days.toFixed(2)} simulated days` + (w.cycle_days ? ` · week ${k.cycle + 1}` : "");
+    const lag = k.wall_interval_s ? Math.max(0, stale - k.wall_interval_s) : 0;
+    $("health").textContent = `updated ${Math.max(0, Math.round(stale))}s ago · ${k.last_tick_compute_s}s per tick` + (lag > 10 ? " · running behind" : "");
+
+    const total = Object.values(w.fleet).reduce((a, b) => a + b, 0);
+    $("tiles").innerHTML =
+      tile(total.toLocaleString(), `objects · ${esc(w.source)}`) +
+      tile(c.encounters_shared, "cross-operator encounters shared") +
+      tile(c.maneuvers_agreed, "joint manoeuvre plans agreed") +
+      tile(c.unilateral, "one side stayed silent") +
+      tile(c.internal + c.private_watch, "kept private or handled in-house") +
+      tile(c.federation_rounds, "federation rounds") +
+      tile(s.ledger.entries.toLocaleString(), `signed ledger entries · ${s.ledger.verified_on_load ? "chain intact" : "TAMPERED"}`);
+
+    // Upcoming
+    $("upcount").textContent = s.n_upcoming ? `(${s.n_upcoming})` : "";
+    $("upcoming").innerHTML = s.upcoming.length ? s.upcoming.map(e => {
+      const plan = e.plan ? `${esc(e.plan.primary)} +, ${esc(e.plan.secondary)} −`
+                 : e.handling === "federated" ? `<span class="p-unilateral">no joint plan</span>` : `<span class="muted">—</span>`;
+      return `<tr><td class="num">${fmtDur(e.time_to_tca_s)}</td>
+        <td>${esc(e.labels[0])} × ${esc(e.labels[1])}${e.engineered ? ' <span class="muted">(engineered)</span>' : ""}<div class="muted">${esc(e.geometry)}, ${e.rel_speed_km_s} km/s</div></td>
+        <td class="num">${fmtMiss(e.miss_km)}</td><td class="num">${e.pc.toExponential(1)}</td>
+        <td><span class="pill p-${esc(e.handling)}">${esc(e.handling)}</span></td><td>${plan}</td></tr>`;
+    }).join("") : `<tr><td colspan="6" class="muted">Nothing inside the ${fmtDur(w.lookahead_s)} look-ahead right now.</td></tr>`;
+
+    // Reputation bars
+    const ops = w.operators;
+    $("reps").innerHTML = ops.map((op, i) => {
+      const sc = s.reputation.scores[op], tier = s.reputation.tiers[op];
+      const b = w.behaviours[op] !== "honest" ? ` <span class="muted">(${esc(w.behaviours[op])})</span>` : "";
+      return `<div class="rep"><span>${esc(op)}${b}</span><span class="bar"><i style="width:${(sc * 100).toFixed(0)}%;background:${COLORS[i % COLORS.length]}"></i></span>
+              <span class="mono">${sc.toFixed(2)}</span><span class="tier t-${tier}">${tier}</span></div>`;
+    }).join("");
+    drawRepChart(ops, s.reputation.history);
+
+    // Last round
+    const r = s.rounds[0];
+    if (r) {
+      const rows = ops.map(op => `<tr><td>${esc(op)}</td><td class="num">${r.reports[op].join(" / ")}</td>
+        <td class="num">${r.evidence[op].matched}/${r.evidence[op].involved}</td><td class="num">${r.evidence[op].unbacked}</td></tr>`).join("");
+      const err = r.errors && Object.keys(r.errors).length
+        ? `<p class="note">Distance from what the honest operators reported: plain mean <b>${r.errors.mean}</b>, trimmed mean <b>${r.errors.trimmed_mean}</b>, reputation-weighted <b>${r.errors.reputation_weighted}</b>.</p>` : "";
+      $("round").innerHTML = `<div class="muted" style="margin-bottom:8px">Round ${r.round} · ${esc(r.sim_time.replace("T", " ").replace("Z", ""))} · ${r.n_signals} signals</div>
+        <table><thead><tr><th>Operator</th><th>Report (thr/elev/crit)</th><th>Matched</th><th>Fake</th></tr></thead><tbody>${rows}</tbody></table>${err}`;
+    }
+
+    // Feed
+    $("feed").innerHTML = s.events.slice(0, 80).map(e =>
+      `<li><div class="t"><span class="pill p-${esc(e.kind)}">${esc(e.kind.replaceAll("_", " "))}</span>${esc(e.sim_time.replace("T", " ").replace("Z", ""))}</div><div class="x">${esc(e.text)}</div></li>`).join("");
+
+    // Legend
+    const tr = s.tracks;
+    $("legend").innerHTML = tr.operators.map((op, i) =>
+      `<span><i class="sw" style="background:${colorOf(op)}"></i>${esc(op)} (${(w.fleet[op] || 0).toLocaleString()})</span>`).join("") +
+      `<span><i class="sw" style="background:var(--danger)"></i>in an upcoming encounter</span>`;
+    $("mapnote").textContent = tr.points.length < total ? `(${tr.points.length.toLocaleString()} of ${total.toLocaleString()} drawn)` : "";
+    draw();
+  }
+
+  function drawRepChart(ops, hist) {
+    const svg = $("repchart"), W = 400, H = 150, L = 28, B = 18, T = 6, R = 6;
+    if (!hist.length) { svg.innerHTML = `<text x="${L}" y="70">reputation history appears after the first round</text>`; return; }
+    const n = hist.length, x = i => L + (n === 1 ? 0 : i * (W - L - R) / (n - 1)), y = v => T + (1 - v) * (H - T - B);
+    let g = "";
+    for (const v of [0, 0.25, 0.45, 0.7, 1]) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="#1a2440"/><text x="0" y="${y(v) + 3}">${v}</text>`;
+    g += `<text x="${L}" y="${H - 3}">round ${Math.max(1, n - 99)}</text><text x="${W - R - 40}" y="${H - 3}">now</text>`;
+    ops.forEach((op, i) => {
+      const pts = hist.map((h, j) => `${x(j).toFixed(1)},${y(h[op] ?? 0.5).toFixed(1)}`).join(" ");
+      g += `<polyline fill="none" stroke="${COLORS[i % COLORS.length]}" stroke-width="2" points="${pts}"/>`;
+    });
+    svg.innerHTML = g;
+  }
+
+  function draw() {
+    const cv = $("map"), ctx = cv.getContext("2d"), W = cv.width, H = cv.height;
+    ctx.clearRect(0, 0, W, H);
+    if (earthOk) { ctx.globalAlpha = 0.55; ctx.drawImage(earth, 0, 0, W, H); ctx.globalAlpha = 1; }
+    else { ctx.fillStyle = "#06101f"; ctx.fillRect(0, 0, W, H); }
+    ctx.strokeStyle = "rgba(120,140,190,.18)"; ctx.lineWidth = 1;
+    for (let lon = -180; lon <= 180; lon += 30) { const px = (lon + 180) / 360 * W; ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke(); }
+    for (let lat = -60; lat <= 60; lat += 30) { const py = (90 - lat) / 180 * H; ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke(); }
+    if (!state) return;
+    const tr = state.tracks, P = p => [(p[1] + 180) / 360 * W, (90 - p[0]) / 180 * H];
+    const big = tr.points.length < 300;
+    for (const p of tr.points) {
+      if (p[3] === 2) continue;
+      const op = tr.operators[p[2]], [x, y] = P(p);
+      ctx.fillStyle = colorOf(op);
+      ctx.globalAlpha = op === "DEBRIS" ? 0.7 : 0.9;
+      ctx.beginPath(); ctx.arc(x, y, p[3] === 1 ? 4 : (big ? 3 : 1.6), 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    for (const p of tr.points) {
+      if (p[3] !== 2) continue;
+      const [x, y] = P(p);
+      ctx.fillStyle = "#ff5468"; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+      ctx.strokeStyle = "rgba(255,84,104,.45)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, 0, 7); ctx.stroke();
+    }
+  }
+
+  poll();
+  setInterval(poll, POLL_MS);
+})();
+</script>
+</body>
+</html>
