@@ -1,0 +1,15 @@
+{
+  "name": "adversarial",
+  "title": "Adversarial",
+  "description": "The sandbox fleets, but Gamma is dishonest: it reports only some of its own encounters and invents fake ones. Watch its reputation fall and its influence on the federation's aggregate disappear.",
+  "fleet": {"type": "synthetic", "n_debris": 25, "seed": 43},
+  "speed": 60,
+  "tick_sim_s": 120,
+  "screening_step_s": 30,
+  "lookahead_s": 1800,
+  "pc_model": "circular",
+  "federation_period_s": 7200,
+  "injection": {"every_s": 1800, "tca_after_s": 2100, "miss_km": [0.0, 1.2]},
+  "behaviours": {"Gamma": "spoofer"},
+  "seed": 43
+}

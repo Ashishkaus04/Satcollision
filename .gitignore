@@ -4,3 +4,8 @@ src/satcollision/__pycache__
 .env
 scripts/__pycache__
 tests/__pycache__
+runs/
+app/frontend/node_modules/
+app/frontend/dist/
+__pycache__/
+*.tsbuildinfo
