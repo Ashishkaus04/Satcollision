@@ -1,0 +1,14 @@
+{
+  "name": "sandbox",
+  "title": "Sandbox",
+  "description": "Three synthetic operators (Alpha, Beta, Gamma) plus debris. A new satellite is launched onto a crossing path every 45 simulated minutes, so there is always an encounter on the way. Every operator is honest.",
+  "fleet": {"type": "synthetic", "n_debris": 25, "seed": 42},
+  "speed": 60,
+  "tick_sim_s": 120,
+  "screening_step_s": 30,
+  "lookahead_s": 1800,
+  "pc_model": "circular",
+  "federation_period_s": 7200,
+  "injection": {"every_s": 2700, "tca_after_s": 2100, "miss_km": [0.0, 1.4]},
+  "seed": 42
+}

@@ -1,0 +1,11 @@
+# Runtime for the full-stack app (app/). Lighter than the root
+# requirements.txt: the app does not need torch/opacus/matplotlib.
+sgp4>=2.23
+numpy>=1.26
+scipy>=1.11
+cryptography>=42.0
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30
+pyjwt>=2.8
+httpx>=0.27          # tests only (FastAPI TestClient)
+pytest>=7.4          # tests only

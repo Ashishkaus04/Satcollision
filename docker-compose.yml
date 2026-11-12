@@ -1,0 +1,22 @@
+# Local run of the full-stack app:  docker compose up --build
+# then open http://localhost:8000  (demo logins, password "demo").
+#
+# Worlds keep their state in the named volume, so stopping and starting the
+# container resumes every world where it left off. Deploying later: set a
+# real APP_SECRET and an APP_USERS_FILE (see README) instead of demo users.
+services:
+  app:
+    build: .
+    image: satcollision-app
+    ports:
+      - "127.0.0.1:8000:8000"   # this computer only; drop "127.0.0.1:" to share on a network
+    environment:
+      APP_SECRET: ${APP_SECRET:-change-me-to-a-long-random-string-before-deploying}
+      # APP_USERS_FILE: /srv/users.json
+      # APP_SPEED: "1"
+    volumes:
+      - worlds-state:/srv/runs
+      # - ./users.json:/srv/users.json:ro
+    restart: unless-stopped
+volumes:
+  worlds-state:
