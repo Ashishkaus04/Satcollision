@@ -364,7 +364,7 @@ def median_tle_age_days(objects: list[TrackedObject], at: datetime.datetime) -> 
 
 
 def _screen_real_catalogue(objects, hours: float, step_s: float, screening_km: float,
-                           pc_model=None, epoch=None):
+                           pc_model=None, epoch=None, screening: str = "grid"):
     """Propagate and screen a real catalogue, returning (conjunctions, start time).
 
     ``epoch=None`` keeps the original behaviour (start now). Pass
@@ -375,6 +375,17 @@ def _screen_real_catalogue(objects, hours: float, step_s: float, screening_km: f
     start = resolve_epoch(objects, epoch)
     _, jd0, fr0 = _epoch_from_calendar(start.year, start.month, start.day,
                                        start.hour + start.minute / 60.0)
+    if screening == "refined":
+        # Closest approach between samples; see screening.py for why the grid
+        # screen under-counts fast (crossing, head-on) encounters.
+        from .screening import screen_conjunctions_refined
+        conjunctions = screen_conjunctions_refined(
+            objects, jd0, fr0, duration_s=hours * 3600.0, step_s=step_s,
+            screening_distance_km=screening_km, pc_model=pc_model,
+            pair_filter=lambda a, b: a.operator != b.operator)
+        return conjunctions, start
+    if screening != "grid":
+        raise ValueError(f"screening must be 'grid' or 'refined', not {screening!r}")
     propagation = propagate_window(objects, jd0, fr0, duration_s=hours * 3600.0, step_s=step_s)
     conjunctions = screen_conjunctions(objects, propagation, screening_distance_km=screening_km,
                                        pc_model=pc_model)
@@ -391,6 +402,7 @@ def run_split_catalog_evaluation(
     horizon_s: float = SCREENING_HORIZON_S,
     pc_model=None,
     epoch=None,
+    screening: str = "grid",
 ) -> dict:
     """Headline run: one real catalogue, split into two operators by parity.
 
@@ -401,7 +413,8 @@ def run_split_catalog_evaluation(
     """
     objects = assign_two_operators(load_tle_file(tle_path, operator_name=catalog_name))
     conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
-                                                      pc_model=pc_model, epoch=epoch)
+                                                      pc_model=pc_model, epoch=epoch,
+                                                      screening=screening)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
@@ -418,6 +431,7 @@ def run_split_catalog_evaluation(
         "window_hours": hours,
         "step_s": step_s,
         "screening_km": screening_km,
+        "screening": screening,
         "pc_threshold": threshold,
         "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,
@@ -448,6 +462,7 @@ def run_cross_constellation_evaluation(
     horizon_s: float = SCREENING_HORIZON_S,
     pc_model=None,
     epoch=None,
+    screening: str = "grid",
 ) -> dict:
     """The honest negative: two genuinely different operators, unmodified.
 
@@ -459,7 +474,8 @@ def run_cross_constellation_evaluation(
     objects = (load_tle_file(tle_path_a, operator_name=name_a)
                + load_tle_file(tle_path_b, operator_name=name_b))
     conjunctions, computed_at = _screen_real_catalogue(objects, hours, step_s, screening_km,
-                                                      pc_model=pc_model, epoch=epoch)
+                                                      pc_model=pc_model, epoch=epoch,
+                                                      screening=screening)
 
     cross_operator = [c for c in conjunctions if c.object_a.operator != c.object_b.operator]
     above_threshold = [c for c in cross_operator if c.pc >= threshold]
@@ -476,6 +492,7 @@ def run_cross_constellation_evaluation(
         "window_hours": hours,
         "step_s": step_s,
         "screening_km": screening_km,
+        "screening": screening,
         "pc_threshold": threshold,
         "pc_model": pc_model_name(pc_model),
         "screening_horizon_h": horizon_s / 3600.0,

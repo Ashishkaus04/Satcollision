@@ -1,0 +1,600 @@
+{
+ "css-starlink1095-2021": [
+  {
+   "as_of": "2021-06-25T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-25T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-25T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-26T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-26T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-26T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-26T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-27T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-06-27T06:00:00+00:00",
+   "lead_h": 86.4,
+   "age_a_h": 9.6,
+   "age_b_h": 1.6,
+   "pred_tca": "2021-06-30T20:25:46+00:00",
+   "miss_km": 3.614,
+   "rel_speed": 10.52,
+   "n_approaches_50km": 7,
+   "pc_circ_full": 3.592174888205913e-15,
+   "pc_circ_nocoop": 1.0754065917015175e-05,
+   "pc_foster8_full": 6.730346866581412e-23,
+   "pc_foster8_nocoop": 2.352287663680713e-05
+  },
+  {
+   "as_of": "2021-06-27T12:00:00+00:00",
+   "lead_h": 90.4,
+   "age_a_h": 2.5,
+   "age_b_h": 1.5,
+   "pred_tca": "2021-07-01T06:24:03+00:00",
+   "miss_km": 10.118,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 9.619790467697776e-93,
+   "pc_circ_nocoop": 7.529906559002092e-08,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 3.1101647605308083e-50
+  },
+  {
+   "as_of": "2021-06-27T18:00:00+00:00",
+   "lead_h": 84.4,
+   "age_a_h": 8.5,
+   "age_b_h": 7.5,
+   "pred_tca": "2021-07-01T06:24:03+00:00",
+   "miss_km": 10.118,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 9.619790467697776e-93,
+   "pc_circ_nocoop": 7.529906559002092e-08,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 3.1101647605308083e-50
+  },
+  {
+   "as_of": "2021-06-28T00:00:00+00:00",
+   "lead_h": 78.4,
+   "age_a_h": 14.5,
+   "age_b_h": 13.5,
+   "pred_tca": "2021-07-01T06:24:03+00:00",
+   "miss_km": 10.118,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 9.619790467697776e-93,
+   "pc_circ_nocoop": 7.529906559002092e-08,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 3.1101647605308083e-50
+  },
+  {
+   "as_of": "2021-06-28T06:00:00+00:00",
+   "lead_h": 68.6,
+   "age_a_h": 2.0,
+   "age_b_h": 1.1,
+   "pred_tca": "2021-07-01T02:34:11+00:00",
+   "miss_km": 11.312,
+   "rel_speed": 10.51,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 5.7304362955576915e-115,
+   "pc_circ_nocoop": 1.0816063915900009e-08,
+   "pc_foster8_full": 1.3433153421566735e-74,
+   "pc_foster8_nocoop": 6.386314674980363e-07
+  },
+  {
+   "as_of": "2021-06-28T12:00:00+00:00",
+   "lead_h": 62.6,
+   "age_a_h": 8.0,
+   "age_b_h": 7.1,
+   "pred_tca": "2021-07-01T02:34:11+00:00",
+   "miss_km": 11.312,
+   "rel_speed": 10.51,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 5.7304362955576915e-115,
+   "pc_circ_nocoop": 3.6055336009934588e-09,
+   "pc_foster8_full": 1.3433153421566735e-74,
+   "pc_foster8_nocoop": 3.328288482977454e-07
+  },
+  {
+   "as_of": "2021-06-28T18:00:00+00:00",
+   "lead_h": 61.2,
+   "age_a_h": 14.0,
+   "age_b_h": 0.8,
+   "pred_tca": "2021-07-01T07:10:22+00:00",
+   "miss_km": 6.381,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 3.4001197597076264e-39,
+   "pc_circ_nocoop": 1.5095134084366108e-06,
+   "pc_foster8_full": 5.160540623608531e-26,
+   "pc_foster8_nocoop": 1.6185818998601642e-05
+  },
+  {
+   "as_of": "2021-06-29T00:00:00+00:00",
+   "lead_h": 56.7,
+   "age_a_h": 4.1,
+   "age_b_h": 2.2,
+   "pred_tca": "2021-07-01T08:42:22+00:00",
+   "miss_km": 9.293,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 7.916904294997475e-79,
+   "pc_circ_nocoop": 2.753751602259699e-08,
+   "pc_foster8_full": 1.5000768918863801e-82,
+   "pc_foster8_nocoop": 6.69653553894977e-08
+  },
+  {
+   "as_of": "2021-06-29T06:00:00+00:00",
+   "lead_h": 49.2,
+   "age_a_h": 2.7,
+   "age_b_h": 3.6,
+   "pred_tca": "2021-07-01T07:10:19+00:00",
+   "miss_km": 8.367,
+   "rel_speed": 10.51,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 1.2269805858735871e-64,
+   "pc_circ_nocoop": 3.111572233909376e-08,
+   "pc_foster8_full": 8.693604520341087e-47,
+   "pc_foster8_nocoop": 8.90638584516802e-07
+  },
+  {
+   "as_of": "2021-06-29T12:00:00+00:00",
+   "lead_h": 42.4,
+   "age_a_h": 0.8,
+   "age_b_h": 1.9,
+   "pred_tca": "2021-07-01T06:24:15+00:00",
+   "miss_km": 9.446,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 7,
+   "pc_circ_full": 2.5141642519127635e-81,
+   "pc_circ_nocoop": 5.376076124499029e-10,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 1.693422549407799e-112
+  },
+  {
+   "as_of": "2021-06-29T18:00:00+00:00",
+   "lead_h": 36.4,
+   "age_a_h": 5.4,
+   "age_b_h": 7.9,
+   "pred_tca": "2021-07-01T06:24:15+00:00",
+   "miss_km": 9.448,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 7,
+   "pc_circ_full": 2.319792695148866e-81,
+   "pc_circ_nocoop": 3.7908142942583057e-11,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 1.7340507137206066e-139
+  },
+  {
+   "as_of": "2021-06-30T00:00:00+00:00",
+   "lead_h": 28.9,
+   "age_a_h": 11.4,
+   "age_b_h": 3.2,
+   "pred_tca": "2021-07-01T04:52:12+00:00",
+   "miss_km": 9.745,
+   "rel_speed": 10.49,
+   "n_approaches_50km": 7,
+   "pc_circ_full": 2.5976085044807935e-86,
+   "pc_circ_nocoop": 6.482082862450553e-14,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 2.3667152144304543e-203
+  },
+  {
+   "as_of": "2021-06-30T06:00:00+00:00",
+   "lead_h": 25.2,
+   "age_a_h": 0.7,
+   "age_b_h": 4.6,
+   "pred_tca": "2021-07-01T07:10:05+00:00",
+   "miss_km": 4.808,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 6.708541992835649e-24,
+   "pc_circ_nocoop": 2.3233154382805375e-07,
+   "pc_foster8_full": 5.327899463278502e-41,
+   "pc_foster8_nocoop": 3.7505405304409545e-09
+  },
+  {
+   "as_of": "2021-06-30T12:00:00+00:00",
+   "lead_h": 19.2,
+   "age_a_h": 0.3,
+   "age_b_h": 2.9,
+   "pred_tca": "2021-07-01T07:10:05+00:00",
+   "miss_km": 6.926,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 1.744762298634496e-45,
+   "pc_circ_nocoop": 3.172245854941701e-12,
+   "pc_foster8_full": 1.0810626641422438e-51,
+   "pc_foster8_nocoop": 6.28079388958068e-13
+  },
+  {
+   "as_of": "2021-06-30T18:00:00+00:00",
+   "lead_h": 13.2,
+   "age_a_h": 6.3,
+   "age_b_h": 8.9,
+   "pred_tca": "2021-07-01T07:10:05+00:00",
+   "miss_km": 6.926,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 1.744762298634496e-45,
+   "pc_circ_nocoop": 9.377951570699299e-16,
+   "pc_foster8_full": 1.0810626641422438e-51,
+   "pc_foster8_nocoop": 4.547277704732139e-17
+  },
+  {
+   "as_of": "2021-07-01T00:00:00+00:00",
+   "lead_h": 10.2,
+   "age_a_h": 0.3,
+   "age_b_h": 1.1,
+   "pred_tca": "2021-07-01T10:14:10+00:00",
+   "miss_km": 5.056,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 5.0475398354317865e-26,
+   "pc_circ_nocoop": 7.113037089976212e-12,
+   "pc_foster8_full": 3.7503647642413958e-34,
+   "pc_foster8_nocoop": 2.626627045851114e-14
+  },
+  {
+   "as_of": "2021-07-01T06:00:00+00:00",
+   "lead_h": 4.2,
+   "age_a_h": 3.1,
+   "age_b_h": 4.1,
+   "pred_tca": "2021-07-01T10:14:10+00:00",
+   "miss_km": 4.803,
+   "rel_speed": 10.5,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 7.318261154488563e-24,
+   "pc_circ_nocoop": 5.189844567139478e-16,
+   "pc_foster8_full": 3.014610697518674e-17,
+   "pc_foster8_nocoop": 7.7932411293979e-12
+  },
+  {
+   "as_of": "2021-07-01T12:00:00+00:00",
+   "lead_h": 3.6,
+   "age_a_h": 2.9,
+   "age_b_h": 5.5,
+   "pred_tca": "2021-07-01T15:36:15+00:00",
+   "miss_km": 7.325,
+   "rel_speed": 10.47,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 1.9753927484293342e-50,
+   "pc_circ_nocoop": 7.851972251556015e-34,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 0.0
+  },
+  {
+   "as_of": "2021-07-01T18:00:00+00:00",
+   "lead_h": 0.7,
+   "age_a_h": 5.8,
+   "age_b_h": 11.5,
+   "pred_tca": "2021-07-01T18:40:17+00:00",
+   "miss_km": 29.152,
+   "rel_speed": 10.47,
+   "n_approaches_50km": 2,
+   "pc_circ_full": 0.0,
+   "pc_circ_nocoop": 0.0,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 0.0
+  },
+  {
+   "as_of": "2021-07-02T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  }
+ ],
+ "css-starlink2305-2021": [
+  {
+   "as_of": "2021-10-14T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-14T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-14T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-14T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-15T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-15T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-15T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-15T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-16T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-16T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-16T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-16T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-17T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-17T06:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-17T12:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-17T18:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-18T00:00:00+00:00",
+   "note": "no approach under 50 km in window"
+  },
+  {
+   "as_of": "2021-10-18T06:00:00+00:00",
+   "lead_h": 98.4,
+   "age_a_h": 0.0,
+   "age_b_h": 2.0,
+   "pred_tca": "2021-10-22T08:26:49+00:00",
+   "miss_km": 14.45,
+   "rel_speed": 1.59,
+   "n_approaches_50km": 5,
+   "pc_circ_full": 3.506071908659769e-185,
+   "pc_circ_nocoop": 2.0373131440579775e-10,
+   "pc_foster8_full": 1.8455425385853524e-267,
+   "pc_foster8_nocoop": 2.629916837179259e-12
+  },
+  {
+   "as_of": "2021-10-18T12:00:00+00:00",
+   "lead_h": 88.6,
+   "age_a_h": 3.0,
+   "age_b_h": 8.0,
+   "pred_tca": "2021-10-22T04:36:13+00:00",
+   "miss_km": 5.165,
+   "rel_speed": 1.59,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 5.337993017464956e-27,
+   "pc_circ_nocoop": 5.0468187611509365e-06,
+   "pc_foster8_full": 1.5796673249399852e-149,
+   "pc_foster8_nocoop": 5.060669164411798e-09
+  },
+  {
+   "as_of": "2021-10-18T18:00:00+00:00",
+   "lead_h": 81.8,
+   "age_a_h": 3.4,
+   "age_b_h": 4.0,
+   "pred_tca": "2021-10-22T03:50:24+00:00",
+   "miss_km": 3.135,
+   "rel_speed": 1.59,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 2.3129241522675813e-12,
+   "pc_circ_nocoop": 1.2870488332416134e-05,
+   "pc_foster8_full": 5.661178180540353e-189,
+   "pc_foster8_nocoop": 4.004484145800519e-10
+  },
+  {
+   "as_of": "2021-10-19T00:00:00+00:00",
+   "lead_h": 72.0,
+   "age_a_h": 9.4,
+   "age_b_h": 2.0,
+   "pred_tca": "2021-10-22T00:00:00+00:00",
+   "miss_km": 3.871,
+   "rel_speed": 1.58,
+   "n_approaches_50km": 11,
+   "pc_circ_full": 7.749730704385592e-17,
+   "pc_circ_nocoop": 9.667027365864196e-06,
+   "pc_foster8_full": 3.421076109155323e-59,
+   "pc_foster8_nocoop": 1.68794537347756e-06
+  },
+  {
+   "as_of": "2021-10-19T06:00:00+00:00",
+   "lead_h": 46.8,
+   "age_a_h": 1.5,
+   "age_b_h": 8.0,
+   "pred_tca": "2021-10-21T04:47:18+00:00",
+   "miss_km": 1.989,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 22,
+   "pc_circ_full": 2.930756031574601e-07,
+   "pc_circ_nocoop": 2.8586995303752966e-05,
+   "pc_foster8_full": 1.3569089108239767e-07,
+   "pc_foster8_nocoop": 7.134191298570088e-05
+  },
+  {
+   "as_of": "2021-10-19T12:00:00+00:00",
+   "lead_h": 40.8,
+   "age_a_h": 7.5,
+   "age_b_h": 14.0,
+   "pred_tca": "2021-10-21T04:47:18+00:00",
+   "miss_km": 1.989,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 22,
+   "pc_circ_full": 2.930756031574601e-07,
+   "pc_circ_nocoop": 3.178206976891976e-05,
+   "pc_foster8_full": 1.3569089108239767e-07,
+   "pc_foster8_nocoop": 7.748290184854624e-05
+  },
+  {
+   "as_of": "2021-10-19T18:00:00+00:00",
+   "lead_h": 23.3,
+   "age_a_h": 3.7,
+   "age_b_h": 4.0,
+   "pred_tca": "2021-10-20T17:16:21+00:00",
+   "miss_km": 6.816,
+   "rel_speed": 1.56,
+   "n_approaches_50km": 19,
+   "pc_circ_full": 3.5106381083530574e-44,
+   "pc_circ_nocoop": 1.4832559979197575e-10,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 8.131979269245879e-58
+  },
+  {
+   "as_of": "2021-10-20T00:00:00+00:00",
+   "lead_h": 34.2,
+   "age_a_h": 2.5,
+   "age_b_h": 4.0,
+   "pred_tca": "2021-10-21T10:10:13+00:00",
+   "miss_km": 0.471,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 27,
+   "pc_circ_full": 0.0005132311475451828,
+   "pc_circ_nocoop": 6.762831630849532e-05,
+   "pc_foster8_full": 0.0008792124443893361,
+   "pc_foster8_nocoop": 0.00017914320818388622
+  },
+  {
+   "as_of": "2021-10-20T06:00:00+00:00",
+   "lead_h": 28.2,
+   "age_a_h": 0.4,
+   "age_b_h": 6.0,
+   "pred_tca": "2021-10-21T10:10:14+00:00",
+   "miss_km": 0.432,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 27,
+   "pc_circ_full": 0.0005508706911335468,
+   "pc_circ_nocoop": 8.771088375109628e-05,
+   "pc_foster8_full": 0.0009890128979192206,
+   "pc_foster8_nocoop": 0.00023063179616951014
+  },
+  {
+   "as_of": "2021-10-20T12:00:00+00:00",
+   "lead_h": 22.2,
+   "age_a_h": 6.4,
+   "age_b_h": 12.0,
+   "pred_tca": "2021-10-21T10:10:14+00:00",
+   "miss_km": 0.432,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 27,
+   "pc_circ_full": 0.0005508706911335468,
+   "pc_circ_nocoop": 0.0001170646516571627,
+   "pc_foster8_full": 0.0009890128979192206,
+   "pc_foster8_nocoop": 0.0003024123952660424
+  },
+  {
+   "as_of": "2021-10-20T18:00:00+00:00",
+   "lead_h": 16.9,
+   "age_a_h": 4.7,
+   "age_b_h": 4.0,
+   "pred_tca": "2021-10-21T10:56:18+00:00",
+   "miss_km": 6.353,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 20,
+   "pc_circ_full": 7.087986675023047e-39,
+   "pc_circ_nocoop": 6.7099502626722525e-12,
+   "pc_foster8_full": 3.101902778284914e-51,
+   "pc_foster8_nocoop": 3.301883154523452e-14
+  },
+  {
+   "as_of": "2021-10-21T00:00:00+00:00",
+   "lead_h": 10.9,
+   "age_a_h": 3.5,
+   "age_b_h": 10.0,
+   "pred_tca": "2021-10-21T10:56:18+00:00",
+   "miss_km": 6.403,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 13,
+   "pc_circ_full": 1.9773806627961215e-39,
+   "pc_circ_nocoop": 8.171199765602231e-16,
+   "pc_foster8_full": 1.6357831295610746e-51,
+   "pc_foster8_nocoop": 1.7723101336561152e-19
+  },
+  {
+   "as_of": "2021-10-21T06:00:00+00:00",
+   "lead_h": 4.9,
+   "age_a_h": 3.0,
+   "age_b_h": 6.0,
+   "pred_tca": "2021-10-21T10:56:19+00:00",
+   "miss_km": 7.257,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 9,
+   "pc_circ_full": 1.4583622717507627e-49,
+   "pc_circ_nocoop": 1.9333082933824613e-29,
+   "pc_foster8_full": 1.6864920404862898e-77,
+   "pc_foster8_nocoop": 7.89380087645437e-45
+  },
+  {
+   "as_of": "2021-10-21T12:00:00+00:00",
+   "lead_h": 0.5,
+   "age_a_h": 9.0,
+   "age_b_h": 12.0,
+   "pred_tca": "2021-10-21T12:28:30+00:00",
+   "miss_km": 30.619,
+   "rel_speed": 1.57,
+   "n_approaches_50km": 1,
+   "pc_circ_full": 0.0,
+   "pc_circ_nocoop": 0.0,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 0.0
+  },
+  {
+   "as_of": "2021-10-21T18:00:00+00:00",
+   "lead_h": 6.0,
+   "age_a_h": 4.1,
+   "age_b_h": 4.0,
+   "pred_tca": "2021-10-22T00:00:30+00:00",
+   "miss_km": 5.573,
+   "rel_speed": 1.58,
+   "n_approaches_50km": 8,
+   "pc_circ_full": 8.353848945976232e-31,
+   "pc_circ_nocoop": 1.470287564169471e-17,
+   "pc_foster8_full": 5.047833785934739e-62,
+   "pc_foster8_nocoop": 5.75574496506932e-33
+  },
+  {
+   "as_of": "2021-10-22T00:00:00+00:00",
+   "lead_h": 0.8,
+   "age_a_h": 2.7,
+   "age_b_h": 10.0,
+   "pred_tca": "2021-10-22T00:46:35+00:00",
+   "miss_km": 6.5,
+   "rel_speed": 1.58,
+   "n_approaches_50km": 4,
+   "pc_circ_full": 1.6087442797776164e-40,
+   "pc_circ_nocoop": 6.614478933257706e-37,
+   "pc_foster8_full": 0.0,
+   "pc_foster8_nocoop": 0.0
+  }
+ ]
+}
