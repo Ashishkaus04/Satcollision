@@ -1,0 +1,263 @@
+{
+ "model": "circular",
+ "sig_far_combined_km": 3.0,
+ "n_scored": 672047,
+ "n_dangerous": 16752,
+ "days_scored": 4.0,
+ "dangerous_per_day": 4188.0,
+ "nocoop": {
+  "recall": 1.0,
+  "median_lead_h": 23.5,
+  "false_alarms_per_day": 1486.25,
+  "median_lead_h_ci95": [
+   23.5,
+   23.583333333333332
+  ]
+ },
+ "full_sharing": {
+  "median_lead_h": 72.0,
+  "pairs_exposed": "all"
+ },
+ "two_stage": [
+  {
+   "tau_pre": 0.0001,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 37.25,
+   "alerts_per_day": 5675.75,
+   "alert_precision": 0.7378760516231335,
+   "secure_evals_per_day": 27027.75,
+   "mpc_hours_per_day": 1.5015416666666668,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    37.25,
+    37.333333333333336
+   ]
+  },
+  {
+   "tau_pre": 3e-05,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 14666.25,
+   "alert_precision": 0.28555356686269495,
+   "secure_evals_per_day": 130121.25,
+   "mpc_hours_per_day": 7.228958333333333,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 1e-05,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 32184.75,
+   "alert_precision": 0.13012373872719224,
+   "secure_evals_per_day": 289662.75,
+   "mpc_hours_per_day": 16.092375,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 3e-06,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 53176.25,
+   "alert_precision": 0.0787569638701488,
+   "secure_evals_per_day": 478586.25,
+   "mpc_hours_per_day": 26.588125,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 1e-06,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 72767.75,
+   "alert_precision": 0.05755296817614946,
+   "secure_evals_per_day": 654909.75,
+   "mpc_hours_per_day": 36.383875,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 3e-07,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 90828.25,
+   "alert_precision": 0.046109002430411244,
+   "secure_evals_per_day": 817454.25,
+   "mpc_hours_per_day": 45.414125,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 1e-07,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 105246.5,
+   "alert_precision": 0.03979229713102098,
+   "secure_evals_per_day": 947218.5,
+   "mpc_hours_per_day": 52.62325,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 3e-08,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 121544.5,
+   "alert_precision": 0.03445651592626569,
+   "secure_evals_per_day": 1093900.5,
+   "mpc_hours_per_day": 60.77225,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  },
+  {
+   "tau_pre": 1e-08,
+   "recall": 1.0,
+   "recall_24h": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 136879.25,
+   "alert_precision": 0.03059631025155383,
+   "secure_evals_per_day": 1231913.25,
+   "mpc_hours_per_day": 68.439625,
+   "recall_ci95": [
+    1.0,
+    1.0
+   ],
+   "median_lead_h_ci95": [
+    72.0,
+    72.0
+   ]
+  }
+ ],
+ "public_prefilter": [
+  {
+   "tau_pre": 0.0001,
+   "recall": 1.0,
+   "median_lead_h": 23.5,
+   "alerts_per_day": 5674.25,
+   "secure_evals_per_day": 18212.75
+  },
+  {
+   "tau_pre": 3e-05,
+   "recall": 1.0,
+   "median_lead_h": 58.5,
+   "alerts_per_day": 14666.25,
+   "secure_evals_per_day": 102815.75
+  },
+  {
+   "tau_pre": 1e-05,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 34400.5,
+   "secure_evals_per_day": 309604.5
+  },
+  {
+   "tau_pre": 3e-06,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 74863.0,
+   "secure_evals_per_day": 673767.0
+  },
+  {
+   "tau_pre": 1e-06,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 104780.25,
+   "secure_evals_per_day": 943022.25
+  },
+  {
+   "tau_pre": 3e-07,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 136879.25,
+   "secure_evals_per_day": 1231913.25
+  },
+  {
+   "tau_pre": 1e-07,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 136879.25,
+   "secure_evals_per_day": 1231913.25
+  },
+  {
+   "tau_pre": 3e-08,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 136879.25,
+   "secure_evals_per_day": 1231913.25
+  },
+  {
+   "tau_pre": 1e-08,
+   "recall": 1.0,
+   "median_lead_h": 72.0,
+   "alerts_per_day": 136879.25,
+   "secure_evals_per_day": 1231913.25
+  }
+ ],
+ "cache_meta": {
+  "tle": "data/starlink.tle",
+  "catalog": "Starlink",
+  "n_objects": 10713,
+  "start_utc": "2026-09-10T07:58:00+00:00",
+  "hours": 168.0,
+  "step_s": 30.0,
+  "screen_km": 10.0,
+  "runtime_s": 430.9,
+  "median_tle_age_days": 0.59,
+  "ownership": "NORAD parity split",
+  "screening": "refined"
+ }
+}
