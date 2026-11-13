@@ -11,7 +11,7 @@ direct panel questioning.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 260 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 269 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
 python3 scripts/run_worlds.py                      # always-running worlds + live dashboard
 docker compose up --build                          # full-stack app: operator / federation / observer views
@@ -145,7 +145,7 @@ Dockerfile, docker-compose.yml  one-container build of the app
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (260 tests) covering the above
+tests/                 pytest suite (269 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
@@ -641,15 +641,52 @@ What changes compared with `real_leo` (`src/satcollision/tle_history.py`,
   than 10 robust sigma (and 1 km) off the previous one are summarised in the
   log once per simulated hour. About 4% of all sets qualify, mostly
   Starlink's.
-* **Agreed avoidance manoeuvres are applied to the truth.** When both
-  operators sign, each satellite gets a small along-track burn at detection
-  time. Its displacement follows the Clohessy-Wiltshire solution and is
-  sized so that the satellite has moved `maneuver_shift_km` (1 km) by TCA,
-  then mirrored back to zero afterwards (a return burn). The plan fixes
-  only that the two moves are opposite. Which way counts as "+" is taken
-  from public data alone, so both sides agree: whichever opens up the
-  predicted miss. The observer view and the log show the true miss before
-  and after (typical burns are a few cm/s).
+* **Agreed avoidance manoeuvres are optimised and applied to the truth**
+  (`src/satcollision/avoidance.py`). When both operators sign, the world
+  picks *when* each satellite burns, *which way* and *how much*: the least
+  weighted fuel (sum of |dv|^2 / capability) that brings Pc under
+  `target_pc` (1e-6). The Pc is evaluated at the *precise* combined
+  covariance (0.5 km), because at the public covariance (8 to 20 km
+  along-track at a day old) the Pc is diluted and a tiny burn would "meet"
+  the target. Burn effects come from the Clohessy-Wiltshire solution,
+  projected into the encounter plane.
+  * **No private orbits are exchanged.** The plan's direction and size
+    depend only on orbit geometry, which public element sets give well
+    enough, so both operators compute the same plan from public data. Each
+    then delivers its own part from its own precise orbit.
+  * **The secure check.** A yes/no check ("target met?") applies both burns
+    to both precise orbits; if it fails, the plan is scaled up and checked
+    again. In the federation this runs inside the secure step and returns
+    only the yes/no. Here it is simulated, and callers use nothing but the
+    answer.
+  * **Also accounted for:** burn-execution error (5% of the planned shift),
+    min/max dv, the burn-time window, low-thrust finite burns for Starlink
+    (1.7e-4 m/s², a few minutes per burn), satellites without propulsion
+    (`no_propulsion`: the other side does all the moving, or "cannot avoid"
+    is logged), and fairness weights.
+  * **Secondary conjunctions.** Each manoeuvred track is re-screened
+    against the public catalogue until its return burn, and a burn time
+    that creates an approach over Pc 1e-5 is swapped for the next cheapest.
+  * **After the burn.** The displacement is mirrored back to zero after TCA
+    (a return burn). The operator view shows its own burn (dv, RTN
+    components, time, Pc before -> target, check result). The observer sees
+    total dv and the Pc at the precise covariance before -> after.
+
+  On the first 12.5 h of the week (`"avoidance": {"avoidance": "fixed"}`
+  restores the earlier rule: 1 km along-track at detection):
+
+  | | Fixed 1 km rule | Optimised |
+  |---|---|---|
+  | Joint plans | 4 | 4 |
+  | Pc <= 1e-6 at the precise covariance after the burns | 1 of 4 | 4 of 4 |
+  | True miss after | 0.77 - 2.09 km | 1.89 - 2.72 km |
+  | Total dv (both satellites, all plans) | 0.43 m/s | 1.04 m/s |
+  | Secondary approaches avoided | - | 5 |
+
+  The fixed rule spends less fuel because it is not sized to any target:
+  three of its four plans leave Pc between 4e-5 and 3e-4. Where both meet
+  the target, the optimised plan uses less (synthetic fast crossing: 25 vs
+  30 cm/s per satellite for the same 1.9 km).
 * **Truth the twins missed.** The sky also screens the truth (refined
   screen, on the nearest set at the middle of each tick's window, because
   the SGP4 refinement needs one set per object). The miss is then

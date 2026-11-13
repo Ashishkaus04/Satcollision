@@ -81,7 +81,16 @@ export default function OperatorView({ view, session }: { view: any; session: Se
                         {e.other_tle_age_h != null && <div className="muted small">other: {e.other_tle_age_h} h old TLE, σT {e.sigma_other_rtn_km[1]} km</div>}</td>
                       <td><Pill kind={e.handling}>{e.handling}</Pill>{e.handling === "federated" && !e.i_signalled && <div className="bad small">I stayed silent</div>}</td>
                       <td>{e.plan ? <span className="good">move {e.plan.direction === "+" ? "+" : "−"} (partner {e.plan.partner_direction === "+" ? "+" : "−"})</span>
-                        : e.handling === "federated" ? <span className="bad">no joint plan</span> : <span className="muted">own call</span>}</td>
+                        : e.handling === "federated" ? <span className="bad">no joint plan</span> : <span className="muted">own call</span>}
+                        {e.my_burn && (
+                          <div className="small">
+                            burn {(e.my_burn.dv_m_s * 100).toFixed(1)} cm/s at {e.my_burn.burn_time.slice(11, 16)}
+                            {e.my_burn.finite_burn_s != null && <> (low thrust, {e.my_burn.finite_burn_s} s)</>}
+                            <div className="muted">RTN {e.my_burn.dv_rtn_m_s.map((x: number) => (x * 100).toFixed(1)).join(" / ")} cm/s · Pc {e.my_burn.pc_before.toExponential(1)} → ≤ {e.my_burn.target_pc.toExponential(0)} {e.my_burn.target_met ? "(secure check: met)" : "(secure check: NOT met)"}</div>
+                            {e.my_burn.secondary_avoided > 0 && <div className="muted">{e.my_burn.secondary_avoided} secondary approach(es) avoided</div>}
+                            {e.my_burn.secondary_risk && <div className="bad">every burn time makes a secondary approach</div>}
+                          </div>
+                        )}</td>
                     </tr>
                   ))}
                   {!view.encounters.length && <tr><td colSpan={7} className="muted">Nothing involving {me} yet.</td></tr>}

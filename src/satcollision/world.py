@@ -1279,6 +1279,10 @@ class World:
         sig_a, sig_b = signal_for(a), signal_for(b)
         if self.mode == "operator":
             self._handle_own_side(record, c, sig_a, sig_b, warning_s)
+            if record.get("i_signalled") and self.history.avoid["avoidance"] != "fixed":
+                mine = self._my_burn_record(c, tca_jd, jd_now)
+                if mine is not None:
+                    record["my_burn"] = mine
             return
         sent = []
         for sig in (sig_a, sig_b):
@@ -1300,7 +1304,10 @@ class World:
                 "secondary": plan.secondary_object, "secondary_operator": plan.secondary_operator,
             }
             self.counters["maneuvers_agreed"] += 1
-            moved = self._apply_avoidance(record, c, tca_jd)
+            if self.history.avoid["avoidance"] == "fixed":
+                moved = self._apply_avoidance(record, c, tca_jd)
+            else:
+                moved = self._apply_optimal(record, c, tca_jd)
             self._event(
                 "maneuver",
                 f"{a.label} x {b.label}: both operators signed ({c.geometry_class}, "
@@ -1325,6 +1332,292 @@ class World:
                 encounter=encounter_id, operators=[a.operator, b.operator], silent=quiet,
             )
         self.encounters.append(record)
+
+    # ---- optimised avoidance (avoidance.py) ----
+
+    def _can_burn(self, obj: TrackedObject) -> bool:
+        prefixes = self.history.avoid["no_propulsion"].get(obj.operator, [])
+        name = (obj.meta.get("name") or "").upper()
+        return not any(name.startswith(p.upper()) for p in prefixes)
+
+    def _public_sigma(self, obj: TrackedObject, at_jd: float, jd_now: float):
+        H = self.history
+        row = self._row_of[obj.norad_id]
+        k = int(H.hist.asof(np.array([row]), jd_now)[0])
+        return H.sigma_public(row, max(k, int(H.hist.start[row])), at_jd)[0]
+
+    def _public_n(self, obj: TrackedObject, jd_now: float) -> float:
+        H = self.history
+        row = self._row_of[obj.norad_id]
+        k = int(H.hist.asof(np.array([row]), jd_now)[0])
+        return H.hist.satrec(max(k, int(H.hist.start[row]))).no_kozai / 60.0
+
+    def _avoid_agreement(self, c: Conjunction, tca_jd: float, jd_now: float):
+        """The joint plan both operators compute from public data alone."""
+        from .avoidance import agree, burn_grid, capability
+        from .history_world import refine_tca
+        from .pc import rtn_covariance
+        A = self.history.avoid
+        a, b = c.object_a, c.object_b
+        fns = [self._state_fn(o, "public", jd_now) for o in (a, b)]
+        found = refine_tca(fns[0], fns[1], tca_jd, self.history.settings["refine_window_s"])
+        if found is None:
+            return None
+        _, tca, ra, va, rb, vb = found
+        states = {a.operator: (ra, va), b.operator: (rb, vb)}
+        # The target is set on the precise covariance (each owner's own
+        # sigma): planning against the public one would sit in the dilution
+        # region, where a public Pc under 1e-6 needs almost no separation.
+        p = self.history.precise
+        covs = {a.operator: rtn_covariance(ra, va, p, p, p), b.operator: rtn_covariance(rb, vb, p, p, p)}
+        caps = capability({a.operator: self._can_burn(a), b.operator: self._can_burn(b)},
+                          A["fairness"], A["weights"])
+        try:
+            return agree(states, (a.operator, b.operator),
+                         {a.operator: self._public_n(a, jd_now), b.operator: self._public_n(b, jd_now)},
+                         covs, caps, tca, burn_grid(jd_now, tca, A), float(A["target_pc"]),
+                         exec_error_frac=float(A["exec_error_frac"]), k_margin=float(A["k_margin"]))
+        except ValueError:
+            return None   # too slow for the encounter-plane model
+
+    def _secure_check(self, c: Conjunction, tca_jd: float, jd_now: float, agreement):
+        """Stand-in for the federation's secure step: with both operators'
+        burns applied to both *precise* orbits, is Pc under the precise
+        combined covariance at or below the target? In a deployment this runs
+        inside the MPC on secret-shared inputs and both sides learn only the
+        yes/no; here it is computed from the simulation's own ephemerides, and
+        callers use nothing but its answer (plus the Pc values the observer
+        is shown). Returns (met, pc_before, pc_after, miss_after_km)."""
+        from .avoidance import burn_grid, candidate_burns
+        from .history_world import apply_maneuvers, pc_with, refine_tca
+        H = self.history
+        A = H.avoid
+        p = (H.precise,) * 3
+        own = [self._state_fn(o, "own", jd_now) for o in (c.object_a, c.object_b)]
+        found = refine_tca(own[0], own[1], tca_jd, H.settings["refine_window_s"])
+        if found is None:
+            return False, None, None, None
+        pc_before = pc_with(found[2], found[3], found[4], found[5], p, p)
+        burns = []
+        for obj, sign, (r, v) in ((c.object_a, 1.0, (found[2], found[3])), (c.object_b, -1.0, (found[4], found[5]))):
+            if obj.operator not in agreement.push:
+                continue
+            n = obj.satrec.no_kozai / 60.0
+            accel = A["low_thrust_accel_m_s2"].get(obj.operator)
+            cands = candidate_burns(agreement, obj.operator, sign, (r, v), n, found[1],
+                                    burn_grid(jd_now, found[1], A), A, accel)
+            if cands:
+                tb, dv, _ = cands[0]
+                burns.append({"norad_id": obj.norad_id, "burn_jd": tb, "tca_jd": found[1], "n_rad_s": n,
+                              "dv_rtn_km_s": [float(x) for x in dv], "accel_m_s2": accel})
+        fns = []
+        for o, base in zip((c.object_a, c.object_b), own):
+            def fn(jd, base=base, nid=o.norad_id):
+                r, v, ok = base(jd)
+                r = r[None].copy()
+                apply_maneuvers(r, v[None], np.array([nid]), np.asarray(jd, dtype=float), burns)
+                return r[0], v, ok
+            fns.append(fn)
+        after = refine_tca(fns[0], fns[1], tca_jd, H.settings["refine_window_s"])
+        if after is None:
+            return False, pc_before, None, None
+        pc_after = pc_with(after[2], after[3], after[4], after[5], p, p)
+        return pc_after <= float(A["target_pc"]), pc_before, pc_after, after[0]
+
+    def _verified_agreement(self, c: Conjunction, tca_jd: float, jd_now: float):
+        """The public plan, scaled up until the secure step says the target
+        is met under the precise covariance (the public miss can be kilometres
+        off, so the first plan is not always enough)."""
+        agreement = self._avoid_agreement(c, tca_jd, jd_now)
+        if agreement is None or not agreement.needed or not agreement.possible:
+            return agreement, None
+        base = {op: v.copy() for op, v in agreement.push.items()}
+        info = {"scale": 1.0, "checks": 0, "met": False}
+        for scale in (1.0, 1.5, 2.25, 3.4, 5.0, 7.5, 11.0):
+            agreement.push = {op: v * scale for op, v in base.items()}
+            met, before, after, miss = self._secure_check(c, tca_jd, jd_now, agreement)
+            info.update(scale=scale, checks=info["checks"] + 1, met=met,
+                        pc_precise_before=before, pc_precise_after=after)
+            if met:
+                break
+        agreement.planned_dv_m_s = {op: v * info["scale"] for op, v in agreement.planned_dv_m_s.items()}
+        return agreement, info
+
+    def _plan_my_burn(self, c: Conjunction, tca_jd: float, jd_now: float, op: str, agreement):
+        """One operator's burn delivering its agreed push, from its own orbit
+        and the public catalogue only (its twin computes exactly this too)."""
+        from .avoidance import SideBurn, burn_grid, candidate_burns, secondary_approaches
+        from .history_world import pc_with, refine_tca
+        H = self.history
+        A = H.avoid
+        obj = c.object_a if c.object_a.operator == op else c.object_b
+        other = c.object_b if obj is c.object_a else c.object_a
+        if op not in agreement.push or not np.any(agreement.push[op]):
+            return None
+        own = self._state_fn(obj, "own", jd_now)
+        mine_first = obj is c.object_a
+        fns = (own, self._state_fn(other, "public", jd_now)) if mine_first else \
+              (self._state_fn(other, "public", jd_now), own)
+        found = refine_tca(fns[0], fns[1], tca_jd, H.settings["refine_window_s"])
+        if found is None:
+            return None
+        tca = found[1]
+        state = (found[2], found[3]) if mine_first else (found[4], found[5])
+        n = obj.satrec.no_kozai / 60.0
+        accel = A["low_thrust_accel_m_s2"].get(op)
+        grid = burn_grid(jd_now, tca, A)
+        cands = candidate_burns(agreement, op, 1.0 if mine_first else -1.0, state, n, tca, grid, A, accel)
+        if not cands:
+            return None
+        # The public catalogue near this satellite's track, for the secondary check.
+        step = float(A["secondary_step_s"])
+        lo = min(t for t, _, _ in cands)
+        span = lo + np.arange(0.0, (2.0 * tca - 2.0 * lo) * 86400.0 + step, step) / 86400.0
+        r_own, _, _ = own(span)
+        near = set()
+        for s in range(0, len(span), 40):
+            r, _, ok, _ = H.predicted(self._rows, jd_now, span[s:s + 40])
+            d = np.linalg.norm(r - r_own[None, s:s + 40], axis=2)
+            near.update(np.nonzero(np.any((d < 16.0 * step / 2.0 + 100.0) & ok, axis=1))[0].tolist())
+        idx = sorted(near)
+        rows, ids = self._rows[idx], self._ids[idx]
+
+        def others(jd):
+            r, v, ok, _ = H.predicted(rows, jd_now, jd)
+            return ids, r, v, ok
+
+        def pc_fn(oid, r, v, ro, vo):
+            row = self._row_of[oid]
+            k = int(H.hist.asof(np.array([row]), jd_now)[0])
+            if k < 0:
+                return 0.0
+            return pc_with(r, v, ro, vo, (H.precise,) * 3, H.sigma_public(row, k, tca)[0])
+
+        avoided, first = [], None
+        for i, (tb, dv, short) in enumerate(cands[:6]):
+            m = {"norad_id": obj.norad_id, "burn_jd": tb, "tca_jd": tca, "n_rad_s": n,
+                 "dv_rtn_km_s": [float(x) for x in dv], "accel_m_s2": accel}
+            bad = secondary_approaches(own, others, m, (tb, 2.0 * tca - tb), step, self.cfg.watch_miss_km,
+                                       {obj.norad_id, other.norad_id}, pc_fn, float(A["secondary_pc"]))
+            burn = SideBurn(op, obj.norad_id, tb, tca, np.asarray(dv), n, accel,
+                            agreement.planned_dv_m_s.get(op, 0.0), short, i + 1, list(avoided))
+            if not bad:
+                return burn
+            avoided.extend(bad)
+            first = first or burn
+        first.secondary_avoided = avoided
+        first.tried = -len(cands[:6])   # every burn time tried makes a secondary approach: flagged
+        return first
+
+    def _my_burn_record(self, c: Conjunction, tca_jd: float, jd_now: float) -> Optional[dict]:
+        """Operator mode: my half of the burn, ready for when the partner signs."""
+        agreement, check = self._verified_agreement(c, tca_jd, jd_now)
+        if agreement is None or not agreement.needed or not agreement.possible:
+            return None
+        b = self._plan_my_burn(c, tca_jd, jd_now, self.me, agreement)
+        if b is None:
+            return None
+        mine = c.object_a if c.object_a.operator == self.me else c.object_b
+        return {**self._burn_summary(b, mine.label), "pc_before": agreement.pc_before,
+                "target_pc": float(self.history.avoid["target_pc"]),
+                "target_met": bool(check and check["met"]), "plan_scale": check["scale"] if check else 1.0}
+
+    @staticmethod
+    def _burn_summary(b, label: str) -> dict:
+        from .history_world import dt_of
+        out = {"satellite": label, "dv_m_s": round(b.dv_m_s, 4),
+               "dv_rtn_m_s": [round(float(x) * 1000.0, 4) for x in b.dv_rtn_km_s],
+               "burn_time": _iso(dt_of(b.burn_jd)),
+               "lead_min": round((b.tca_jd - b.burn_jd) * 1440.0, 1),
+               "planned_dv_m_s": round(b.planned_dv_m_s, 4), "shortfall": round(b.shortfall, 3),
+               "candidates_tried": abs(b.tried), "secondary_risk": b.tried < 0,
+               "secondary_avoided": len(b.secondary_avoided)}
+        if b.accel_m_s2:
+            out["finite_burn_s"] = round(b.dv_m_s / b.accel_m_s2, 0)
+        return out
+
+    def _public_after(self, c: Conjunction, tca_jd: float, jd_now: float, maneuvers: List[dict]):
+        """Miss and Pc from public data with the burns applied."""
+        from .history_world import apply_maneuvers, pc_with, refine_tca
+        fns = []
+        for o in (c.object_a, c.object_b):
+            base = self._state_fn(o, "public", jd_now)
+
+            def fn(jd, base=base, nid=o.norad_id):
+                r, v, ok = base(jd)
+                r = r[None].copy()
+                apply_maneuvers(r, v[None], np.array([nid]), np.asarray(jd, dtype=float), maneuvers)
+                return r[0], v, ok
+            fns.append(fn)
+        found = refine_tca(fns[0], fns[1], tca_jd, self.history.settings["refine_window_s"])
+        if found is None:
+            return None, None
+        miss, tca, ra, va, rb, vb = found
+        H = self.history
+        sigs = []
+        for o in (c.object_a, c.object_b):
+            row = self._row_of[o.norad_id]
+            k = int(H.hist.asof(np.array([row]), jd_now)[0])
+            sigs.append(H.sigma_public(row, k, tca)[0])
+        return miss, pc_with(ra, va, rb, vb, sigs[0], sigs[1])
+
+    def _apply_optimal(self, record: dict, c: Conjunction, tca_jd: float) -> str:
+        from .history_world import jd_of
+        A = self.history.avoid
+        jd_now = jd_of(self.sim_time)
+        agreement, check = self._verified_agreement(c, tca_jd, jd_now)
+        if agreement is None:
+            return ""
+        record["avoidance"] = {"mode": "optimal", "target_pc": float(A["target_pc"]),
+                               "pc_before": agreement.pc_before, "fairness": A["fairness"],
+                               "check": check,
+                               "capability": agreement.caps,
+                               "planned_dv_m_s": {k: round(v, 4) for k, v in agreement.planned_dv_m_s.items()}}
+        if not agreement.needed:
+            return "already under the target Pc from public data; no burn needed"
+        if not agreement.possible:
+            record["avoidance"]["cannot_avoid"] = True
+            self._event("cannot_avoid", f"{c.object_a.label} x {c.object_b.label}: neither satellite can burn "
+                                        f"(no propulsion) in time, so the encounter cannot be avoided.",
+                        encounter=record["id"])
+            return "neither satellite can burn, so nothing was applied"
+        before = self._truth_miss(c, tca_jd, with_maneuvers=True)
+        burns, made = {}, []
+        for obj in (c.object_a, c.object_b):
+            b = self._plan_my_burn(c, tca_jd, jd_now, obj.operator, agreement)
+            if b is None:
+                continue
+            made.append(b.as_maneuver(record["id"], obj.label))
+            burns[obj.operator] = self._burn_summary(b, obj.label)
+        self.maneuvers.extend(made)
+        record["burns"] = burns
+        miss_pub, pc_pub = self._public_after(c, tca_jd, jd_now, made)
+        record["avoidance"].update(pc_after_public=pc_pub, miss_after_public_km=miss_pub,
+                                   total_dv_m_s=round(sum(b["dv_m_s"] for b in burns.values()), 4))
+        after = self._truth_miss(c, tca_jd, with_maneuvers=True)
+        parts = []
+        for b in burns.values():
+            text = f"{b['satellite']} {b['dv_m_s'] * 100:.1f} cm/s at {b['burn_time'][11:16]}"
+            if "finite_burn_s" in b:
+                text += f" (low thrust, {b['finite_burn_s']:.0f} s)"
+            if b["secondary_avoided"]:
+                text += f", {b['secondary_avoided']} secondary approach(es) avoided"
+            if b["secondary_risk"]:
+                text += ", every burn time tried makes a secondary approach"
+            parts.append(text)
+        for obj in (c.object_a, c.object_b):
+            if obj.operator not in burns:
+                parts.append(f"{obj.label} cannot burn")
+        text = f"optimal burns {'; '.join(parts)}"
+        if check and check.get("pc_precise_after") is not None:
+            text += (f"; Pc at the precise covariance {check['pc_precise_before']:.1e} -> "
+                     f"{check['pc_precise_after']:.1e} (target {A['target_pc']:.0e} "
+                     f"{'met' if check['met'] else 'NOT met'}, plan x{check['scale']:g})")
+        text += f"; public Pc {pc_pub:.1e}"
+        if before and after:
+            record["truth"] = {**after, "miss_km_without_maneuver": before["miss_km"]}
+            text += f"; true miss {before['miss_km'] * 1000:.0f} m -> {after['miss_km'] * 1000:.0f} m"
+        return text
 
     def _predicted_miss_with(self, c: Conjunction, tca_jd: float, jd_now: float, maneuvers: List[dict]) -> float:
         from .history_world import apply_maneuvers, refine_tca

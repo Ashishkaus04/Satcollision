@@ -73,6 +73,7 @@ DEFAULTS = {
     "jump_min_km": 1.0,         # ... and at least this far off
     "maneuver_shift_km": 1.0,   # avoidance burn sized to move each satellite this far by TCA
     "fit_objects_per_group": 1500,
+    "avoidance": {},            # see avoidance.DEFAULTS
     "error_bins_h": list(DEFAULT_BINS_H),
 }
 
@@ -118,6 +119,8 @@ class HistoryModel:
 
     def __init__(self, fleet: dict, repo_root: Path):
         self.settings = {**DEFAULTS, **{k: v for k, v in fleet.items() if k in DEFAULTS}}
+        from .avoidance import DEFAULTS as AVOID
+        self.avoid = {**AVOID, **(fleet.get("avoidance") or {})}
         path = Path(fleet["file"])
         if not path.is_absolute():
             path = repo_root / path
@@ -256,11 +259,12 @@ def maneuver_offset_rtn(m: dict, jd: np.ndarray) -> np.ndarray:
 def apply_maneuvers(r: np.ndarray, v: np.ndarray, norad_ids: np.ndarray, jd: np.ndarray,
                     maneuvers: List[dict]) -> None:
     """Add each manoeuvre's displacement to the rows it applies to, in place."""
+    from .avoidance import displacement_rtn
     for m in maneuvers:
         rows = np.nonzero(norad_ids == m["norad_id"])[0]
         if rows.size == 0:
             continue
-        off = maneuver_offset_rtn(m, jd)
+        off = displacement_rtn(m, jd) if "dv_rtn_km_s" in m else maneuver_offset_rtn(m, jd)
         if not off.any():
             continue
         for i in rows:

@@ -209,6 +209,14 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
             "plan": _my_plan(e.get("plan") or _plan_from_feed(e, senders), operator),
             "engineered": e.get("engineered", False),
         }
+        burn = e.get("my_burn") or (e.get("burns") or {}).get(operator)
+        if burn is not None and row["plan"]:
+            # My half of the optimised avoidance, worked out from my own orbit.
+            if "pc_before" not in burn and e.get("avoidance"):
+                check = e["avoidance"].get("check") or {}
+                burn = {**burn, "pc_before": e["avoidance"]["pc_before"], "target_pc": e["avoidance"]["target_pc"],
+                        "target_met": bool(check.get("met")), "plan_scale": check.get("scale", 1.0)}
+            row["my_burn"] = burn
         if side is not None:
             # My own assessment (my satellite from my own ephemeris); the
             # public-catalogue prediction alongside it.
