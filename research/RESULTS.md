@@ -193,6 +193,59 @@ here reaches the threshold. A crewed station plausibly uses a stricter rule (a
 keep-out box) or better tracking of its own orbit, which these data cannot show.
 The paper should report this as a negative result, not drop it.
 
+## 7. Privacy: what a rival operator learns from the federation's messages
+
+`research/leakage.py`. Attacker: operator A, which knows its own satellites
+precisely and everything else from the public catalogue. Target: a satellite S
+of operator B. Secret: B's private correction to S's public orbit (the public
+catalogue error, a 3-vector in S's RTN frame, prior 1-sigma 452 m radial,
+3,618 m along-track, 452 m cross-track, i.e. 3 km combined with along-track ×8).
+The correction is held fixed over the observation window, which favours the
+attacker. A sees every message about S's approaches with A's own satellites
+(under 10 km, every 8-hourly update) and computes a Bayesian posterior over the
+correction (importance sampling in two passes; B's estimation noise integrated
+by Monte Carlo). 10 Sep catalogue, 100 targets for one day, 75 for one week
+(25 for the hardened design).
+
+Remaining uncertainty, median over targets, as a share of the public 1-sigma
+(along-track / radial):
+
+| What A sees | 1 day | 1 week |
+| --- | --- | --- |
+| "Act now" decisions only (hardened design) | 28% / 26% (1.0 km / 118 m) | 18% / 18% |
+| Alerts | 18% / 18% (660 m / 80 m) | 8% / 7% |
+| Alerts + severity tier | 13% / 9% | 4% / 3% |
+| + TCA in whole seconds | 10% / 12% | 3% / 3% |
+| + secure step's yes/no | 8% / 6% (300 m / 28 m) | 3% / 2% |
+| Secure step returns the Pc value | about 0 (orbit recovered) | about 0 |
+
+Cross-track is barely learned from alerts alone (96% left after a day) but the
+TCA channel exposes it (55%). Per target and day there are about 300
+approach-updates and 9 to 21 alerts. Figure: `figures/fig_leakage.png`.
+
+Caveats. The one-week posteriors for the richer channels are poorly resolved
+(effective sample size 12 to 28), so treat those percentages as approximate;
+the error of the posterior mean is a steadier measure, at about 10% of the prior
+there. The attacker knows the noise models exactly, which is a strong
+assumption. A real public-catalogue error drifts from one element set to the
+next, so the one-day numbers are the more realistic ones.
+
+What this means for the design and the paper:
+
+1. **Coarse signals are not privacy.** Hundreds of yes/no outcomes a day act like
+   measurements. The claim "never shares raw orbits" is true but must not be
+   presented as "reveals nothing about orbits".
+2. **The secure step must return only the decision, never the Pc value.** The
+   value pins the orbit exactly.
+3. **Hardened design:** feed the stage-1 alerts into the secure computation
+   instead of announcing them, drop tiers, and round or omit TCAs. A then learns
+   only "act now", the floor any warning service must reveal.
+4. **The floor itself is large in a constellation this dense:** a day of
+   act/no-act decisions still cuts the along-track uncertainty to about a
+   quarter. Adding noise to alerts cannot go below this floor, because the act
+   decisions cannot be randomised without costing safety. This is a limit of
+   conjunction warning in general, and the paper should say so.
+
 ## Reproduce
 
 ```bash
@@ -205,6 +258,8 @@ python research/fig_two_stage.py research/results/<cache>__mc_circular_far3.json
 PYTHONPATH=src:research python research/sweep.py research/cache/<cache>.npz --k 1,4,8,16 --sp 0.25,0.5,1.0 --far 1.5,3,6
 python research/latest_per_object.py <space-track 3le> data/historical/<name>_latest.tle
 PYTHONPATH=src python research/replay_2021.py data/historical/css_2021.tle
+PYTHONPATH=src:research python research/leakage.py research/cache/<cache>.npz --targets 25 --seed 1 --window-h 24
+python research/fig_leakage.py
 python research/fig_sweep.py research/results/<cache>__sweep.json
 ```
 
@@ -212,5 +267,4 @@ The cache file (125 MB) is not committed; it regenerates in about 7 minutes.
 
 ## Next
 
-1. Leakage: what an observer of the alerts learns about each operator's orbits.
-2. Adaptive and colluding attackers against the alert layer.
+1. Adaptive and colluding attackers against the alert layer.
