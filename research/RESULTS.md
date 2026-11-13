@@ -279,6 +279,60 @@ Warned = share of dangerous encounters warned at least 24 h ahead.
   The secure step itself assumes its servers do not collude (the standard MPC
   assumption); that belongs in the paper's threat model, not in an experiment.
 
+## 9. Rerun with the measured public-catalogue error (no assumed sigmas)
+
+`research/measured.py`. Sections 2 to 5 assumed the public 1-sigma falls from
+3 km (combined) at 72 h to 0.5 km at TCA. We replaced that with the RTN error
+measured on one week of Space-Track history (6 to 12 Nov 2026, 11,204 Starlink
+objects, TLE vs later TLE, robust 1.4826 x MAD; `research/tle_error_fit.py`):
+
+| Age of the public set | Radial | Along-track | Cross-track |
+| --- | --- | --- | --- |
+| 0 to 3 h | 0.11 km | 0.82 km | 0.05 km |
+| 6 to 12 h | 0.20 km | 2.0 km | 0.14 km |
+| 12 to 24 h | 0.28 km | 7.9 km | 0.19 km |
+| 24 to 36 h | 0.38 km | 20 km | 0.24 km |
+| 48 to 72 h | 1.2 km | 87 km | 0.45 km |
+
+Per object, at age = lead time + 4 h (mean age of the newest set at an update),
+interpolated log-log. "Biased" adds the median along-track drift (+3.7 km at
+12 to 24 h, +44 km at 48 to 72 h) in quadrature. The operator's own precise
+sigma is still an assumption (0.25, 0.5 or 1.0 km combined, constant).
+
+Precise 0.5 km, spread only (the biased variant differs by under 1.5 MPC h/day):
+
+| Date | No coop, warned >= 24 h | Full sharing | Two-stage MPC h/day for 99% of full | Public trigger, same | Ratio |
+| --- | --- | --- | --- | --- | --- |
+| 28 Feb | 0.0% | 99.6% | 18.6 | 20.9 | 1.12 |
+| 31 May | 0.03% | 99.4% | 21.6 | 24.6 | 1.14 |
+| 31 Jul | 0.05% | 99.6% | 31.2 | 36.0 | 1.15 |
+| 10 Sep | 0.08% | 99.6% | 43.4 | 51.3 | 1.18 |
+| 12 Nov | 0.18% | 99.5% | 46.0 | 54.8 | 1.19 |
+
+Over precise 0.25 to 1.0 km the ratio is 1.06 to 1.30 (30 cases, alerts cheaper in all 30).
+
+What changes:
+
+1. **No cooperation is far worse than either assumed model.** With measured
+   errors almost no dangerous encounter (under 0.2%) is warned a day ahead from
+   public data. The "10% (circular) to 92% (Foster x8)" range of section 4 was
+   an artefact of the assumed 3 km. The motivation for sharing is now strong
+   and no longer model-dependent.
+2. **The scheme still matches full sharing**, but needs a much lower alert
+   threshold (tau about 3e-7, not 3e-5): with one side's along-track error at
+   tens of km, a single operator's Pc is diluted.
+3. **Secure compute roughly doubles to triples**: 19 to 46 cluster-hours/day
+   (was 8 to 20), still 35 to 85 times below all-pairs (about 1,594).
+4. **Operator alerts help less than before**: 1.12 to 1.19 times cheaper than a
+   public trigger (was a median 1.32). When the public error is this large,
+   one side's precise orbit narrows the search less. The honest claim is that
+   alerts are a modest improvement over a public trigger; the large gain is the
+   two-stage structure itself.
+
+Caveats: the error table is Starlink-only and from one week; TLE-vs-TLE
+consistency understates the true error for objects with shared observations;
+the precise sigma is still assumed. Results: `results/*__measured.json`.
+
 ## Reproduce
 
 ```bash
@@ -301,4 +355,4 @@ The cache file (125 MB) is not committed; it regenerates in about 7 minutes.
 
 ## Next
 
-1. Write the paper draft.
+1. Paper draft written (Claude Doc); section 9 numbers to fold in.
