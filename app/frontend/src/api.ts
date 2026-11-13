@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export type Session = { token: string; role: "operator" | "federation" | "observer"; operator?: string | null; username: string };
 
@@ -44,39 +44,60 @@ export async function api<T = any>(path: string, session: Session | null, init: 
   return r.json();
 }
 
-/** Live role view of one world: WebSocket push, falling back to polling. */
+/** Live role view of one world: WebSocket push, falling back to polling.
+ *
+ * Every run of the effect owns its socket, poll and retry timer, and its own
+ * ``cancelled`` flag. (A flag shared between runs was the bug behind views
+ * flipping between worlds and logins: the next run reset it before the old
+ * socket's close event arrived, so the old socket started polling and
+ * reconnecting with the old world and the old token, for good.) Anything that
+ * arrives for another world or another party is dropped as well. */
 export function useLiveView<T = any>(world: string | null, session: Session | null) {
   const [data, setData] = useState<T | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const stop = useRef(false);
 
   useEffect(() => {
-    if (!world || !session) return;
-    stop.current = false;
     setData(null);
+    setConnected(false);
+    setError(null);
+    if (!world || !session) return;
+    let cancelled = false;
     let ws: WebSocket | null = null;
     let poll: number | undefined;
     let retry: number | undefined;
 
+    const accept = (d: any) => {
+      if (cancelled || !d || d.world?.name !== world) return;
+      if (session.role === "operator" ? d.role !== "operator" || d.operator !== session.operator : d.role !== session.role) return;
+      setData(d);
+      setError(null);
+    };
+
     const startPolling = () => {
-      if (poll) return;
+      if (poll || cancelled) return;
       const tick = () =>
         api<T>(`/api/worlds/${world}/view`, session)
-          .then((d) => { setData(d); setError(null); })
-          .catch((e) => setError(String(e.message ?? e)));
+          .then(accept)
+          .catch((e) => { if (!cancelled) setError(String(e.message ?? e)); });
       tick();
       poll = window.setInterval(tick, 3000);
     };
 
     const connect = () => {
+      if (cancelled) return;
       const proto = location.protocol === "https:" ? "wss" : "ws";
-      ws = new WebSocket(`${proto}://${location.host}/api/worlds/${world}/live?token=${encodeURIComponent(session.token)}`);
-      ws.onopen = () => { setConnected(true); setError(null); if (poll) { clearInterval(poll); poll = undefined; } };
-      ws.onmessage = (ev) => setData(JSON.parse(ev.data));
-      ws.onclose = (ev) => {
+      const sock = new WebSocket(`${proto}://${location.host}/api/worlds/${world}/live?token=${encodeURIComponent(session.token)}`);
+      ws = sock;
+      sock.onopen = () => {
+        if (cancelled) { sock.close(); return; }
+        setConnected(true); setError(null);
+        if (poll) { clearInterval(poll); poll = undefined; }
+      };
+      sock.onmessage = (ev) => accept(JSON.parse(ev.data));
+      sock.onclose = (ev) => {
+        if (cancelled || ws !== sock) return;
         setConnected(false);
-        if (stop.current) return;
         if (ev.code === 4401 || ev.code === 4403) { setError("Not allowed to view this world."); return; }
         startPolling();
         retry = window.setTimeout(connect, 5000);
@@ -84,7 +105,7 @@ export function useLiveView<T = any>(world: string | null, session: Session | nu
     };
     connect();
     return () => {
-      stop.current = true;
+      cancelled = true;
       ws?.close();
       if (poll) clearInterval(poll);
       if (retry) clearTimeout(retry);
