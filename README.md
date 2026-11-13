@@ -11,7 +11,7 @@ direct panel questioning.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 239 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 260 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
 python3 scripts/run_worlds.py                      # always-running worlds + live dashboard
 docker compose up --build                          # full-stack app: operator / federation / observer views
@@ -145,7 +145,7 @@ Dockerfile, docker-compose.yml  one-container build of the app
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (239 tests) covering the above
+tests/                 pytest suite (260 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
@@ -156,7 +156,7 @@ scripts/run_historical_replay.py  replays a documented event, writes docs/histor
 scripts/run_environment_demo.py  console walkthrough of environment.py
 scripts/run_worlds.py  starts every world in worlds/, restarts crashed ones, serves docs/live_worlds.html
 scripts/run_world.py   runs one world (normally started by run_worlds.py)
-worlds/*.json          the three world definitions (sandbox, adversarial, real_leo)
+worlds/*.json          the world definitions (sandbox, adversarial, real_leo, real_leo_history)
 scripts/run_midsem_demo.py  the mid-semester walkthrough (real catalogue, ~20 s)
 notebooks/satellite_environment.ipynb  environment.py in a notebook
 requirements.txt        sgp4, numpy, scipy, matplotlib, pytest, cryptography, torch, opacus
@@ -582,6 +582,116 @@ engineered encounters use `fleets.inject_actor_encounter`, whose closed-form
 inversion often misses at steep crossing angles, so each injection is
 verified against SGP4 and retried at another angle or satellite until the
 two objects really meet.
+
+### `real_leo_history`: truth and prediction from a week of real element sets
+
+`worlds/real_leo_history.json` replaces the single catalogue snapshot with a
+Space-Track `gp_history` file: every element set published for every LEO
+object over a week (`data/historical/gp_history_week.tle`: 315,014 sets for
+17,781 objects, 6 to 12 Nov 2026, about 2.9 sets per object per day). Like the
+rest of `data/historical/` it is not in git, and it is not built into the
+Docker image either (it is mounted read-only, see `docker-compose.yml`),
+because Space-Track data must not be redistributed. Download it from
+Space-Track's `gp_history` class with your own account (one query per week,
+3LE format) and save it under that name.
+
+What changes compared with `real_leo` (`src/satcollision/tle_history.py`,
+`history_world.py`):
+
+* **Truth** is the element set whose epoch is nearest to the moment,
+  including one published a little later, the way an orbit fit uses
+  observations on both sides of its epoch. Across each switch between sets
+  the two positions are blended linearly over 10 minutes, so nothing jumps.
+* **Prediction**: every twin screens against the public catalogue as it
+  stood at that moment, using only the newest set with epoch at or before
+  now (the as-of rule from `historical_replay.py`). So every party finds
+  the same encounters with the same ids. The screen is the refined one
+  (`screening.screen_conjunctions_refined`). It finds the closest approach
+  between the 30 s samples, so fast crossings are not skipped. Approaches
+  predicted closer than `candidate_km` (5 km) are assessed. Each tick takes
+  only the approaches whose TCA falls in its own slice of the look-ahead, so
+  each one is found exactly once. An operator then assesses its own
+  side: its own satellite from its own ephemeris (the truth, with
+  `precise_sigma_km` = 0.354 km per object, 0.5 km combined), the other object
+  from the public prediction. Each side decides alone whether to share, so
+  the two operators of one encounter can disagree (the log says when one
+  side's Pc was under the threshold).
+* **Measured covariance.** The RTN error of a TLE as a function of its age is
+  fitted from the file itself: each set is propagated to the epochs of later
+  sets of the same object and compared there, using a robust sigma
+  (1.4826 x MAD, then combined with the median offset in quadrature) per age
+  bin, Starlink and everyone else separately (`research/tle_error_fit.py`).
+  The Foster Pc uses the sigma for the age that the other object's set will
+  have at TCA.
+
+  | Age (h) | Starlink σR / σT / σC (km) | Starlink median T | Others σR / σT / σC (km) |
+  |---|---|---|---|
+  | 0-3 | 0.11 / 0.82 / 0.05 | -0.11 | 0.005 / 0.044 / 0.008 |
+  | 3-6 | 0.15 / 0.99 / 0.09 | +0.05 | 0.010 / 0.066 / 0.011 |
+  | 6-12 | 0.20 / 2.04 / 0.14 | +0.49 | 0.018 / 0.116 / 0.017 |
+  | 12-24 | 0.28 / 7.88 / 0.19 | +3.73 | 0.034 / 0.208 / 0.027 |
+  | 24-36 | 0.38 / 20.3 / 0.24 | +9.34 | 0.051 / 0.361 / 0.044 |
+  | 36-48 | 0.61 / 41.2 / 0.33 | +21.8 | 0.064 / 0.578 / 0.058 |
+  | 48-72 | 1.24 / 87.0 / 0.45 | +44.4 | 0.097 / 1.14 / 0.083 |
+
+  Starlink matches the 2021 pilot (about 7 km at 12-24 h and 21 km at
+  24-36 h). For other objects the TLE-vs-later-TLE spread understates the
+  true error: consecutive fits share observations.
+* **Real manoeuvres** show up as jumps between consecutive sets. Sets more
+  than 10 robust sigma (and 1 km) off the previous one are summarised in the
+  log once per simulated hour. About 4% of all sets qualify, mostly
+  Starlink's.
+* **Agreed avoidance manoeuvres are applied to the truth.** When both
+  operators sign, each satellite gets a small along-track burn at detection
+  time. Its displacement follows the Clohessy-Wiltshire solution and is
+  sized so that the satellite has moved `maneuver_shift_km` (1 km) by TCA,
+  then mirrored back to zero afterwards (a return burn). The plan fixes
+  only that the two moves are opposite. Which way counts as "+" is taken
+  from public data alone, so both sides agree: whichever opens up the
+  predicted miss. The observer view and the log show the true miss before
+  and after (typical burns are a few cm/s).
+* **Truth the twins missed.** The sky also screens the truth (refined
+  screen, on the nearest set at the middle of each tick's window, because
+  the SGP4 refinement needs one set per object). The miss is then
+  re-measured on the blended truth, applied burns included. A real
+  approach under 2 km that no twin flagged is shown to the observer only.
+* **The clock** starts 24 h after the first epoch (so most objects have a
+  published set) and runs through the file's real dates. When it reaches
+  the last epoch it stops, logs that, and the dashboard shows a banner. With
+  `"at_end": "loop"` it replays the file and logs a cycle event instead.
+
+On the week above, the first 12.5 h (300 ticks from 7 Nov 00:00), refined
+screen vs the grid screen it replaced:
+
+| | Grid (30 s samples, 25 km) | Refined |
+|---|---|---|
+| Cross-operator, over the threshold | 4 | 19 |
+| ... joint plans (burns applied) | 2 | 4 |
+| ... one side's own Pc under the threshold, or silent | 2 | 15 |
+| In-house (one operator, or a member and a non-member) | 61 | 246 |
+| Private watch (under the threshold, < 2 km) | 217 | 957 |
+| Real approaches < 2 km no twin flagged | 18 | 368 |
+| Median relative speed of the recorded approaches | 9.8 km/s | 12.2 km/s |
+| Time per tick, one process | ~1.4-2 s | ~0.8-1.8 s |
+| Time per tick, separate processes (8) | ~3 s | ~1.7-2.1 s |
+
+The added approaches are mostly fast crossings, as `research/RESULTS.md`
+section 1 found for the snapshot catalogue. The refined screen is also the
+cheaper of the two here, because only approaches predicted inside 5 km are
+assessed, against every pair inside the grid's 25 km. Each twin process uses
+about 225 MB (about 1.6 GB for all eight).
+`tests/test_history_world.py` checks it on a synthetic history: the as-of
+rule, blending, the error fit, the jump flag, the burn, a fast crossing
+between samples that a grid screen misses, the stop and loop at the end,
+restarts, and that separate processes reach the same result as one process.
+
+Still simplified: the twins' own ephemeris does not include the simulated
+avoidance burns, and the public catalogue never learns of them (the TLEs
+are history); an element set counts as published at its epoch, which is
+earlier than it really appears; and a public prediction more than 5 km
+off is never assessed (those approaches end up in the observer's "no twin
+flagged it" list, which is why that list is long: Starlink's sets are
+kilometres off within hours).
 
 ## Full-stack app: what each party sees
 

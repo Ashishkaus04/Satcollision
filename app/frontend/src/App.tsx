@@ -117,6 +117,7 @@ export default function App() {
 
       {v && (
         <>
+          {v.world.finished && <div className="banner">The clock has stopped: this world has reached the end of its element-set file, and there is no truth beyond the last published set.</div>}
           <section className="intro">
             <p>{v.world.description}</p>
             <div className="clock">

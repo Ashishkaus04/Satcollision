@@ -5,7 +5,9 @@
 #
 # The real-catalogue world needs data/*.tle in the build context (data/ is
 # git-ignored, so download the catalogues first; without them the image
-# still builds and runs the two synthetic worlds).
+# still builds and runs the two synthetic worlds). data/historical (Space-Track
+# history, for real_leo_history) is left out of the image on purpose and
+# mounted at run time instead (docker-compose.yml).
 
 FROM node:20.18.0-alpine AS frontend
 WORKDIR /build
