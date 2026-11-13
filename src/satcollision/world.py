@@ -1039,11 +1039,19 @@ class World:
             return [round(math.degrees(math.asin(z / rad)), 3), round(lon, 3), round(rad - 6378.137, 2)]
 
         n = len(jd) - 2
+        valid = [i for i in range(n) if ok[i]]
+        now = self._jd(self.elapsed_s)
+        # Where the satellite is now along the path: the last sample at or
+        # before the world's clock (-1: the window has not started yet). The
+        # samples share the clock's 60 s grid, so this one is exactly "now".
+        now_index = max((k for k, i in enumerate(valid) if jd[i] <= now + 1e-9), default=-1)
         return {
             "satellite": obj.label, "operator": obj.operator, "norad_id": norad_id,
             "burn_time": _iso(dt_of(m["burn_jd"])), "tca": _iso(dt_of(m["tca_jd"])),
-            "original": [geo(r[i], jd[i]) for i in range(n) if ok[i]],
-            "maneuvered": [geo(moved[i], jd[i]) for i in range(n) if ok[i]],
+            "original": [geo(r[i], jd[i]) for i in valid],
+            "maneuvered": [geo(moved[i], jd[i]) for i in valid],
+            "start_time": _iso(dt_of(jd[valid[0]])) if valid else None, "step_s": step_s,
+            "now_index": now_index,
             "burn_point": geo(moved[n], jd[n]), "tca_point": geo(moved[n + 1], jd[n + 1]),
             "tca_point_original": geo(r[n + 1], jd[n + 1]),
             "shift_at_tca_km": round(float(np.linalg.norm(moved[n + 1] - r[n + 1])), 3),
