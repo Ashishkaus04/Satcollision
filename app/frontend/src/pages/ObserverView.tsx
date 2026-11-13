@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Globe, { GlobePoint } from "../components/Globe";
+import { pathLayers, pathLegend } from "../components/paths";
 import { Legend, Panel, Pill, RepChart, Stat, Tier } from "../components/ui";
 import { colorFor, fmtDur, fmtMiss, Session } from "../api";
 import Compare from "./Compare";
@@ -14,6 +15,7 @@ export default function ObserverView({ view, session }: { view: any; session: Se
   const points = useMemo<GlobePoint[]>(() => tr.points.map((p: number[]) => ({
     lat: p[0], lon: p[1], alt_km: p[5], color: p[3] === 2 ? "#ff5468" : colorFor(tr.operators[p[2]], ops), highlight: p[3] === 2,
   })), [view]);
+  const paths = useMemo(() => pathLayers(view.burn_paths), [view]);
 
   if (comparing) {
     return <Compare world={view.world.name} encounterId={comparing} session={session} version={view.version} onClose={() => setComparing(null)} />;
@@ -38,10 +40,28 @@ export default function ObserverView({ view, session }: { view: any; session: Se
       <div className="grid">
         <div className="stack">
           <Panel title="Everything, as it really is" extra={tr.points.length < total ? `(${tr.points.length.toLocaleString()} of ${total.toLocaleString()} drawn)` : ""}>
-            <Globe points={points} />
+            <Globe points={[...points, ...paths.markers]} tracks={paths.tracks} />
             <Legend items={[...tr.operators.map((op: string) => ({ color: colorFor(op, ops), label: `${op} (${(view.fleet[op] ?? 0).toLocaleString()})` })),
-              { color: "#ff5468", label: "in an upcoming encounter" }]} />
+              { color: "#ff5468", label: "in an upcoming encounter" }, ...pathLegend(view.burn_paths)]} />
           </Panel>
+          {view.burn_paths?.length > 0 && (
+            <Panel title="Avoidance paths" extra="both satellites, as flown">
+              <table>
+                <thead><tr><th>Satellite</th><th>Burn</th><th>Closest approach</th><th className="num">Moved at TCA</th><th className="num">True miss</th></tr></thead>
+                <tbody>
+                  {view.burn_paths.map((p: any) => (
+                    <tr key={p.encounter + p.satellite}>
+                      <td>{p.satellite}</td>
+                      <td className="mono small">{p.burn_time.slice(11, 16)}</td>
+                      <td className="mono small">{p.tca.slice(11, 16)}</td>
+                      <td className="num">{fmtMiss(p.shift_at_tca_km)}</td>
+                      <td className="num">{p.miss_before_km != null ? <>{fmtMiss(p.miss_before_km)} to <span className="good">{fmtMiss(p.miss_after_km)}</span></> : "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Panel>
+          )}
           <Panel title="Encounters" extra={`${view.upcoming.length} upcoming`}>
             <div className="scroll">
               <table>

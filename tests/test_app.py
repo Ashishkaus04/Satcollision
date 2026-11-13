@@ -199,3 +199,15 @@ def test_server_refuses_to_send_someone_elses_view(two_worlds):
     finally:
         runner.operator_view = real
         runner._cache.clear()
+
+
+def test_server_never_sends_an_operator_another_operators_path():
+    from fastapi import HTTPException
+    from app.backend.main import User, _check_view_is_for
+    alpha = User(username="alpha", role="operator", operator="Alpha")
+    view = {"role": "operator", "operator": "Alpha", "world": {"name": "w"},
+            "burn_paths": [{"operator": "Alpha", "satellite": "Alpha-1"}]}
+    _check_view_is_for(view, alpha, "w")
+    view["burn_paths"].append({"operator": "Beta", "satellite": "Beta-2"})
+    with pytest.raises(HTTPException):
+        _check_view_is_for(view, alpha, "w")
