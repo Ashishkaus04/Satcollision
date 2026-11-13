@@ -16,6 +16,9 @@ services:
       # APP_SPEED: "1"
     volumes:
       - worlds-state:/srv/runs
+      # Space-Track history for the real_leo_history world: mounted, never
+      # built into the image (.dockerignore), since it must not be redistributed.
+      - ./data/historical:/srv/data/historical:ro
       # - ./users.json:/srv/users.json:ro
     restart: unless-stopped
 volumes:

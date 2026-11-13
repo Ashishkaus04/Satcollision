@@ -51,7 +51,10 @@ export default function ObserverView({ view, session }: { view: any; session: Se
                     <tr key={e.id} className={e.status !== "upcoming" ? "dim" : ""}>
                       <td className="num">{e.status === "upcoming" ? `in ${fmtDur(e.time_to_tca_s)}` : "passed"}</td>
                       <td>{e.labels[0]} × {e.labels[1]}<div className="muted small">{e.geometry}{e.engineered ? " · engineered" : ""}</div></td>
-                      <td className="num">{fmtMiss(e.miss_km)}</td>
+                      <td className="num">{fmtMiss(e.miss_km)}
+                        {e.truth && !e.observer_only && <div className="small">true {fmtMiss(e.truth.miss_km)}
+                          {e.truth.miss_km_without_maneuver != null && <span className="good"> (was {fmtMiss(e.truth.miss_km_without_maneuver)} before the burns)</span>}</div>}
+                        {e.observer_only && <div className="muted small">true miss; no twin flagged it</div>}</td>
                       <td className="num">{e.pc.toExponential(1)}</td>
                       <td><Pill kind={e.handling}>{e.handling}</Pill></td>
                       <td><button className="btn small" onClick={() => setComparing(e.id)}>Compare</button></td>

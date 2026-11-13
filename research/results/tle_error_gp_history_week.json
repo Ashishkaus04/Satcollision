@@ -1,0 +1,197 @@
+{
+ "file": "gp_history_week.tle",
+ "n_sets": 315014,
+ "n_objects": 17781,
+ "max_objects_per_group": 1500,
+ "model": {
+  "bins_h": [
+   0.0,
+   3.0,
+   6.0,
+   12.0,
+   24.0,
+   36.0,
+   48.0,
+   72.0
+  ],
+  "table": {
+   "other": [
+    {
+     "age_lo_h": 0.0,
+     "age_hi_h": 3.0,
+     "n": 2365,
+     "age_mid_h": 1.684970397502184,
+     "sigma_r_km": 0.005,
+     "median_r_km": -0.003,
+     "sigma_t_km": 0.0444,
+     "median_t_km": -0.0041,
+     "sigma_c_km": 0.0081,
+     "median_c_km": -0.0
+    },
+    {
+     "age_lo_h": 3.0,
+     "age_hi_h": 6.0,
+     "n": 6696,
+     "age_mid_h": 4.726569844409823,
+     "sigma_r_km": 0.0101,
+     "median_r_km": -0.0078,
+     "sigma_t_km": 0.0664,
+     "median_t_km": -0.0062,
+     "sigma_c_km": 0.0107,
+     "median_c_km": 0.0003
+    },
+    {
+     "age_lo_h": 6.0,
+     "age_hi_h": 12.0,
+     "n": 17897,
+     "age_mid_h": 8.497622162103653,
+     "sigma_r_km": 0.018,
+     "median_r_km": -0.0162,
+     "sigma_t_km": 0.116,
+     "median_t_km": -0.0091,
+     "sigma_c_km": 0.0169,
+     "median_c_km": 0.0011
+    },
+    {
+     "age_lo_h": 12.0,
+     "age_hi_h": 24.0,
+     "n": 34627,
+     "age_mid_h": 17.673707529902458,
+     "sigma_r_km": 0.0335,
+     "median_r_km": -0.0347,
+     "sigma_t_km": 0.2081,
+     "median_t_km": -0.0025,
+     "sigma_c_km": 0.027,
+     "median_c_km": -0.0001
+    },
+    {
+     "age_lo_h": 24.0,
+     "age_hi_h": 36.0,
+     "n": 31723,
+     "age_mid_h": 30.000278156250715,
+     "sigma_r_km": 0.0515,
+     "median_r_km": -0.0573,
+     "sigma_t_km": 0.3615,
+     "median_t_km": -0.002,
+     "sigma_c_km": 0.0437,
+     "median_c_km": 0.0024
+    },
+    {
+     "age_lo_h": 36.0,
+     "age_hi_h": 48.0,
+     "n": 27444,
+     "age_mid_h": 41.7413298022002,
+     "sigma_r_km": 0.0643,
+     "median_r_km": -0.0874,
+     "sigma_t_km": 0.5775,
+     "median_t_km": 0.0353,
+     "sigma_c_km": 0.0575,
+     "median_c_km": -0.0001
+    },
+    {
+     "age_lo_h": 48.0,
+     "age_hi_h": 72.0,
+     "n": 45787,
+     "age_mid_h": 60.094208400696516,
+     "sigma_r_km": 0.0965,
+     "median_r_km": -0.1236,
+     "sigma_t_km": 1.1346,
+     "median_t_km": 0.0425,
+     "sigma_c_km": 0.0831,
+     "median_c_km": 0.002
+    }
+   ],
+   "starlink": [
+    {
+     "age_lo_h": 0.0,
+     "age_hi_h": 3.0,
+     "n": 2920,
+     "age_mid_h": 1.9999996796250343,
+     "sigma_r_km": 0.1137,
+     "median_r_km": -0.0151,
+     "sigma_t_km": 0.8159,
+     "median_t_km": -0.1094,
+     "sigma_c_km": 0.0489,
+     "median_c_km": -0.001
+    },
+    {
+     "age_lo_h": 3.0,
+     "age_hi_h": 6.0,
+     "n": 5240,
+     "age_mid_h": 4.000833358615637,
+     "sigma_r_km": 0.1509,
+     "median_r_km": -0.0193,
+     "sigma_t_km": 0.985,
+     "median_t_km": 0.0457,
+     "sigma_c_km": 0.0925,
+     "median_c_km": 0.004
+    },
+    {
+     "age_lo_h": 6.0,
+     "age_hi_h": 12.0,
+     "n": 14969,
+     "age_mid_h": 8.000000160187483,
+     "sigma_r_km": 0.2043,
+     "median_r_km": -0.0281,
+     "sigma_t_km": 2.0361,
+     "median_t_km": 0.4918,
+     "sigma_c_km": 0.1368,
+     "median_c_km": 0.0164
+    },
+    {
+     "age_lo_h": 12.0,
+     "age_hi_h": 24.0,
+     "n": 31041,
+     "age_mid_h": 18.75907800346613,
+     "sigma_r_km": 0.2759,
+     "median_r_km": -0.0869,
+     "sigma_t_km": 7.8803,
+     "median_t_km": 3.7299,
+     "sigma_c_km": 0.1875,
+     "median_c_km": 0.041
+    },
+    {
+     "age_lo_h": 24.0,
+     "age_hi_h": 36.0,
+     "n": 26894,
+     "age_mid_h": 30.000277675688267,
+     "sigma_r_km": 0.3812,
+     "median_r_km": -0.1688,
+     "sigma_t_km": 20.3292,
+     "median_t_km": 9.342,
+     "sigma_c_km": 0.2378,
+     "median_c_km": 0.0568
+    },
+    {
+     "age_lo_h": 36.0,
+     "age_hi_h": 48.0,
+     "n": 24584,
+     "age_mid_h": 42.00000023469329,
+     "sigma_r_km": 0.6105,
+     "median_r_km": -0.3391,
+     "sigma_t_km": 41.2427,
+     "median_t_km": 21.7531,
+     "sigma_c_km": 0.3254,
+     "median_c_km": 0.1338
+    },
+    {
+     "age_lo_h": 48.0,
+     "age_hi_h": 72.0,
+     "n": 41280,
+     "age_mid_h": 60.000555608421564,
+     "sigma_r_km": 1.2401,
+     "median_r_km": -0.774,
+     "sigma_t_km": 86.9957,
+     "median_t_km": 44.4202,
+     "sigma_c_km": 0.446,
+     "median_c_km": 0.2067
+    }
+   ]
+  },
+  "floor_km": 0.05
+ },
+ "jumps_over_5_sigma": {
+  "other": 11991,
+  "starlink": 20567
+ }
+}

@@ -8,3 +8,5 @@ notebooks
 docs
 tests
 *.docx
+data/historical
+cache

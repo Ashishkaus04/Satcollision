@@ -75,8 +75,10 @@ export default function OperatorView({ view, session }: { view: any; session: Se
                       <td className="num">{e.status === "upcoming" ? `in ${fmtDur(e.time_to_tca_s)}` : "passed"}</td>
                       <td><button className="link" onClick={() => setSelected(Number(e.my_satellite.split("-").pop()))}>{e.my_satellite}</button></td>
                       <td>{e.other_object}<div className="muted small">{e.geometry}, {e.rel_speed_km_s} km/s</div></td>
-                      <td className="num">{fmtMiss(e.miss_km)}</td>
-                      <td className="num">{e.pc.toExponential(1)}</td>
+                      <td className="num">{fmtMiss(e.miss_km)}
+                        {e.public_miss_km != null && <div className="muted small">public {fmtMiss(e.public_miss_km)}</div>}</td>
+                      <td className="num">{e.pc.toExponential(1)}
+                        {e.other_tle_age_h != null && <div className="muted small">other: {e.other_tle_age_h} h old TLE, σT {e.sigma_other_rtn_km[1]} km</div>}</td>
                       <td><Pill kind={e.handling}>{e.handling}</Pill>{e.handling === "federated" && !e.i_signalled && <div className="bad small">I stayed silent</div>}</td>
                       <td>{e.plan ? <span className="good">move {e.plan.direction === "+" ? "+" : "−"} (partner {e.plan.partner_direction === "+" ? "+" : "−"})</span>
                         : e.handling === "federated" ? <span className="bad">no joint plan</span> : <span className="muted">own call</span>}</td>
