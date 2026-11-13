@@ -157,7 +157,9 @@ def test_engineered_crossing_is_assessed_signed_and_avoided(hist_file, tmp_path)
     assert e["plan"] is not None
     # The truth got both burns and the miss grew past a kilometre.
     assert {m["norad_id"] for m in w.maneuvers} == {90001, 90011}
-    assert e["truth"]["miss_km_without_maneuver"] < 0.5 < 1.0 < e["truth"]["miss_km"]
+    assert e["truth"]["miss_km"] > 2 * e["truth"]["miss_km_without_maneuver"]
+    chk = e["avoidance"]["check"]
+    assert chk["met"] and chk["pc_precise_after"] <= e["avoidance"]["target_pc"] < chk["pc_precise_before"]
     kinds = [ev["kind"] for ev in w.recent_events]
     assert "maneuver" in kinds and "Applied to the truth" in next(ev["text"] for ev in w.recent_events
                                                                   if ev["kind"] == "maneuver")
@@ -300,6 +302,127 @@ def test_separate_processes_match_one_process(hist_file, tmp_path):
         assert fed["ledger"]["entries"] == len(ref.ledger.entries)
         assert group.sky.maneuvers == ref.maneuvers
         obs = group.observer_view()
-        assert any(e["id"] == ENC and e["truth"]["miss_km"] > 1.0 for e in obs["upcoming"] + obs["passed"])
+        assert any(e["id"] == ENC and e["truth"]["miss_km"] > 2 * e["truth"]["miss_km_without_maneuver"]
+                   for e in obs["upcoming"] + obs["passed"])
+        # Each twin worked out its own burn alone; it is the one the sky applied.
+        for op in ("Alpha", "Beta"):
+            mine = next(e for e in group.operator_view(op)["encounters"] if e["id"] == ENC)
+            theirs = next(e for e in operator_view(ref, op)["encounters"] if e["id"] == ENC)
+            assert mine["my_burn"] == theirs["my_burn"] and mine["my_burn"]["dv_m_s"] > 0
     finally:
         group.close()
+
+
+# ---------------------------------------------------------------------------
+# Optimised avoidance (avoidance.py)
+# ---------------------------------------------------------------------------
+
+def _run_to_both_encounters(hist_file, tmp_path, **over):
+    w = _world(hist_file, tmp_path, **over)
+    while w.elapsed_s < FAST_TCA_AFTER_S - w.cfg.lookahead_s + w.cfg.tick_sim_s:
+        w.tick()
+    return w, [e for e in w.encounters if e.get("plan")]
+
+
+def test_cw_displacement_matches_the_burn_model():
+    from satcollision.avoidance import cw_matrix, displacement_rtn
+    n = 2 * math.pi / 5700.0
+    dv = np.array([0.0001, 0.0002, -0.00005])
+    m = {"burn_jd": 0.0, "tca_jd": 3000.0 / 86400.0, "n_rad_s": n, "dv_rtn_km_s": list(dv)}
+    off = displacement_rtn(m, np.array([1500.0, 3000.0, 6000.0, 7000.0]) / 86400.0)
+    assert np.allclose(off[0], cw_matrix(n, 1500.0) @ dv)
+    assert np.allclose(off[1], cw_matrix(n, 3000.0) @ dv)
+    assert np.allclose(off[2], 0.0) and np.allclose(off[3], 0.0)       # returned to its track
+    # A finite (low-thrust) burn spreads the same dv over minutes: close to,
+    # not the same as, the impulse.
+    finite = displacement_rtn({**m, "accel_m_s2": 1e-4}, np.array([3000.0 / 86400.0]))[0]
+    assert 0.0 < np.linalg.norm(finite - off[1]) < 0.2 * np.linalg.norm(off[1])
+
+
+def test_optimiser_meets_the_target_with_less_fuel_than_the_fixed_rule(hist_file, tmp_path):
+    w, plans = _run_to_both_encounters(hist_file, tmp_path / "opt")
+    assert len(plans) == 2
+    for e in plans:
+        a = e["avoidance"]
+        assert a["mode"] == "optimal" and a["check"]["met"] and a["check"]["pc_precise_after"] <= a["target_pc"]
+        assert set(e["burns"]) == {"Alpha", "Beta"}
+        for b in e["burns"].values():
+            assert b["dv_m_s"] == pytest.approx(b["planned_dv_m_s"], rel=0.10)   # own orbit vs public plan
+            assert not b["secondary_risk"]
+    # Against the fixed 1 km rule, on the encounter where the fixed rule also
+    # meets the target (its 1.9 km): the same outcome for less fuel.
+    fast = "ENC-90002-90013-"
+    optimal = next(e for e in plans if e["id"].startswith(fast))["avoidance"]["total_dv_m_s"]
+    f, fixed_plans = _run_to_both_encounters(hist_file, tmp_path / "fixed",
+                                             fleet={"avoidance": {"avoidance": "fixed"}})
+    fixed_enc = next(e for e in fixed_plans if e["id"].startswith(fast))
+    fixed = sum(abs(m["dv_km_s"]) * 1000.0 for m in f.maneuvers if m["encounter"] == fixed_enc["id"])
+    assert fixed_enc["truth"]["miss_km"] >= next(e for e in plans if e["id"].startswith(fast))["truth"]["miss_km"] - 0.01
+    assert optimal < fixed
+    events = [ev["text"] for ev in w.recent_events if ev["kind"] == "maneuver"]
+    assert events and all("optimal burns" in t and "precise covariance" in t for t in events)
+
+
+def test_a_satellite_without_propulsion_does_not_burn(hist_file, tmp_path):
+    w, plans = _run_to_both_encounters(hist_file, tmp_path,
+                                       fleet={"avoidance": {"no_propulsion": {"Beta": ["BETA-1"]}}})
+    e = next(e for e in plans if e["id"] == ENC)
+    assert e["avoidance"]["capability"] == {"Alpha": 1.0, "Beta": 0.0}
+    assert set(e["burns"]) == {"Alpha"}
+    assert e["avoidance"]["check"]["met"]
+    assert not any(m["norad_id"] == 90011 for m in w.maneuvers)
+
+
+def test_when_neither_can_burn_the_world_says_so(hist_file, tmp_path):
+    w, plans = _run_to_both_encounters(hist_file, tmp_path,
+                                       fleet={"avoidance": {"no_propulsion": {"Alpha": ["ALPHA"], "Beta": ["BETA"]}}})
+    assert plans and all(e["avoidance"].get("cannot_avoid") for e in plans)
+    assert w.maneuvers == []
+    assert any(ev["kind"] == "cannot_avoid" for ev in w.recent_events)
+
+
+def test_secondary_check_finds_an_approach_the_burn_creates():
+    from satcollision.avoidance import displacement_rtn, secondary_approaches
+    from satcollision.tle_history import from_rtn
+    n = 2 * math.pi / 5700.0
+    jd0 = 2461351.5
+    m = {"burn_jd": jd0, "tca_jd": jd0 + 1800.0 / 86400.0, "n_rad_s": n, "dv_rtn_km_s": [0.0, 0.001, 0.0]}
+    t = np.arange(0.0, 3601.0, 30.0)
+    r0 = np.stack([7000.0 + 0 * t, 7.5 * t, 0 * t], axis=1)          # a straight track is enough here
+    v0 = np.tile([0.0, 7.5, 0.0], (len(t), 1))
+    i = 40                                                          # 1200 s after the burn
+    moved = r0[i] + from_rtn(displacement_rtn(m, np.array([jd0 + t[i] / 86400.0]))[0], r0[i], v0[i])
+    # crosses the manoeuvred track there at 10 km/s, out of plane; the
+    # unmanoeuvred track is 1.4 km away (the burn's displacement)
+    other_r = np.tile(moved, (len(t), 1)) + np.outer(t - t[i], [0.0, 0.0, 10.0])
+    other_v = np.tile([0.0, 0.0, 10.0], (len(t), 1))
+
+    def own(jd):
+        return r0, v0, np.ones(len(t), bool)
+
+    def others(jd):
+        return np.array([555]), other_r[None], other_v[None], np.ones((1, len(t)), bool)
+
+    hits = secondary_approaches(own, others, m, (jd0, jd0 + 3600.0 / 86400.0), 30.0, 1.0, set(),
+                                lambda *a: 1e-3, 1e-5)
+    assert [h["other"] for h in hits] == [555] and hits[0]["miss_km"] < 0.01
+
+
+def test_a_burn_time_that_makes_a_secondary_approach_is_skipped(hist_file, tmp_path, monkeypatch):
+    import satcollision.avoidance as av
+    real = av.secondary_approaches
+    calls = []
+
+    def first_one_bad(own, others, m, horizon, *a, **k):
+        calls.append(m["burn_jd"])
+        if len(calls) == 1:
+            return [{"other": 90020, "miss_km": 0.1, "pc": 1e-3, "jd": horizon[0]}]
+        return real(own, others, m, horizon, *a, **k)
+
+    monkeypatch.setattr(av, "secondary_approaches", first_one_bad)
+    w, plans = _run_to_both_encounters(hist_file, tmp_path)
+    e = next(e for e in plans if e["id"] == ENC)
+    retried = next(b for b in e["burns"].values() if b["candidates_tried"] == 2)
+    assert retried["secondary_avoided"] == 1 and not retried["secondary_risk"]
+    assert calls[0] != calls[1]                     # a different burn time was used
+    assert e["avoidance"]["check"]["met"]
