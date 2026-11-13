@@ -81,9 +81,9 @@ from .reputation import (
     reputation_weighted_aggregate,
     update_scores,
 )
-from .signal import AbstractedSignal, abstract_conjunction, assert_no_raw_state
+from .signal import AbstractedSignal, abstract_conjunction, assert_no_raw_state, severity_tier
 from .summaries import summarize_maneuver_plan
-from .twin import Conjunction, propagate_window, screen_conjunctions
+from .twin import Conjunction, PropagationResult, propagate_window, screen_conjunctions
 from .wire import encode_signed_report, encode_signed_signal
 
 STATE_VERSION = 1
@@ -161,10 +161,18 @@ class WorldConfig:
                 raise ValueError(f"behaviour for {op} must be one of {BEHAVIOURS}, not {behaviour!r}")
         if self.speed <= 0:
             raise ValueError("speed must be positive")
-        if self.fleet.get("type") not in ("synthetic", "tle", "catalogue"):
-            raise ValueError("fleet.type must be 'synthetic', 'tle' or 'catalogue'")
-        if self.fleet["type"] == "catalogue" and not self.fleet.get("operators"):
-            raise ValueError("a catalogue fleet needs 'operators': {name: [name prefixes]}")
+        if self.fleet.get("type") not in ("synthetic", "tle", "catalogue", "history"):
+            raise ValueError("fleet.type must be 'synthetic', 'tle', 'catalogue' or 'history'")
+        if self.fleet["type"] in ("catalogue", "history") and not self.fleet.get("operators"):
+            raise ValueError(f"a {self.fleet['type']} fleet needs 'operators': {{name: [name prefixes]}}")
+        if self.fleet["type"] == "history":
+            if self.pc_model != "foster":
+                raise ValueError("a history world uses the measured RTN covariance: pc_model must be 'foster'")
+            if self.cycle_days is not None or self.injection:
+                raise ValueError("a history world runs through its file's own dates: "
+                                 "no cycle_days and no injection (use fleet.at_end)")
+            if self.fleet.get("at_end", "stop") not in ("stop", "loop"):
+                raise ValueError("fleet.at_end must be 'stop' or 'loop'")
 
     def fingerprint(self) -> str:
         """Hash of the settings that change what the world *is*. A checkpoint
@@ -342,6 +350,7 @@ class World:
         self.repo_root = Path(repo_root)
         self.run_dir.mkdir(parents=True, exist_ok=True)
 
+        self.history = None   # a HistoryModel for fleet type "history"
         self._base_objects, self.start_time = self._build_fleet()
         self.operators = sorted({o.operator for o in self._base_objects if not o.is_debris})
         self.ownership = {
@@ -390,6 +399,10 @@ class World:
         self.last_tick_wall_s = 0.0
         self._tick_tag = 0  # the tick an event belongs to (the one being run)
         self.outbox: List[dict] = []  # operator mode: signed messages for the federation
+        self.maneuvers: List[dict] = []  # history worlds: avoidance burns applied to the truth
+        self.finished = False            # history worlds: reached the end of the file
+        if self.history is not None:
+            self._refresh_sets()
 
     # ------------------------------------------------------------------ #
     # Construction
@@ -405,6 +418,8 @@ class World:
                 seed=int(fleet.get("seed", self.cfg.seed)),
             )
             return objects, start
+        if fleet["type"] == "history":
+            return self._build_history_fleet()
         objects: List[TrackedObject] = []
         files = fleet["files"].items() if fleet["type"] == "tle" else [(None, fleet["file"])]
         for operator, rel_path in files:
@@ -425,6 +440,26 @@ class World:
         # TLEs are only good for a few days around their epoch: start there.
         start = catalogue_epoch(objects).replace(microsecond=0)
         return objects, start
+
+    def _build_history_fleet(self):
+        from .history_world import HistoryModel
+        try:
+            self.history = H = HistoryModel(self.cfg.fleet, self.repo_root)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"world '{self.cfg.name}' {exc}") from None
+        hist = H.hist
+        objects = [TrackedObject(norad_id=int(hist.ids[row]), operator="", satrec=hist.first_set_satrec(row),
+                                 meta={"name": hist.names[row]})
+                   for row in range(hist.n_objects)]
+        objects = group_catalogue(objects, self.cfg.fleet["operators"],
+                                  max_altitude_km=self.cfg.fleet.get("max_altitude_km"))
+        if not objects:
+            raise ValueError(f"world '{self.cfg.name}': no satellites loaded")
+        self._row_of = {int(n): i for i, n in enumerate(hist.ids)}
+        self._rows = np.array([self._row_of[o.norad_id] for o in objects], dtype=np.int64)
+        self._ids = np.array([o.norad_id for o in objects], dtype=np.int64)
+        self._id_set = set(int(i) for i in self._ids)
+        return objects, H.start_time()
 
     def _build_pc_model(self):
         if self.cfg.pc_model == "foster":
@@ -677,6 +712,9 @@ class World:
         overlap by two steps, so an encounter can show up twice; the
         duplicate is dropped by pair and time.
         """
+        if self.history is not None:
+            self._screen_history()
+            return
         cfg = self.cfg
         step = cfg.screening_step_s
         start_s = self.elapsed_s + cfg.lookahead_s - step
@@ -969,6 +1007,423 @@ class World:
                     round=self.round_index)
 
     # ------------------------------------------------------------------ #
+    # History worlds (fleet type "history"; see history_world.py)
+    # ------------------------------------------------------------------ #
+
+    def _jd(self, cycle_offset_s: float) -> float:
+        from .history_world import jd_of
+        return jd_of(self._at(cycle_offset_s))
+
+    def _refresh_sets(self) -> None:
+        """Point every object's ``satrec`` at the element set this party
+        would draw it from right now (the map, ground tracks, views): the
+        nearest set for the truth and for an operator's own satellites, the
+        newest published one for everybody else's."""
+        hist = self.history.hist
+        jd = self._jd(self.elapsed_s)
+        sets = hist.nearest(self._rows, jd)
+        if self.mode == "operator":
+            asof = hist.asof(self._rows, jd)
+            others = np.array([o.operator != self.me for o in self._objects])
+            sets = np.where(others & (asof >= 0), asof, sets)
+        for o, k in zip(self._objects, sets):
+            o.satrec = hist.satrec(int(k))
+
+    def _state_fn(self, obj: TrackedObject, kind: str, jd_now: float):
+        """``jd_array -> (r, v, ok)`` for one object, as ``kind`` knows it:
+        "public" (as-of prediction), "own" (owner's ephemeris, no simulated
+        manoeuvres) or "truth" (with them)."""
+        H = self.history
+        rows = np.array([self._row_of[obj.norad_id]])
+        if kind == "public":
+            def fn(jd):
+                r, v, ok, _ = H.predicted(rows, jd_now, jd)
+                return r[0], v[0], ok[0]
+        elif kind == "own":
+            def fn(jd):
+                r, v, ok = H.truth(rows, jd)
+                return r[0], v[0], ok[0]
+        else:
+            ids = np.array([obj.norad_id])
+
+            def fn(jd):
+                r, v, ok = H.truth(rows, jd, self.maneuvers, ids)
+                return r[0], v[0], ok[0]
+        return fn
+
+    def _assess(self, c: Conjunction, tca_jd: float, jd_now: float, viewer: Optional[str]):
+        """One party's view of a publicly detected encounter (``viewer=None``:
+        public data only). Returns history_world.Assessment or None."""
+        from .history_world import Assessment, pc_with, refine_tca
+        H = self.history
+        objs = (c.object_a, c.object_b)
+        own = [viewer is not None and o.operator == viewer for o in objs]
+        fns = [self._state_fn(o, "own" if mine else "public", jd_now) for o, mine in zip(objs, own)]
+        found = refine_tca(fns[0], fns[1], tca_jd, H.settings["refine_window_s"])
+        if found is None:
+            return None
+        miss, tca, ra, va, rb, vb = found
+        sigmas, other = [], None
+        for o, mine in zip(objs, own):
+            if mine:
+                sigmas.append((H.precise,) * 3)
+                continue
+            row = self._row_of[o.norad_id]
+            k = int(H.hist.asof(np.array([row]), jd_now)[0])
+            if k < 0:
+                return None
+            sig, age_h = H.sigma_public(row, k, tca)
+            sigmas.append(sig)
+            other = (sig, age_h)
+        pc = pc_with(ra, va, rb, vb, sigmas[0], sigmas[1])
+        if other is not None and any(own):
+            return Assessment(miss, pc, tca, other[0], other[1])
+        return Assessment(miss, pc, tca)
+
+    def _truth_miss(self, c: Conjunction, tca_jd: float, with_maneuvers: bool = True):
+        from .history_world import dt_of, refine_tca
+        kind = "truth" if with_maneuvers else "own"
+        fns = [self._state_fn(o, kind, 0.0) for o in (c.object_a, c.object_b)]
+        found = refine_tca(fns[0], fns[1], tca_jd, self.history.settings["refine_window_s"])
+        if found is None:
+            return None
+        return {"miss_km": round(found[0], 4), "tca": _iso(dt_of(found[1]))}
+
+    def _proxies(self, sets) -> List[TrackedObject]:
+        """The world's objects, each drawing from element set ``sets[i]``
+        (objects with none yet are left out)."""
+        hist = self.history.hist
+        return [dataclasses.replace(o, satrec=hist.satrec(int(k)))
+                for o, k in zip(self._objects, sets) if k >= 0]
+
+    def _pair_filter(self):
+        members = set(self.operators)
+        me = self.me
+
+        def keep(a, b):
+            if me is not None and me not in (a.operator, b.operator):
+                return False
+            return a.operator in members or b.operator in members
+        return keep
+
+    def _history_window(self):
+        """This tick's slice of the look-ahead: approaches whose TCA falls in
+        [now + lookahead, now + lookahead + tick) belong to this tick, so
+        each one is accepted exactly once. The screened span reaches a step
+        either side so nothing at the edges is lost."""
+        cfg = self.cfg
+        step = cfg.screening_step_s
+        lo_s = self.elapsed_s + cfg.lookahead_s
+        start_s = lo_s - step
+        duration = cfg.tick_sim_s + 2 * step
+        jd, fr = _jd_fr(self._at(start_s))
+        return start_s, duration, jd, fr, lo_s, lo_s + cfg.tick_sim_s
+
+    def _screen_history(self) -> None:
+        """Refined public screening (every party the same: the newest
+        published set of every object), then each side's own assessment; in
+        the sky, also the truth, to catch what the public catalogue missed.
+        screening.screen_conjunctions_refined finds the closest approach
+        between samples, so fast crossings are not skipped."""
+        from .history_world import jd_of
+        from .screening import screen_conjunctions_refined
+        cfg = self.cfg
+        H = self.history
+        step = cfg.screening_step_s
+        start_s, duration, jd0, fr0, lo_s, hi_s = self._history_window()
+        jd_now = jd_of(self.sim_time)
+        objs = self._proxies(H.hist.asof(self._rows, jd_now))
+        conjs = screen_conjunctions_refined(
+            objs, jd0, fr0, duration, step_s=step, screening_distance_km=float(H.settings["candidate_km"]),
+            pair_filter=self._pair_filter(), chunk_s=duration + step)
+        self.counters["screened_pairs"] += len(conjs)
+        by_id = {o.norad_id: o for o in self._objects}
+        for c in sorted(conjs, key=lambda c: (c.tca_offset_s, c.object_a.norad_id, c.object_b.norad_id)):
+            tca_s = start_s + c.tca_offset_s
+            if not (lo_s <= tca_s < hi_s):
+                continue
+            c.object_a, c.object_b = by_id[c.object_a.norad_id], by_id[c.object_b.norad_id]
+            lo, hi = sorted((c.object_a.norad_id, c.object_b.norad_id))
+            if any(e["pair"] == [lo, hi] and abs(e["tca_s"] - tca_s) <= 2 * step and not e.get("observer_only")
+                   for e in self.encounters):
+                continue
+            self._handle_history_conjunction(c, tca_s, jd_now)
+        if self.mode != "operator":
+            self._screen_truth()
+
+    def _screen_truth(self) -> None:
+        """Close approaches that really happen that no public-screening
+        record covers. Only the observer sees these: no operator flagged
+        them. Found by the refined screen on the nearest element set at the
+        middle of the window (the SGP4 refinement needs one set per object);
+        the miss is then re-measured on the blended truth, applied
+        manoeuvres included."""
+        from .screening import screen_conjunctions_refined
+        cfg = self.cfg
+        start_s, duration, jd0, fr0, lo_s, hi_s = self._history_window()
+        objs = self._proxies(self.history.hist.nearest(self._rows, self._jd(start_s + duration / 2)))
+        conjs = screen_conjunctions_refined(
+            objs, jd0, fr0, duration, step_s=cfg.screening_step_s,
+            screening_distance_km=cfg.watch_miss_km + 0.5, pair_filter=self._pair_filter(),
+            chunk_s=duration + cfg.screening_step_s, refine=True)
+        by_id = {o.norad_id: o for o in self._objects}
+        for c in sorted(conjs, key=lambda c: (c.tca_offset_s, c.object_a.norad_id, c.object_b.norad_id)):
+            tca_s = start_s + c.tca_offset_s
+            if not (lo_s <= tca_s < hi_s):
+                continue
+            c.object_a, c.object_b = by_id[c.object_a.norad_id], by_id[c.object_b.norad_id]
+            lo, hi = sorted((c.object_a.norad_id, c.object_b.norad_id))
+            if any(e["pair"] == [lo, hi] and abs(e["tca_s"] - tca_s) <= 900 for e in self.encounters):
+                continue
+            truth = self._truth_miss(c, self._jd(tca_s))
+            if truth is None or truth["miss_km"] > cfg.watch_miss_km:
+                continue
+            a, b = c.object_a, c.object_b
+            self.counters["unseen"] = self.counters.get("unseen", 0) + 1
+            self.encounters.append({
+                "id": f"TRUTH-{lo}-{hi}-{int(round(self.total_sim_s + (tca_s - self.elapsed_s)))}",
+                "pair": [lo, hi], "labels": [a.label, b.label], "operators": [a.operator, b.operator],
+                "tca_s": tca_s, "tca": truth["tca"], "detected": _iso(self.sim_time),
+                "warning_s": tca_s - self.elapsed_s, "miss_km": truth["miss_km"], "pc": 0.0,
+                "geometry": c.geometry_class, "rel_speed_km_s": round(float(c.relative_speed_km_s), 3),
+                "engineered": False, "status": "upcoming", "handling": "unseen",
+                "observer_only": True, "truth": truth,
+            })
+            self._event(
+                "unseen",
+                f"Truth: {a.label} and {b.label} really pass {truth['miss_km'] * 1000:.0f} m apart at "
+                f"{truth['tca']} ({c.relative_speed_km_s:.1f} km/s), but nobody's twin flagged it: "
+                f"the published element sets put them further apart.",
+            )
+
+    def _handle_history_conjunction(self, c: Conjunction, tca_s: float, jd_now: float) -> None:
+        cfg = self.cfg
+        a, b = c.object_a, c.object_b
+        if self.me is not None and self.me not in (a.operator, b.operator):
+            return
+        members = [op for op in dict.fromkeys((a.operator, b.operator)) if op in self.operators]
+        if not members:
+            return
+        tca_jd = self._jd(tca_s)
+        sides = [self.me] if self.mode == "operator" else members
+        assessed = {op: self._assess(c, tca_jd, jd_now, op) for op in sides}
+        if any(s is None for s in assessed.values()):
+            return
+        above = {op: s.pc >= cfg.pc_threshold for op, s in assessed.items()}
+        near = {op: s.miss_km <= cfg.watch_miss_km for op, s in assessed.items()}
+        if not any(above.values()) and not any(near.values()):
+            return
+        public = self._assess(c, tca_jd, jd_now, None)
+        cross = len(members) == 2
+        lo, hi = sorted((a.norad_id, b.norad_id))
+        encounter_id = f"ENC-{lo}-{hi}-{int(round(self.total_sim_s + (tca_s - self.elapsed_s)))}"
+        warning_s = tca_s - self.elapsed_s
+        # A real encounter the truth screening logged first is now covered.
+        self.encounters = [e for e in self.encounters if not (
+            e.get("observer_only") and e["pair"] == [lo, hi] and abs(e["tca_s"] - tca_s) <= 900)]
+        side_info = {}
+        for op, s in assessed.items():
+            handling = ("federated" if cross else "internal") if above[op] else ("private" if near[op] else None)
+            side_info[op] = {**s.as_dict(), "handling": handling}
+        record = {
+            "id": encounter_id, "pair": [lo, hi], "labels": [a.label, b.label],
+            "operators": [a.operator, b.operator], "tca_s": tca_s, "tca": _iso(self._at(tca_s)),
+            "detected": _iso(self.sim_time), "warning_s": warning_s,
+            "miss_km": round(public.miss_km, 4) if public else round(float(c.miss_distance_km), 4),
+            "pc": float(public.pc) if public else 0.0,
+            "geometry": c.geometry_class, "rel_speed_km_s": round(float(c.relative_speed_km_s), 3),
+            "engineered": False, "status": "upcoming", "sides": side_info,
+        }
+        if self.mode != "operator":
+            record["truth"] = self._truth_miss(c, tca_jd)
+
+        def own_text(op):
+            s = side_info[op]
+            text = f"{op}'s own assessment {s['miss_km'] * 1000:.0f} m, Pc {s['pc']:.1e}"
+            if "other_tle_age_h" in s:
+                text += (f" (the other object from a {s['other_tle_age_h']:.0f} h old element set, "
+                         f"along-track sigma {s['sigma_other_rtn_km'][1]:.1f} km)")
+            return text
+
+        if not cross or not any(above.values()):
+            owner = members[0] if not cross else (self.me or members[0])
+            handling = side_info[owner]["handling"] if not cross else "private"
+            if handling is None:
+                return
+            record["handling"] = handling
+            self.encounters.append(record)
+            if handling == "internal":
+                self.counters["internal"] += 1
+                what = "a non-member object" if (a.is_debris or b.is_debris) else "its own satellites"
+                self._event("internal", f"{owner} sees {a.label} and {b.label} ({what}): {own_text(owner)}. "
+                                        f"One operator involved, so it plans its own move and shares nothing.",
+                            encounter=encounter_id, operators=[owner])
+            else:
+                self.counters["private_watch"] += 1
+                self._event("private_watch", f"{a.label} and {b.label}: "
+                            + "; ".join(own_text(op) for op in side_info)
+                            + ". Under the sharing threshold, so nothing leaves the operators' own twins.",
+                            encounter=encounter_id)
+            return
+
+        # Cross-operator, at least one side over the threshold: the federated path.
+        self.counters["encounters_shared"] += 1
+
+        def signal_for(obj):
+            pc = side_info.get(obj.operator, side_info.get(self.me))["pc"]
+            return AbstractedSignal(encounter_id=encounter_id, sender_operator=obj.operator,
+                                    local_object_label=obj.label, tca_offset_s=float(warning_s),
+                                    geometry_class=c.geometry_class,
+                                    severity_tier=severity_tier(max(pc, cfg.pc_threshold), cfg.pc_threshold))
+
+        sig_a, sig_b = signal_for(a), signal_for(b)
+        if self.mode == "operator":
+            self._handle_own_side(record, c, sig_a, sig_b, warning_s)
+            return
+        sent = []
+        for sig in (sig_a, sig_b):
+            if not above[sig.sender_operator]:
+                continue
+            if self._would_share(sig, encounter_id):
+                self._emit(sig)
+                sent.append(sig)
+            else:
+                self.counters["signals_withheld"] += 1
+        record["handling"] = "federated"
+        record["signals_sent"] = [s.sender_operator for s in sent]
+        record["below_threshold"] = [op for op in members if not above[op]]
+        record["tier"] = (sig_a if above[a.operator] else sig_b).severity_tier
+        if len(sent) == 2:
+            plan = negotiate_maneuver(sig_a, sig_b)
+            record["plan"] = {
+                "primary": plan.primary_object, "primary_operator": plan.primary_operator,
+                "secondary": plan.secondary_object, "secondary_operator": plan.secondary_operator,
+            }
+            self.counters["maneuvers_agreed"] += 1
+            moved = self._apply_avoidance(record, c, tca_jd)
+            self._event(
+                "maneuver",
+                f"{a.label} x {b.label}: both operators signed ({c.geometry_class}, "
+                f"{warning_s / 3600:.1f} h warning). " + summarize_maneuver_plan(plan).split(" Both sides")[0]
+                + (f" Applied to the truth: {moved}." if moved else ""),
+                encounter=encounter_id, operators=[a.operator, b.operator],
+            )
+        else:
+            quiet = [s.sender_operator for s in (sig_a, sig_b) if s not in sent and above[s.sender_operator]]
+            below = record["below_threshold"]
+            self.counters["unilateral"] += 1
+            reasons = []
+            if below:
+                reasons.append(f"{', '.join(below)}'s own assessment was under the threshold")
+            if quiet:
+                reasons.append(f"{', '.join(quiet)} stayed silent")
+            self._event(
+                "unilateral",
+                f"{a.label} x {b.label}: " + " and ".join(reasons) + ", so no joint plan could be agreed. "
+                f"{' and '.join(s.sender_operator for s in sent) or 'Nobody'} must move alone. "
+                + "; ".join(own_text(op) for op in side_info) + ".",
+                encounter=encounter_id, operators=[a.operator, b.operator], silent=quiet,
+            )
+        self.encounters.append(record)
+
+    def _predicted_miss_with(self, c: Conjunction, tca_jd: float, jd_now: float, maneuvers: List[dict]) -> float:
+        from .history_world import apply_maneuvers, refine_tca
+        fns = []
+        for o in (c.object_a, c.object_b):
+            base = self._state_fn(o, "public", jd_now)
+
+            def fn(jd, base=base, nid=o.norad_id):
+                r, v, ok = base(jd)
+                r, v = r[None].copy(), v[None]
+                apply_maneuvers(r, v, np.array([nid]), np.asarray(jd, dtype=float), maneuvers)
+                return r[0], v[0], ok
+            fns.append(fn)
+        found = refine_tca(fns[0], fns[1], tca_jd, self.history.settings["refine_window_s"])
+        return found[0] if found else 0.0
+
+    def _apply_avoidance(self, record: dict, c: Conjunction, tca_jd: float) -> str:
+        """Give both satellites of an agreed plan their burn (see
+        history_world). Returns a description, '' if there was no time."""
+        from .history_world import dt_of, jd_of, plan_burn
+        burn_jd = jd_of(self.sim_time)
+        lead_s = (tca_jd - burn_jd) * 86400.0
+        if lead_s < 600:
+            return ""
+        before = self._truth_miss(c, tca_jd, with_maneuvers=True)
+        by_label = {c.object_a.label: c.object_a, c.object_b.label: c.object_b}
+        shift = float(self.history.settings["maneuver_shift_km"])
+
+        def burns(flip: bool) -> List[dict]:
+            out = []
+            for label, direction in ((record["plan"]["primary"], "+"), (record["plan"]["secondary"], "-")):
+                if flip:
+                    direction = "-" if direction == "+" else "+"
+                obj = by_label[label]
+                n = obj.satrec.no_kozai / 60.0
+                out.append({"norad_id": obj.norad_id, "encounter": record["id"], "burn_jd": burn_jd,
+                            "tca_jd": tca_jd, "dv_km_s": plan_burn(n, lead_s, shift, direction),
+                            "n_rad_s": n, "direction": direction, "label": label})
+            return out
+
+        # The plan fixes only that the two moves are opposite. Which way is
+        # "+" is settled from public data alone (both operators can compute
+        # it and agree): the orientation that opens up the predicted miss.
+        options = [burns(False), burns(True)]
+        predicted = [self._predicted_miss_with(c, tca_jd, burn_jd, ms) for ms in options]
+        chosen = options[int(predicted[1] > predicted[0])]
+        self.maneuvers.extend(chosen)
+        dvs = [f"{m['label']} {m['dv_km_s'] * 1e5:+.1f} cm/s" for m in chosen]
+        after = self._truth_miss(c, tca_jd, with_maneuvers=True)
+        if before and after:
+            record["truth"] = {**after, "miss_km_without_maneuver": before["miss_km"]}
+            return (f"burns {', '.join(dvs)} along-track at {_iso(dt_of(burn_jd))}; "
+                    f"true miss {before['miss_km'] * 1000:.0f} m -> {after['miss_km'] * 1000:.0f} m")
+        return f"burns {', '.join(dvs)}"
+
+    def _history_before_tick(self) -> bool:
+        """End-of-file handling and housekeeping. False: don't advance."""
+        cfg = self.cfg
+        H = self.history
+        horizon = self._jd(self.elapsed_s + cfg.lookahead_s + cfg.tick_sim_s + 2 * cfg.screening_step_s)
+        if horizon > H.hist.last_epoch:
+            if H.settings["at_end"] == "loop":
+                self._start_new_cycle()
+            else:
+                if not self.finished:
+                    self.finished = True
+                    self._event("end", f"End of the element-set file: the last set's epoch is "
+                                       f"{_iso(H.end_time())}, so there is no truth beyond it. "
+                                       f"The clock has stopped at {_iso(self.sim_time)} (at_end: stop).")
+                return False
+        now = self._jd(self.elapsed_s)
+        self.maneuvers = [m for m in self.maneuvers if 2 * m["tca_jd"] - m["burn_jd"] > now]
+        self._refresh_sets()
+        return True
+
+    def _report_jumps(self, old_elapsed_s: float) -> None:
+        """Once per simulated hour: element sets published in the hour that
+        jump more than the error model allows (real manoeuvres)."""
+        hour_old, hour_new = int(old_elapsed_s // 3600), int(self.elapsed_s // 3600)
+        if hour_new <= hour_old:
+            return
+        lo, hi = self._jd(hour_old * 3600.0), self._jd(hour_new * 3600.0)
+        jumps = self.history.jumps_between(lo, hi, self._id_set)
+        if not jumps:
+            return
+        self.counters["tle_jumps"] = self.counters.get("tle_jumps", 0) + len(jumps)
+        owner = {o.norad_id: o for o in self._objects}
+        n_members = sum(1 for j in jumps if not owner[j["norad_id"]].is_debris)
+        top = sorted(jumps, key=lambda j: -j["n_sigma"])[:3]
+        text = ", ".join(f"{j['name'] or owner[j['norad_id']].label} "
+                         f"({'/'.join(f'{x:+.1f}' for x in j['rtn_km'])} km R/T/C, {j['n_sigma']:.0f} sigma)"
+                         for j in top)
+        self._event("tle_jump",
+                    f"{len(jumps)} element sets published in the last hour ({n_members} of them federation "
+                    f"members') jumped more than {self.history.settings['jump_sigma']:g} robust sigma from the "
+                    f"previous set: real manoeuvres, most likely. Largest: {text}.",
+                    n=len(jumps))
+
+    # ------------------------------------------------------------------ #
     # Tick
     # ------------------------------------------------------------------ #
 
@@ -982,6 +1437,12 @@ class World:
         self.elapsed_s = 0.0
         self.next_injection_s = 0.0
         self.encounters = [e for e in self.encounters if e["status"] == "passed"]
+        if self.history is not None:
+            self.maneuvers = []
+            self._refresh_sets()
+            self._event("cycle", f"Reached the end of the element-set file ({_iso(self.history.end_time())}); "
+                                 f"replaying it from {_iso(self.start_time)} (cycle {self.cycle}, at_end: loop).")
+            return
         self._event(
             "cycle",
             f"Clock reset to the catalogue epoch {_iso(self.start_time)} (cycle {self.cycle}): "
@@ -996,11 +1457,17 @@ class World:
         cycle_s = (self.cfg.cycle_days or 0) * 86400.0
         if cycle_s and self.elapsed_s >= cycle_s:
             self._start_new_cycle()
+        if self.history is not None and not self._history_before_tick():
+            self._tick_tag = self.tick_index
+            return
         self._retire_injections()
         self._maybe_inject()
         self._screen()
         self._mark_passed()
+        old_elapsed = self.elapsed_s
         self.elapsed_s += self.cfg.tick_sim_s
+        if self.history is not None and self.mode != "operator":
+            self._report_jumps(old_elapsed)
         self.total_sim_s += self.cfg.tick_sim_s
         self.tick_index += 1
         self.counters["ticks"] += 1
@@ -1041,6 +1508,22 @@ class World:
                            round(rad - 6378.137)])
         return {"operators": names, "points": points}
 
+    def source_text(self) -> str:
+        if self.history is not None:
+            return self.history.source_text()
+        return "synthetic fleets" if self.cfg.fleet["type"] == "synthetic" else "real TLE catalogue"
+
+    def history_info(self) -> dict:
+        H = self.history
+        return {
+            "end_time": _iso(H.end_time()), "at_end": H.settings["at_end"],
+            "truth": f"nearest element set, blended over {H.blend_s:g} s at each switch",
+            "prediction": "newest element set published at or before now",
+            "precise_sigma_km": H.precise,
+            "error_model": H.model.table,
+            "maneuvers_active": len(self.maneuvers),
+        }
+
     def state(self, wall_interval_s: float | None = None) -> dict:
         upcoming = sorted((e for e in self.encounters if e["status"] == "upcoming"), key=lambda e: e["tca_s"])
         passed = [e for e in self.encounters if e["status"] == "passed"][::-1]
@@ -1061,7 +1544,8 @@ class World:
                 "cycle_days": self.cfg.cycle_days,
                 "behaviours": {op: self.cfg.behaviours.get(op, "honest") for op in self.operators},
                 "start_time": _iso(self.start_time),
-                "source": "synthetic fleets" if self.cfg.fleet["type"] == "synthetic" else "real TLE catalogue",
+                "source": self.source_text(),
+                **({"history": self.history_info()} if self.history is not None else {}),
             },
             "clock": {
                 "sim_time": _iso(self.sim_time), "tick": self.tick_index, "cycle": self.cycle,
@@ -1069,6 +1553,9 @@ class World:
                 "wall_started": self.wall_started, "wall_updated": _iso(datetime.now(timezone.utc)),
                 "last_tick_compute_s": round(self.last_tick_wall_s, 3),
                 "wall_interval_s": wall_interval_s,
+                "finished": self.finished,
+                "end_time": _iso(self.history.end_time()) if self.history is not None else None,
+                "at_end": self.history.settings["at_end"] if self.history is not None else None,
             },
             "counters": self.counters,
             "upcoming": upcoming[:40],
@@ -1108,6 +1595,7 @@ class World:
             "rounds": self.rounds, "recent_events": self.recent_events,
             "counters": self.counters,
             "ledger_entries": len(self.ledger.entries), "ledger_tail": self.ledger.tail_hash(),
+            "maneuvers": self.maneuvers, "finished": self.finished,
         }
 
     def save(self, wall_interval_s: float | None = None) -> None:
@@ -1163,8 +1651,12 @@ class World:
         rep = ck["reputation"]
         self.reputation = ReputationState(scores=dict(rep["scores"]), rounds=rep["rounds"],
                                           history=list(rep["history"]))
+        self.maneuvers = list(ck.get("maneuvers", []))
+        self.finished = bool(ck.get("finished", False))
         for rec in self.injections:
             self._materialize_injection(rec)
+        if self.history is not None:
+            self._refresh_sets()
         self._tick_tag = self.tick_index
         self._load_ledger(ck["ledger_entries"], ck["ledger_tail"])
         # Events written after the last checkpoint belong to a tick that will

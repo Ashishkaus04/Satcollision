@@ -108,8 +108,9 @@ def _world_header(world: World) -> dict:
         "tick": world.tick_index,
         "speed": world.cfg.speed,
         "operators": world.operators,
-        "source": "synthetic fleets" if world.cfg.fleet["type"] == "synthetic" else "real TLE catalogue",
+        "source": world.source_text(),
         "pc_model": world.cfg.pc_model,
+        "finished": world.finished,
         "pc_threshold": world.cfg.pc_threshold,
         "lookahead_s": world.cfg.lookahead_s,
         "federation_period_s": world.cfg.federation_period_s,
@@ -149,10 +150,19 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
     other_objs = sorted((o for o in world._objects if o.operator != operator), key=lambda o: o.norad_id)
     involved_ids = set()
     mine = []
+    party_to = set()   # every encounter id naming one of my satellites (what I could attest to)
     for e in world.encounters:
-        if operator in e["operators"]:
-            mine.append(e)
-            involved_ids.update(e["pair"])
+        if e.get("observer_only") or operator not in e["operators"]:
+            continue
+        party_to.add(e["id"])
+        if "sides" in e:
+            # History world: each operator assessed its own side; keep what
+            # its own twin would have kept.
+            side = e["sides"].get(operator)
+            if side is None or side.get("handling") is None:
+                continue
+        mine.append(e)
+        involved_ids.update(e["pair"])
 
     own_shown = _thin(own_objs, MAX_OWN_POINTS, keep=involved_ids)
     own_states = _states(world, own_shown)
@@ -186,7 +196,8 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
     encounters = []
     for e in sorted(mine, key=lambda e: (e["status"] != "upcoming", e["tca_s"] if e["status"] == "upcoming" else -e["tca_s"])):
         mine_idx = 0 if e["operators"][0] == operator else 1
-        encounters.append({
+        side = (e.get("sides") or {}).get(operator)
+        row = {
             "id": e["id"], "status": e["status"], "tca": e["tca"],
             "time_to_tca_s": e["tca_s"] - world.elapsed_s,
             "my_satellite": e["labels"][mine_idx],
@@ -197,7 +208,16 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
             "i_signalled": e.get("i_signalled", operator in e.get("signals_sent", [])),
             "plan": _my_plan(e.get("plan") or _plan_from_feed(e, senders), operator),
             "engineered": e.get("engineered", False),
-        })
+        }
+        if side is not None:
+            # My own assessment (my satellite from my own ephemeris); the
+            # public-catalogue prediction alongside it.
+            row.update(miss_km=side["miss_km"], pc=side["pc"], handling=side["handling"],
+                       public_miss_km=e["miss_km"], public_pc=e["pc"])
+            for k in ("sigma_other_rtn_km", "other_tle_age_h"):
+                if k in side:
+                    row[k] = side[k]
+        encounters.append(row)
 
     # Alerts: signals other operators sent about encounters I'm party to,
     # tailored to the tier my reputation has earned.
@@ -210,7 +230,7 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
     else:
         tier = world.reputation.tier(operator)
         reputation = {"score": round(world.reputation.score(operator), 3), "tier": tier}
-        my_ids = {e["id"] for e in mine}
+        my_ids = party_to
         alerts = []
         for s in _ledger_signals(world):
             if s["encounter_id"] in my_ids and s["sender_operator"] != operator:
@@ -381,8 +401,9 @@ def compare_from_views(world: World, truth: dict, op_views: Dict[str, dict], fed
     return {
         "encounter_id": encounter_id,
         "world": _world_header(world),
-        "truth": {k: truth[k] for k in ("labels", "operators", "tca", "miss_km", "pc", "geometry",
-                                         "rel_speed_km_s", "handling", "status")},
+        "truth": {**{k: truth[k] for k in ("labels", "operators", "tca", "miss_km", "pc", "geometry",
+                                           "rel_speed_km_s", "handling", "status")},
+                  **({"real": truth["truth"]} if truth.get("truth") else {})},
         "operators": sides,
         "server": server,
     }
