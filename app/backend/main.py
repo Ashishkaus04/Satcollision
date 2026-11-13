@@ -319,6 +319,19 @@ def _decode(settings: Settings, token: str) -> User:
     return User(username=p["sub"], role=p["role"], operator=p.get("op"))
 
 
+def _check_view_is_for(data: dict, user: "User", world: str) -> None:
+    """Last line of defence before a view leaves the server: it must be the
+    requesting party's own view of the world it asked for. Raising here
+    sends nothing (500 on REST; the socket closes)."""
+    ok = data.get("role") == user.role and (data.get("world") or {}).get("name") == world
+    if user.role == "operator":
+        ok = ok and data.get("operator") == user.operator
+    if not ok:
+        log.error("refused to send %s/%s view of %s to %s", data.get("role"), data.get("operator"),
+                  (data.get("world") or {}).get("name"), user.username)
+        raise HTTPException(500, "view does not match the requesting party")
+
+
 def _can_see_world(user: User, runner: WorldRunner) -> bool:
     return user.role in ("federation", "observer") or user.operator in runner.world.operators
 
@@ -359,10 +372,13 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     def build_view(runner: WorldRunner, user: User) -> dict:
         if user.role == "operator":
-            return runner.view(f"op:{user.operator}", lambda: runner.operator_view(user.operator))
-        if user.role == "federation":
-            return runner.view("federation", runner.federation_view)
-        return runner.view("observer", runner.observer_view)
+            data = runner.view(f"op:{user.operator}", lambda: runner.operator_view(user.operator))
+        elif user.role == "federation":
+            data = runner.view("federation", runner.federation_view)
+        else:
+            data = runner.view("observer", runner.observer_view)
+        _check_view_is_for(data, user, runner.world.cfg.name)
+        return data
 
     # ---- routes ----
 
@@ -459,6 +475,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
                     sent = data["version"]
                     await ws.send_json(data)
                 await asyncio.sleep(0.5)
+        except HTTPException:
+            await ws.close(code=1011)   # a view that is not this caller's: send nothing
         except (WebSocketDisconnect, RuntimeError):
             return
 
