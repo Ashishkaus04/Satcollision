@@ -450,3 +450,24 @@ def test_avoidance_paths_are_drawn_for_the_owner_and_the_observer_only(hist_file
         assert mine and all(q["operator"] == op for q in mine)
         assert not any(q["satellite"].startswith(other) for q in mine)
         assert "miss_after_km" not in mine[0]        # the truth is the observer's only
+
+
+def test_the_satellite_rides_its_drawn_path(hist_file, tmp_path):
+    """Same frame, same clock: the path sample at "now" is where the
+    satellite's dot is drawn, tick after tick, and now moves along the path."""
+    from satcollision.views import observer_view
+    w = _world(hist_file, tmp_path)
+    for _ in range(16):
+        w.tick()
+    seen = []
+    for _ in range(6):
+        w.tick()
+        v = observer_view(w)
+        p = next(p for p in v["burn_paths"] if p["satellite"] == "Alpha-90001")
+        dot = next(q for q in v["tracks"]["points"] if q[4] == 90001)
+        k = p["now_index"]
+        assert k >= 0
+        assert p["original"][k][0] == pytest.approx(dot[0], abs=0.02)
+        assert (p["original"][k][1] - dot[1] + 540) % 360 - 180 == pytest.approx(0.0, abs=0.02)
+        seen.append(k)
+    assert seen == sorted(seen) and seen[-1] - seen[0] == 10     # two minutes a tick, one sample a minute
