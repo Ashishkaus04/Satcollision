@@ -326,6 +326,8 @@ def _check_view_is_for(data: dict, user: "User", world: str) -> None:
     ok = data.get("role") == user.role and (data.get("world") or {}).get("name") == world
     if user.role == "operator":
         ok = ok and data.get("operator") == user.operator
+        # Avoidance paths are orbits: an operator only ever gets its own.
+        ok = ok and all(p.get("operator") == user.operator for p in data.get("burn_paths", []))
     if not ok:
         log.error("refused to send %s/%s view of %s to %s", data.get("role"), data.get("operator"),
                   (data.get("world") or {}).get("name"), user.username)

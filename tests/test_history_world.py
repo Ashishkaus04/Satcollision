@@ -280,6 +280,10 @@ def test_operator_twin_finds_the_same_encounter_with_only_its_own_side(hist_file
             assert k and h.epochs[k[0]] <= jd
 
 
+def mine_view_paths(view):
+    return [(p["satellite"], p["burn_time"], p["maneuvered"][-1]) for p in view["burn_paths"]]
+
+
 def test_separate_processes_match_one_process(hist_file, tmp_path):
     from pathlib import Path
     from satcollision.processes import ProcessWorld
@@ -309,6 +313,7 @@ def test_separate_processes_match_one_process(hist_file, tmp_path):
             mine = next(e for e in group.operator_view(op)["encounters"] if e["id"] == ENC)
             theirs = next(e for e in operator_view(ref, op)["encounters"] if e["id"] == ENC)
             assert mine["my_burn"] == theirs["my_burn"] and mine["my_burn"]["dv_m_s"] > 0
+            assert mine_view_paths(group.operator_view(op)) == mine_view_paths(operator_view(ref, op))
     finally:
         group.close()
 
@@ -426,3 +431,22 @@ def test_a_burn_time_that_makes_a_secondary_approach_is_skipped(hist_file, tmp_p
     assert retried["secondary_avoided"] == 1 and not retried["secondary_risk"]
     assert calls[0] != calls[1]                     # a different burn time was used
     assert e["avoidance"]["check"]["met"]
+
+
+def test_avoidance_paths_are_drawn_for_the_owner_and_the_observer_only(hist_file, tmp_path):
+    from satcollision.views import observer_view
+    w = _world(hist_file, tmp_path)
+    for _ in range(18):                              # past the decision, before TCA
+        w.tick()
+    obs = observer_view(w)["burn_paths"]
+    assert {p["satellite"] for p in obs if p["encounter"] == ENC} == {"Alpha-90001", "Beta-90011"}
+    p = next(p for p in obs if p["satellite"] == "Alpha-90001")
+    assert len(p["original"]) == len(p["maneuvered"]) > 30 and len(p["original"][0]) == 3
+    assert p["shift_at_tca_km"] > 0.5                # the burn moves it at TCA
+    assert p["original"][0] == pytest.approx(p["maneuvered"][0], abs=1e-6)   # same before the burn
+    assert p["miss_after_km"] > p["miss_before_km"]
+    for op, other in (("Alpha", "Beta"), ("Beta", "Alpha")):
+        mine = operator_view(w, op)["burn_paths"]
+        assert mine and all(q["operator"] == op for q in mine)
+        assert not any(q["satellite"].startswith(other) for q in mine)
+        assert "miss_after_km" not in mine[0]        # the truth is the observer's only

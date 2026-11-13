@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 export type GlobePoint = { lat: number; lon: number; alt_km: number; color: string; size?: number; highlight?: boolean };
-export type GlobeTrack = { points: [number, number, number][]; color: string };
+export type GlobeTrack = { points: [number, number, number][]; color: string; opacity?: number };
 
 const R_EARTH = 6378.137;
 // Altitudes are exaggerated x3 so a 550 km shell is visibly off the surface.
@@ -35,9 +35,10 @@ function dotTexture() {
  * Three.js globe. Points are re-uploaded whenever ``points`` changes (once
  * per world tick); the camera, rotation and Earth stay put.
  */
-export default function Globe({ points, track, emptyMessage, height = 460 }: {
+export default function Globe({ points, track, tracks, emptyMessage, height = 460 }: {
   points: GlobePoint[];
   track?: GlobeTrack | null;
+  tracks?: GlobeTrack[];
   emptyMessage?: string;
   height?: number;
 }) {
@@ -156,13 +157,14 @@ export default function Globe({ points, track, emptyMessage, height = 460 }: {
       });
       s.layer.add(new THREE.Points(geo, mat));
     }
-    if (track && track.points.length > 1) {
-      const pts = track.points.map(([lat, lon, alt]) => toVec(lat, lon, alt));
+    for (const t of [...(tracks ?? []), ...(track ? [track] : [])]) {
+      if (t.points.length < 2) continue;
+      const pts = t.points.map(([lat, lon, alt]) => toVec(lat, lon, alt));
       const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
-        new THREE.LineBasicMaterial({ color: track.color, transparent: true, opacity: 0.9 }));
+        new THREE.LineBasicMaterial({ color: t.color, transparent: true, opacity: t.opacity ?? 0.9 }));
       s.layer.add(line);
     }
-  }, [points, track]);
+  }, [points, track, tracks]);
 
   return (
     <div className="globe" style={{ height }}>

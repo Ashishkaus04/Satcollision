@@ -1010,6 +1010,80 @@ class World:
     # History worlds (fleet type "history"; see history_world.py)
     # ------------------------------------------------------------------ #
 
+    # ---- avoidance paths for the dashboard ----
+
+    MAX_PATHS = 6
+
+    def burn_path(self, norad_id: int, m: dict, step_s: float = 60.0) -> Optional[dict]:
+        """A satellite's own track around one planned burn, without and with
+        it: from 10 min before the burn to 10 min after the return burn
+        (at most 4 h), one sample a minute, as [lat, lon, alt_km]."""
+        from .history_world import apply_maneuvers, dt_of
+        obj = next((o for o in self._objects if o.norad_id == norad_id), None)
+        if obj is None or self.history is None:
+            return None
+        lo = m["burn_jd"] - 600.0 / 86400.0
+        hi = min(2.0 * m["tca_jd"] - m["burn_jd"] + 600.0 / 86400.0, lo + 4 * 3600.0 / 86400.0)
+        marks = np.array([m["burn_jd"], m["tca_jd"]])
+        jd = np.concatenate([lo + np.arange(0.0, (hi - lo) * 86400.0 + step_s, step_s) / 86400.0, marks])
+        r, v, ok = self._state_fn(obj, "own", 0.0)(jd)
+        moved = r[None].copy()
+        apply_maneuvers(moved, v[None], np.array([norad_id]), jd, [m])
+        moved = moved[0]
+
+        def geo(pos, t):
+            whole = math.floor(t - 0.5) + 0.5
+            x, y, z = (float(c) for c in pos)
+            rad = math.sqrt(x * x + y * y + z * z)
+            lon = (math.degrees(math.atan2(y, x) - _gmst_rad(whole, t - whole)) + 540.0) % 360.0 - 180.0
+            return [round(math.degrees(math.asin(z / rad)), 3), round(lon, 3), round(rad - 6378.137, 2)]
+
+        n = len(jd) - 2
+        return {
+            "satellite": obj.label, "operator": obj.operator, "norad_id": norad_id,
+            "burn_time": _iso(dt_of(m["burn_jd"])), "tca": _iso(dt_of(m["tca_jd"])),
+            "original": [geo(r[i], jd[i]) for i in range(n) if ok[i]],
+            "maneuvered": [geo(moved[i], jd[i]) for i in range(n) if ok[i]],
+            "burn_point": geo(moved[n], jd[n]), "tca_point": geo(moved[n + 1], jd[n + 1]),
+            "tca_point_original": geo(r[n + 1], jd[n + 1]),
+            "shift_at_tca_km": round(float(np.linalg.norm(moved[n + 1] - r[n + 1])), 3),
+        }
+
+    def burn_paths(self, operator: Optional[str]) -> List[dict]:
+        """Paths of the planned burns still in play (upcoming, or not yet
+        back on track). ``operator``: only that operator's own satellites,
+        from its own plan; None: the observer, every burn the world applied."""
+        if self.history is None:
+            return []
+        now = self._jd(self.elapsed_s)
+        out = []
+        for e in sorted(self.encounters, key=lambda e: e["tca_s"]):
+            if not e.get("plan") and operator is None:
+                continue
+            if operator is None:
+                burns = e.get("burn_maneuvers") or {}
+            else:
+                mine = e.get("my_burn_maneuver") or (e.get("burn_maneuvers") or {}).get(operator)
+                burns = {operator: mine} if mine else {}
+            for op, m in burns.items():
+                if 2.0 * m["tca_jd"] - m["burn_jd"] < now:
+                    continue   # back on its own track
+                path = self.burn_path(m["norad_id"], m)
+                if path is None:
+                    continue
+                path["encounter"] = e["id"]
+                if operator is None:
+                    t = e.get("truth") or {}
+                    path["miss_before_km"] = t.get("miss_km_without_maneuver")
+                    path["miss_after_km"] = t.get("miss_km")
+                else:
+                    side = (e.get("sides") or {}).get(operator) or {}
+                    path["miss_before_km"] = side.get("miss_km")      # its own assessment
+                out.append(path)
+            if len(out) >= self.MAX_PATHS:
+                break
+        return out[:self.MAX_PATHS]
+
     def _jd(self, cycle_offset_s: float) -> float:
         from .history_world import jd_of
         return jd_of(self._at(cycle_offset_s))
@@ -1283,6 +1357,7 @@ class World:
                 mine = self._my_burn_record(c, tca_jd, jd_now)
                 if mine is not None:
                     record["my_burn"] = mine
+                    record["my_burn_maneuver"] = {**self._last_burn_maneuver, "encounter": record["id"]}
             return
         sent = []
         for sig in (sig_a, sig_b):
@@ -1518,6 +1593,7 @@ class World:
         if b is None:
             return None
         mine = c.object_a if c.object_a.operator == self.me else c.object_b
+        self._last_burn_maneuver = b.as_maneuver("", mine.label)
         return {**self._burn_summary(b, mine.label), "pc_before": agreement.pc_before,
                 "target_pc": float(self.history.avoid["target_pc"]),
                 "target_met": bool(check and check["met"]), "plan_scale": check["scale"] if check else 1.0}
@@ -1591,6 +1667,8 @@ class World:
             burns[obj.operator] = self._burn_summary(b, obj.label)
         self.maneuvers.extend(made)
         record["burns"] = burns
+        record["burn_maneuvers"] = {next(o.operator for o in (c.object_a, c.object_b) if o.norad_id == m["norad_id"]): m
+                                    for m in made}
         miss_pub, pc_pub = self._public_after(c, tca_jd, jd_now, made)
         record["avoidance"].update(pc_after_public=pc_pub, miss_after_public_km=miss_pub,
                                    total_dv_m_s=round(sum(b["dv_m_s"] for b in burns.values()), 4))
@@ -1665,6 +1743,7 @@ class World:
         predicted = [self._predicted_miss_with(c, tca_jd, burn_jd, ms) for ms in options]
         chosen = options[int(predicted[1] > predicted[0])]
         self.maneuvers.extend(chosen)
+        record["burn_maneuvers"] = {by_label[m["label"]].operator: m for m in chosen}
         dvs = [f"{m['label']} {m['dv_km_s'] * 1e5:+.1f} cm/s" for m in chosen]
         after = self._truth_miss(c, tca_jd, with_maneuvers=True)
         if before and after:

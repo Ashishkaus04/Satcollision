@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Globe, { GlobePoint, GlobeTrack } from "../components/Globe";
+import { pathLayers, pathLegend } from "../components/paths";
 import { Legend, Panel, Pill, Stat, Tier, Withheld } from "../components/ui";
 import { api, colorFor, fmtDur, fmtMiss, Session } from "../api";
 
@@ -30,6 +31,7 @@ export default function OperatorView({ view, session }: { view: any; session: Se
     }
     return pts;
   }, [view, hideOthers, selected]);
+  const paths = useMemo(() => pathLayers(view.burn_paths), [view]);
 
   const upcoming = view.encounters.filter((e: any) => e.status === "upcoming");
   const passed = view.encounters.filter((e: any) => e.status !== "upcoming");
@@ -55,15 +57,36 @@ export default function OperatorView({ view, session }: { view: any; session: Se
       <div className="grid">
         <div className="stack">
           <Panel title="My sky" extra={view.own_satellites.length < view.own_count ? `(${view.own_satellites.length.toLocaleString()} of mine drawn)` : ""}>
-            <Globe points={points} track={track} />
+            <Globe points={[...points, ...paths.markers]} track={track} tracks={paths.tracks} />
             <Legend items={[
               { color: colorFor(me, ops), label: `${me} (precise)` },
               { color: "#56607e", label: "others (public catalogue, ~50 km)" },
               { color: "#ff5468", label: "in an upcoming close approach" },
               ...(track ? [{ color: "#ffffff", label: "selected orbit, next 100 min" }] : []),
+              ...pathLegend(view.burn_paths),
             ]} />
             <label className="check"><input type="checkbox" checked={hideOthers} onChange={(e) => setHideOthers(e.target.checked)} /> hide other operators</label>
           </Panel>
+
+          {view.burn_paths?.length > 0 && (
+            <Panel title="My avoidance paths" extra="drawn on the globe">
+              <table>
+                <thead><tr><th>Satellite</th><th>Burn</th><th>Closest approach</th><th className="num">Moved at TCA</th><th className="num">My miss before</th></tr></thead>
+                <tbody>
+                  {view.burn_paths.map((p: any) => (
+                    <tr key={p.encounter + p.satellite}>
+                      <td>{p.satellite}</td>
+                      <td className="mono small">{p.burn_time.slice(11, 16)}</td>
+                      <td className="mono small">{p.tca.slice(11, 16)}</td>
+                      <td className="num">{fmtMiss(p.shift_at_tca_km)}</td>
+                      <td className="num">{p.miss_before_km != null ? fmtMiss(p.miss_before_km) : "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="note">Only your own satellites' paths: the partner works out and flies its own.</p>
+            </Panel>
+          )}
 
           <Panel title="My close approaches" extra={`look-ahead ${fmtDur(view.world.lookahead_s)}`}>
             <div className="scroll">

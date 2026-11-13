@@ -252,9 +252,12 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
         my_reports = [{"received": r["received"], "counts": r["counts"]}
                       for r in ledger_report_rows(world.ledger.entries, operator, limit=10)]
 
+    planned = {e["id"] for e in encounters if e["plan"]}
+    paths = [p for p in world.burn_paths(operator) if p["encounter"] in planned and p["operator"] == operator]
     return {
         "role": "operator",
         "operator": operator,
+        "burn_paths": paths,
         "world": _world_header(world),
         "own_satellites": own,
         "own_count": len(own_objs),
@@ -333,6 +336,7 @@ def observer_view(world: World, federation: Optional[dict] = None) -> dict:
         "note": "Simulation ground truth. No real party has this view: it exists so the "
                 "operator and federation views can be checked against it.",
         "tracks": state["tracks"],
+        "burn_paths": world.burn_paths(None),
         "fleet": state["world"]["fleet"],
         "behaviours": state["world"]["behaviours"],
         "counters": state["counters"],
