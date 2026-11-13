@@ -246,6 +246,39 @@ What this means for the design and the paper:
    decisions cannot be randomised without costing safety. This is a limit of
    conjunction warning in general, and the paper should say so.
 
+## 8. Dishonest operators against the two-stage scheme
+
+`research/adversarial.py`, 10 Sep catalogue, precise 0.5 km, public 3 km, tau = 3e-5.
+Warned = share of dangerous encounters warned at least 24 h ahead.
+
+| Scenario | Circular: warned / MPC h per day | Foster ×8: warned / MPC h per day |
+| --- | --- | --- |
+| Both honest | 99.1% / 18.6 | 99.8% / 18.5 |
+| B withholds all its alerts | 97.6% / 13.7 | 99.7% / 14.6 |
+| A alerts on every approach (flood) | 99.6% / 84.0 | 99.8% / 84.0 |
+| Flood, but secure step needs B's own Pc >= 1e-5 | 99.4% / 26.2 | 99.7% / 19.7 |
+| Flood, but secure step needs B's own Pc >= 1e-6 | 99.5% / 46.2 | 99.7% / 26.9 |
+| Both honest, both checks >= 1e-5 | 98.2% / 10.9 | 99.7% / 11.6 |
+| Both honest, both checks >= 1e-6 | 99.0% / 15.4 | 99.7% / 15.3 |
+
+- **Withholding is self-limiting:** the honest side's own alerts still cover
+  almost every dangerous encounter, because each operator can detect the
+  approach from its own precise orbit. Loss: 1.5 points (circular), 0.1 (Foster).
+- **Flooding is the real threat.** It multiplies the secure compute by 4.5 (a lower
+  bound: the cache only holds approaches under 10 km, and a flooder could name
+  any pair) and, worse, lets the flooder query the secure step's decision on
+  every approach. That is the probing route to the leakage in section 7.
+- **Defence: a plausibility check.** Run the secure step only if the *other*
+  operator's own stage-1 Pc reaches a floor. With a floor of 1e-6 an honest
+  federation loses nothing measurable (99.0% vs 99.1%) and a flooder's extra
+  load falls from +65 to +28 cluster-hours a day (circular). Caveat: if the
+  flooder can see whether the secure step ran, it learns the outcome of B's check,
+  an alert-like bit at a lower threshold. The check should therefore also run
+  inside the secure computation, so only the final decision comes out.
+- Collusion: with two operators, collusion only harms the colluders' own pairs.
+  The secure step itself assumes its servers do not collude (the standard MPC
+  assumption); that belongs in the paper's threat model, not in an experiment.
+
 ## Reproduce
 
 ```bash
@@ -260,6 +293,7 @@ python research/latest_per_object.py <space-track 3le> data/historical/<name>_la
 PYTHONPATH=src python research/replay_2021.py data/historical/css_2021.tle
 PYTHONPATH=src:research python research/leakage.py research/cache/<cache>.npz --targets 25 --seed 1 --window-h 24
 python research/fig_leakage.py
+PYTHONPATH=src:research python research/adversarial.py research/cache/<cache>.npz --k 8
 python research/fig_sweep.py research/results/<cache>__sweep.json
 ```
 
@@ -267,4 +301,4 @@ The cache file (125 MB) is not committed; it regenerates in about 7 minutes.
 
 ## Next
 
-1. Adaptive and colluding attackers against the alert layer.
+1. Write the paper draft.
