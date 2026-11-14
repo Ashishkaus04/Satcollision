@@ -190,3 +190,41 @@ def test_catalogue_world_counts_non_members_as_nobodys(tmp_path):
     assert w.operators == ["OneWeb"]
     assert any(o.is_debris for o in w._objects)
     w.tick()
+
+
+def test_a_torn_ledger_tail_from_a_killed_process_is_dropped(tmp_path):
+    """A container killed mid-write can leave NUL bytes or half a line at the
+    end of an append-only file. Resuming drops that tail instead of crashing."""
+    cfg = _cfg("sandbox")
+    w = World.open(cfg, tmp_path, ROOT, reset=True)
+    for _ in range(80):
+        w.tick()
+    w.save()
+    n = len(w.ledger.entries)
+    assert n > 0
+    with open(tmp_path / "ledger.jsonl", "ab") as fh:
+        fh.write(b"\x00" * 4096 + b"\n" + b'{"index": 9')
+    with open(tmp_path / "events.jsonl", "ab") as fh:
+        fh.write(b"\x00" * 512)
+    back = World.open(cfg, tmp_path, ROOT)
+    assert len(back.ledger.entries) == n and back.ledger_verified
+    assert b"\x00" not in (tmp_path / "ledger.jsonl").read_bytes()
+    back.tick()
+    back.save()
+
+
+def test_federation_survives_a_torn_ledger_tail(tmp_path):
+    from satcollision.jsonl import read_valid_lines
+    path = tmp_path / "ledger.jsonl"
+    path.write_bytes(b'{"a": 1}\n{"a": 2}\n' + b"\x00" * 100)
+    assert read_valid_lines(path) == ['{"a": 1}', '{"a": 2}']
+    assert path.read_bytes().splitlines() == [b'{"a": 1}', b'{"a": 2}']
+
+
+def test_dashboard_lists_keep_federated_encounters():
+    from satcollision.world import keep_important
+    rows = [{"id": i, "handling": "federated" if i in (0, 50) else "internal"} for i in range(100)]
+    kept = keep_important(rows, 10)
+    assert [r["id"] for r in kept] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 50]
+    newest = keep_important(rows[::-1], 10)[::-1]
+    assert [r["id"] for r in newest] == [0, 50, 92, 93, 94, 95, 96, 97, 98, 99]

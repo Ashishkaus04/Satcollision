@@ -449,7 +449,8 @@ class FederationService:
         self.counters.update(ck["counters"])
 
         path = self.run_dir / "ledger.jsonl"
-        lines = [ln for ln in path.read_text(encoding="utf-8").splitlines() if ln.strip()] if path.exists() else []
+        from .jsonl import read_valid_lines
+        lines = read_valid_lines(path)        # a torn tail from a killed process is dropped
         n = ck["ledger_entries"]
         if len(lines) > n:   # written after the last checkpoint: that work is redone
             lines = lines[:n]
