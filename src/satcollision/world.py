@@ -1057,15 +1057,18 @@ class World:
             "shift_at_tca_km": round(float(np.linalg.norm(moved[n + 1] - r[n + 1])), 3),
         }
 
-    def burn_paths(self, operator: Optional[str]) -> List[dict]:
-        """Paths of the planned burns still in play (upcoming, or not yet
-        back on track). ``operator``: only that operator's own satellites,
-        from its own plan; None: the observer, every burn the world applied."""
+    def burn_paths(self, operator: Optional[str], encounter_id: Optional[str] = None) -> List[dict]:
+        """Paths of planned burns. ``operator``: only that operator's own
+        satellites, from its own plan; None: the observer, every burn the
+        world applied. With ``encounter_id``: that encounter's, whether or not
+        the satellites are back on track yet; without: the ones still in play."""
         if self.history is None:
             return []
         now = self._jd(self.elapsed_s)
         out = []
         for e in sorted(self.encounters, key=lambda e: e["tca_s"]):
+            if encounter_id is not None and e["id"] != encounter_id:
+                continue
             if not e.get("plan") and operator is None:
                 continue
             if operator is None:
@@ -1074,7 +1077,7 @@ class World:
                 mine = e.get("my_burn_maneuver") or (e.get("burn_maneuvers") or {}).get(operator)
                 burns = {operator: mine} if mine else {}
             for op, m in burns.items():
-                if 2.0 * m["tca_jd"] - m["burn_jd"] < now:
+                if encounter_id is None and 2.0 * m["tca_jd"] - m["burn_jd"] < now:
                     continue   # back on its own track
                 path = self.burn_path(m["norad_id"], m)
                 if path is None:
@@ -1938,9 +1941,9 @@ class World:
                 "at_end": self.history.settings["at_end"] if self.history is not None else None,
             },
             "counters": self.counters,
-            "upcoming": upcoming[:40],
+            "upcoming": keep_important(upcoming, 40),
             "n_upcoming": len(upcoming),
-            "passed": passed[:20],
+            "passed": keep_important(passed, 20),
             "events": self.recent_events[::-1],
             "reputation": {
                 "scores": {op: round(self.reputation.score(op), 3) for op in self.operators},
@@ -2087,6 +2090,19 @@ class World:
                 except (ValueError, KeyError):
                     continue
         path.write_text("".join(ln + "\n" for ln in kept), encoding="utf-8")
+
+
+def keep_important(rows: List[dict], limit: int) -> List[dict]:
+    """At most ``limit`` rows, in their order, never dropping a federated
+    one (those carry the plans): a busy real catalogue has many more
+    in-house and private approaches than the dashboard lists."""
+    important = [i for i, e in enumerate(rows) if e.get("handling") == "federated" or e.get("plan")]
+    keep = set(important[:limit])
+    for i in range(len(rows)):
+        if len(keep) >= limit:
+            break
+        keep.add(i)
+    return [rows[i] for i in sorted(keep)]
 
 
 def load_world_configs(worlds_dir: str | Path) -> Dict[str, WorldConfig]:

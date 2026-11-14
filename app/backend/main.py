@@ -69,6 +69,7 @@ from starlette.concurrency import run_in_threadpool  # noqa: E402
 
 from satcollision.processes import ProcessWorld  # noqa: E402
 from satcollision.views import (  # noqa: E402
+    encounter_path,
     compare_encounter,
     federation_view,
     ground_track,
@@ -237,6 +238,12 @@ class WorldRunner:
             if self.group:
                 return self.group.compare(encounter_id)
             return compare_encounter(self.world, encounter_id)
+
+    def encounter_path(self, encounter_id: str, operator: Optional[str]) -> dict:
+        with self.lock:
+            if self.group:
+                return self.group.encounter_path(encounter_id, operator)
+            return encounter_path(self.world, encounter_id, operator)
 
     def track(self, norad_id: int, minutes: int, operator: Optional[str]) -> dict:
         """``operator=None`` for the observer. Raises KeyError / PermissionError."""
@@ -440,6 +447,23 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
             return await run_in_threadpool(runner.compare, encounter_id)
         except KeyError:
             raise HTTPException(404, f"no encounter {encounter_id} in {name}")
+
+    @app.get("/api/worlds/{name}/encounters/{encounter_id}/path")
+    async def path(name: str, encounter_id: str, user: User = Depends(current_user)):
+        """One encounter's avoidance path: an operator's own satellite only,
+        the observer's both. The federation holds no orbits, so none."""
+        runner = runner_for(name, user)
+        if user.role not in ("observer", "operator"):
+            raise HTTPException(403, "the federation holds no orbits")
+        operator = None if user.role == "observer" else user.operator
+        try:
+            data = await run_in_threadpool(runner.encounter_path, encounter_id, operator)
+        except KeyError:
+            raise HTTPException(404, f"no avoidance path for {encounter_id} that you may see")
+        if operator is not None and any(p.get("operator") != operator for p in data["paths"]):
+            log.error("refused to send another operator's path to %s", user.username)
+            raise HTTPException(500, "path does not match the requesting party")
+        return data
 
     @app.get("/api/worlds/{name}/satellites/{norad_id}/track")
     async def track(name: str, norad_id: int, minutes: int = Query(100, ge=10, le=300),
