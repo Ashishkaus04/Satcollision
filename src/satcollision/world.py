@@ -883,7 +883,10 @@ class World:
                 self.counters["passed"] += 1
         upcoming = [e for e in self.encounters if e["status"] == "upcoming"]
         passed = [e for e in self.encounters if e["status"] == "passed"]
-        self.encounters = passed[-MAX_PASSED_IN_STATE:] + upcoming
+        # Keep the most recent passed ones, but never let a busy catalogue's
+        # in-house approaches push out the federated ones (they carry plans).
+        passed = keep_important(passed[::-1], MAX_PASSED_IN_STATE)[::-1]
+        self.encounters = passed + upcoming
 
     # ------------------------------------------------------------------ #
     # Federation round
@@ -2051,9 +2054,9 @@ class World:
                               f"{'intact' if self.ledger_verified else 'TAMPERED'}.")
 
     def _load_ledger(self, n_entries: int, expected_tail: str) -> None:
+        from .jsonl import read_valid_lines
         path = self.run_dir / "ledger.jsonl"
-        lines = path.read_text(encoding="utf-8").splitlines() if path.exists() else []
-        lines = [ln for ln in lines if ln.strip()]
+        lines = read_valid_lines(path)        # a torn tail from a killed process is dropped
         if len(lines) > n_entries:  # written by a tick that never checkpointed
             lines = lines[:n_entries]
             path.write_text("".join(ln + "\n" for ln in lines), encoding="utf-8")
