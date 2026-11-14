@@ -47,7 +47,7 @@ from .federation_service import (
 )
 from .reputation import tailor_alert
 from .signal import AbstractedSignal
-from .world import World, _gmst_rad, _iso, _jd_fr
+from .world import World, _gmst_rad, _iso, _jd_fr, keep_important
 
 R_EARTH_KM = 6378.137
 PUBLIC_GRID_DEG = 0.5          # public-catalogue positions are rounded to this
@@ -217,6 +217,7 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
                 burn = {**burn, "pc_before": e["avoidance"]["pc_before"], "target_pc": e["avoidance"]["target_pc"],
                         "target_met": bool(check.get("met")), "plan_scale": check.get("scale", 1.0)}
             row["my_burn"] = burn
+        row["has_path"] = bool(row["plan"] and (e.get("my_burn_maneuver") or (e.get("burns") or {}).get(operator)))
         if side is not None:
             # My own assessment (my satellite from my own ephemeris); the
             # public-catalogue prediction alongside it.
@@ -252,19 +253,16 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
         my_reports = [{"received": r["received"], "counts": r["counts"]}
                       for r in ledger_report_rows(world.ledger.entries, operator, limit=10)]
 
-    planned = {e["id"] for e in encounters if e["plan"]}
-    paths = [p for p in world.burn_paths(operator) if p["encounter"] in planned and p["operator"] == operator]
     return {
         "role": "operator",
         "operator": operator,
-        "burn_paths": paths,
         "world": _world_header(world),
         "own_satellites": own,
         "own_count": len(own_objs),
         "public_catalogue": others,
         "public_count": len(other_objs),
         "public_grid_deg": PUBLIC_GRID_DEG,
-        "encounters": encounters[:60],
+        "encounters": keep_important(encounters, 60),
         "alerts": alerts[:40],
         "reputation": reputation,
         "my_reports": my_reports,
@@ -336,12 +334,11 @@ def observer_view(world: World, federation: Optional[dict] = None) -> dict:
         "note": "Simulation ground truth. No real party has this view: it exists so the "
                 "operator and federation views can be checked against it.",
         "tracks": state["tracks"],
-        "burn_paths": world.burn_paths(None),
         "fleet": state["world"]["fleet"],
         "behaviours": state["world"]["behaviours"],
         "counters": state["counters"],
-        "upcoming": state["upcoming"],
-        "passed": state["passed"],
+        "upcoming": [{**e, "has_path": bool(e.get("burn_maneuvers"))} for e in state["upcoming"]],
+        "passed": [{**e, "has_path": bool(e.get("burn_maneuvers"))} for e in state["passed"]],
         "events": state["events"][:100],
         "reputation": state["reputation"],
         "rounds": state["rounds"][:10],
@@ -447,3 +444,37 @@ def ground_track(world: World, norad_id: int, minutes: int = 100) -> dict:
                     round((math.degrees(math.atan2(y, x) - g) + 540) % 360 - 180, 3),
                     round(rad - R_EARTH_KM, 2)])
     return {"id": norad_id, "label": obj.label, "operator": obj.operator, "points": pts}
+
+
+# ---------------------------------------------------------------------------
+# One encounter's avoidance path, on demand
+# ---------------------------------------------------------------------------
+
+def encounter_path(world: World, encounter_id: str, operator: Optional[str] = None,
+                   feed: Optional[dict] = None) -> dict:
+    """The dedicated "avoidance path" view of one encounter. An operator gets
+    only its own satellite's path, and only for an encounter its own view
+    lists with a plan; the observer gets both satellites, with the truth.
+    Raises KeyError when there is nothing this party may see."""
+    if operator is not None:
+        view = operator_view(world, operator, feed=feed)
+        row = next((e for e in view["encounters"] if e["id"] == encounter_id), None)
+        if row is None or not row.get("has_path"):
+            raise KeyError(encounter_id)
+        paths = [p for p in world.burn_paths(operator, encounter_id) if p["operator"] == operator]
+        info = {k: row.get(k) for k in ("my_satellite", "other_object", "other_operator", "tca", "status",
+                                        "time_to_tca_s", "miss_km", "pc", "public_miss_km", "geometry",
+                                        "rel_speed_km_s", "my_burn")}
+    else:
+        rec = next((e for e in world.encounters if e["id"] == encounter_id and e.get("burn_maneuvers")), None)
+        if rec is None:
+            raise KeyError(encounter_id)
+        paths = world.burn_paths(None, encounter_id)
+        info = {"labels": rec["labels"], "tca": rec["tca"], "status": rec["status"],
+                "time_to_tca_s": rec["tca_s"] - world.elapsed_s, "geometry": rec["geometry"],
+                "rel_speed_km_s": rec["rel_speed_km_s"], "truth": rec.get("truth"),
+                "avoidance": rec.get("avoidance"), "burns": rec.get("burns")}
+    if not paths:
+        raise KeyError(encounter_id)
+    return {"role": "operator" if operator else "observer", "operator": operator, "encounter": encounter_id,
+            "world": _world_header(world), "paths": paths, "info": info}

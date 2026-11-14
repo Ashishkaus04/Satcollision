@@ -46,7 +46,7 @@ from pathlib import Path
 from .identity import OperatorIdentity
 from .node_http import TOKEN_ENV, Forbidden, NotFound, call, run_forever, serve
 from .reputation import attest_participation
-from .views import ground_track, operator_view
+from .views import encounter_path, ground_track, operator_view
 from .world import World, WorldConfig
 
 
@@ -131,6 +131,17 @@ class TwinNode:
         with self.lock:
             return operator_view(self.world, self.operator, feed=feed)
 
+    def path(self, body, query):
+        ts = time.time()
+        feed = self._fed("POST", "/feed", {
+            "operator": self.operator, "ts": ts,
+            "signature": self.identity.sign_bytes(f"feed|{self.operator}|{ts}".encode()).hex()})
+        with self.lock:
+            try:
+                return encounter_path(self.world, query["id"], self.operator, feed=feed)
+            except KeyError:
+                raise NotFound("no avoidance path of mine for that encounter")
+
     def track(self, body, query):
         norad_id = int(query["id"])
         minutes = max(10, min(300, int(query.get("minutes", 100))))
@@ -149,6 +160,7 @@ class TwinNode:
             ("POST", "/attest"): self.attest,
             ("GET", "/view"): self.view,
             ("GET", "/track"): self.track,
+            ("GET", "/path"): self.path,
         }
 
 
