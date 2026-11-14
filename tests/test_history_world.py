@@ -9,7 +9,7 @@ import pytest
 
 from satcollision.history_world import apply_maneuvers, jd_of, maneuver_offset_rtn, plan_burn
 from satcollision.tle_history import TLEHistory, detect_jumps, fit_tle_errors, parse_satnum, to_rtn
-from satcollision.views import operator_view
+from satcollision.views import encounter_path, operator_view
 from satcollision.world import World, WorldConfig
 from tests.history_fixture import BASE, FAST_TCA_AFTER_S, N_SETS, TCA_AFTER_S, config, write_history
 
@@ -280,8 +280,8 @@ def test_operator_twin_finds_the_same_encounter_with_only_its_own_side(hist_file
             assert k and h.epochs[k[0]] <= jd
 
 
-def mine_view_paths(view):
-    return [(p["satellite"], p["burn_time"], p["maneuvered"][-1]) for p in view["burn_paths"]]
+def path_key(data):
+    return [(p["satellite"], p["burn_time"], p["maneuvered"][-1]) for p in data["paths"]]
 
 
 def test_separate_processes_match_one_process(hist_file, tmp_path):
@@ -313,7 +313,7 @@ def test_separate_processes_match_one_process(hist_file, tmp_path):
             mine = next(e for e in group.operator_view(op)["encounters"] if e["id"] == ENC)
             theirs = next(e for e in operator_view(ref, op)["encounters"] if e["id"] == ENC)
             assert mine["my_burn"] == theirs["my_burn"] and mine["my_burn"]["dv_m_s"] > 0
-            assert mine_view_paths(group.operator_view(op)) == mine_view_paths(operator_view(ref, op))
+            assert path_key(group.encounter_path(ENC, op)) == path_key(encounter_path(ref, ENC, op))
     finally:
         group.close()
 
@@ -438,15 +438,19 @@ def test_avoidance_paths_are_drawn_for_the_owner_and_the_observer_only(hist_file
     w = _world(hist_file, tmp_path)
     for _ in range(18):                              # past the decision, before TCA
         w.tick()
-    obs = observer_view(w)["burn_paths"]
-    assert {p["satellite"] for p in obs if p["encounter"] == ENC} == {"Alpha-90001", "Beta-90011"}
+    # The main views carry no paths, only a flag on the rows that have one.
+    assert "burn_paths" not in observer_view(w) and "burn_paths" not in operator_view(w, "Alpha")
+    assert next(e for e in observer_view(w)["upcoming"] if e["id"] == ENC)["has_path"]
+    assert next(e for e in operator_view(w, "Alpha")["encounters"] if e["id"] == ENC)["has_path"]
+    obs = encounter_path(w, ENC)["paths"]
+    assert {p["satellite"] for p in obs} == {"Alpha-90001", "Beta-90011"}
     p = next(p for p in obs if p["satellite"] == "Alpha-90001")
     assert len(p["original"]) == len(p["maneuvered"]) > 30 and len(p["original"][0]) == 3
     assert p["shift_at_tca_km"] > 0.5                # the burn moves it at TCA
     assert p["original"][0] == pytest.approx(p["maneuvered"][0], abs=1e-6)   # same before the burn
     assert p["miss_after_km"] > p["miss_before_km"]
     for op, other in (("Alpha", "Beta"), ("Beta", "Alpha")):
-        mine = operator_view(w, op)["burn_paths"]
+        mine = encounter_path(w, ENC, op)["paths"]
         assert mine and all(q["operator"] == op for q in mine)
         assert not any(q["satellite"].startswith(other) for q in mine)
         assert "miss_after_km" not in mine[0]        # the truth is the observer's only
@@ -463,7 +467,7 @@ def test_the_satellite_rides_its_drawn_path(hist_file, tmp_path):
     for _ in range(6):
         w.tick()
         v = observer_view(w)
-        p = next(p for p in v["burn_paths"] if p["satellite"] == "Alpha-90001")
+        p = next(p for p in encounter_path(w, ENC)["paths"] if p["satellite"] == "Alpha-90001")
         dot = next(q for q in v["tracks"]["points"] if q[4] == 90001)
         k = p["now_index"]
         assert k >= 0
@@ -471,3 +475,39 @@ def test_the_satellite_rides_its_drawn_path(hist_file, tmp_path):
         assert (p["original"][k][1] - dot[1] + 540) % 360 - 180 == pytest.approx(0.0, abs=0.02)
         seen.append(k)
     assert seen == sorted(seen) and seen[-1] - seen[0] == 10     # two minutes a tick, one sample a minute
+
+
+def test_path_endpoint_is_scoped_to_the_caller(hist_file, tmp_path):
+    """GET /api/worlds/{w}/encounters/{id}/path: an operator gets its own
+    satellite only, an outsider and the federation get nothing, the observer
+    gets both."""
+    pytest.importorskip("fastapi")
+    from fastapi.testclient import TestClient
+    from app.backend.main import Settings, create_app
+    worlds = tmp_path / "worlds"
+    worlds.mkdir()
+    (worlds / "hist_fixture.json").write_text(json.dumps(config(hist_file)), encoding="utf-8")
+    settings = Settings(APP_RUNS_DIR=str(tmp_path / "runs"), APP_RUN_WORLDS="0", APP_RESET="1",
+                        APP_WORLDS_DIR=str(worlds), APP_SECRET="t" * 40, APP_PROCESSES="0")
+    app = create_app(settings)
+    with TestClient(app) as c:
+        app.state.app_state.runners["hist_fixture"].step(18)
+
+        def get(user):
+            tok = c.post("/api/login", json={"username": user, "password": "demo"}).json()["token"]
+            return c.get(f"/api/worlds/hist_fixture/encounters/{ENC}/path", headers={"Authorization": f"Bearer {tok}"})
+
+        alpha = get("alpha")
+        assert alpha.status_code == 200
+        assert [p["satellite"] for p in alpha.json()["paths"]] == ["Alpha-90001"]
+        assert "truth" not in alpha.json()["info"]
+        assert [p["satellite"] for p in get("beta").json()["paths"]] == ["Beta-90011"]
+        assert get("gamma").status_code == 403          # not an operator in this world at all
+        assert get("federation").status_code == 403
+        obs = get("observer").json()
+        assert {p["satellite"] for p in obs["paths"]} == {"Alpha-90001", "Beta-90011"}
+        assert obs["info"]["truth"]["miss_km"] > obs["info"]["truth"]["miss_km_without_maneuver"]
+        tok = c.post("/api/login", json={"username": "alpha", "password": "demo"}).json()["token"]
+        other = c.get("/api/worlds/hist_fixture/encounters/ENC-90012-90020-1/path",
+                      headers={"Authorization": f"Bearer {tok}"})
+        assert other.status_code == 404                 # not Alpha's encounter: nothing, not even its existence

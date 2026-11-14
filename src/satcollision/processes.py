@@ -47,6 +47,7 @@ from .node_http import TOKEN_ENV, NodeError, call
 from .views import (
     _world_header,
     compare_from_views,
+    encounter_path,
     ground_track,
     observer_view,
 )
@@ -220,6 +221,21 @@ class ProcessWorld:
             raise KeyError(encounter_id)
         views = {op: self.operator_view(op) for op in dict.fromkeys(truth["operators"]) if op in self.twins}
         return compare_from_views(self.sky, truth, views, self.federation_view())
+
+    def encounter_path(self, encounter_id: str, operator: Optional[str]) -> dict:
+        """The observer's comes from the sky; an operator's from its own
+        process, which only ever knows its own burn."""
+        if operator is None:
+            return encounter_path(self.sky, encounter_id)
+        from urllib.parse import quote
+        try:
+            out = self._call(self.twins[operator], "GET", f"/path?id={quote(encounter_id)}")
+        except NodeError as exc:
+            if exc.status == 404:
+                raise KeyError(encounter_id)
+            raise
+        out["world"] = _world_header(self.sky)
+        return out
 
     def track(self, norad_id: int, minutes: int, operator: Optional[str]) -> dict:
         """``operator=None`` is the observer (ground truth, from the sky);
