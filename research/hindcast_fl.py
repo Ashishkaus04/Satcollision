@@ -86,6 +86,7 @@ def main():
     ap.add_argument("--no-secure-check", action="store_true")
     ap.add_argument("--dp-clip", type=float, default=0.5)
     ap.add_argument("--dp-noise", type=float, default=1.0)
+    ap.add_argument("--owner-eps", type=lambda v: [float(x) for x in v.split(",")], default=[2.0, 8.0])
     a = ap.parse_args()
 
     cfg = json.loads((ROOT / "worlds" / "real_leo_history.json").read_text())["fleet"]["operators"]
@@ -169,6 +170,10 @@ def main():
     local = {op: el.train_local(train[op], epochs=epochs, seed=a.seed) for op in ops}
     log(f"local models {time.time() - t0:.0f} s")
     t0 = time.time()
+    owner_dp = {eps: {op: el.train_owner_dp(train[op], target_epsilon=eps, seed=a.seed) for op in ops}
+                for eps in a.owner_eps}
+    log(f"DP owner models (epsilon {a.owner_eps}) {time.time() - t0:.0f} s")
+    t0 = time.time()
     central = el.train_local(el.ErrorSamples.concat([train[op] for op in ops]), epochs=epochs, seed=a.seed)
     log(f"central model {time.time() - t0:.0f} s")
     public = el.train_local(pub_train, epochs=epochs, seed=a.seed)
@@ -211,7 +216,8 @@ def main():
              "table_bias": el.table_nll(sp_t[sel], md_t[sel], d),
              "fedavg": el.evaluate(fed, d), "fedavg_sqrt": el.evaluate(fed_sqrt, d),
              "central": el.evaluate(central, d), "own_local": el.evaluate(local[op], d),
-             "public_model": el.evaluate(public, d), "fedavg_dp": el.evaluate(fed_dp, d)}
+             "public_model": el.evaluate(public, d), "fedavg_dp": el.evaluate(fed_dp, d),
+             **{f"owner_dp_eps{eps:g}": el.evaluate(owner_dp[eps][op], d) for eps in a.owner_eps}}
         # local models of *other* operators predicting this fleet: what a
         # local-only twin uses when it screens this operator's satellites
         others = [el.evaluate(local[o], d)["nll"] for o in ops if o != op and len(train[o])]
@@ -256,13 +262,12 @@ def main():
     # Suggested alternative: every member shares (to the federation) one
     # model of its *own* fleet's error, and a twin uses the owner's model
     # for that owner's satellites.
-    b_own = np.zeros_like(median); s_own = sig_table.copy()
-    sel = ~member_other
-    b_own[sel], s_own[sel] = el.predict(public, Xo[sel], age[sel])
-    for k, op in enumerate(ops):
-        sel = other_owner == k
-        if sel.any():
-            b_own[sel], s_own[sel] = el.predict(local[op], Xo[sel], age[sel])
+    reg = el.OwnerModels({k: local[op] for k, op in enumerate(ops)}, public)
+    b_own, s_own = reg.predict(Xo, age, other_owner)
+    owner_dp_bs = {}
+    for eps in a.owner_eps:
+        r_dp = el.OwnerModels({k: owner_dp[eps][op] for k, op in enumerate(ops)}, public)
+        owner_dp_bs[eps] = r_dp.predict(Xo, age, other_owner)
 
     circ_meas = np.sqrt(PRECISE ** 2 + np.mean(sig_table ** 2, axis=1))
     schemes = {
@@ -281,6 +286,8 @@ def main():
         "foster_pub_central": hc.assess_pc(enc, asm, err, s_cenp, PRECISE, bias_rtn=b_cenp),
         "foster_pub_fl_dp": hc.assess_pc(enc, asm, err, s_dpp, PRECISE, bias_rtn=b_dpp),
         "foster_pub_owner": hc.assess_pc(enc, asm, err, s_own, PRECISE, bias_rtn=b_own),
+        **{f"foster_pub_owner_dp{eps:g}": hc.assess_pc(enc, asm, err, owner_dp_bs[eps][1], PRECISE,
+                                                        bias_rtn=owner_dp_bs[eps][0]) for eps in a.owner_eps},
     }
 
     subsets = {"all": None, "member_vs_member": member_other}
@@ -320,6 +327,8 @@ def main():
         "model_quality": quality, "model_quality_unowned": quality_unowned,
         "fedavg_history": fed_log.history, "fedavg_best_round": fed_log.best_round,
         "fedavg_sqrt_best_round": fsq_log.best_round,
+        "owner_dp": {f"{eps:g}": {op: owner_dp[eps][op].dp for op in ops} for eps in a.owner_eps},
+        "owner_models_bytes": reg.wire_size_bytes(),
         "dp": {"clip": a.dp_clip, "noise_multiplier": a.dp_noise, "rounds": len(dp_log.history), "epsilon": dp_eps, "delta": 1e-5}, "results": results, "sweep": sweep,
     }, indent=1), encoding="utf-8")
     log("wrote", out.relative_to(ROOT))
