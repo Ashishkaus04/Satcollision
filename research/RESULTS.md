@@ -725,6 +725,65 @@ least partly, an artefact of TLE-derived truth, and should not be "fixed" by
 tuning against it. The fair test is against precise or operator-fitted truth
 (section 11, the SupGP collection).
 
+## 13. Real secure computation: timing the secure Pc step
+
+`research/mpc/secure_pc.mpc`, `research/mpc/make_inputs.py`, results in
+`results/mpc_timing.json`. Sections 2 to 9 priced the secure step with a
+throughput from the literature (18,000 pairs an hour per three-server cluster,
+Valdma & Veskus, SDC9 2025). Here it is implemented and timed.
+
+**Design.** Three parties: the two operators and an independent server,
+replicated secret sharing over a 128-bit ring (MP-SPDZ 0.4.4, semi-honest,
+honest majority). The encounter geometry is public: the plane basis from the
+public relative velocity, each object's RTN axes, a public reference point. Each
+operator projects its *private* precise position into the plane relative to that
+point (2 numbers) and its private covariance into the plane (3 numbers), locally,
+and secret-shares them. The program computes m = m_a - m_b and C = C_a + C_b,
+then the decision Pc >= 1e-4 in the equivalent form q + ln det C <= -2 ln(2T/R^2),
+and reveals only the act/no-act bit, never Pc, m or C (as section 7 requires).
+Fixed point with 20 fractional bits.
+
+**Correctness.** On 61,000 encounters drawn from the four-week hindcast (half
+near misses, so both answers occur), the secure bits match the plaintext decision
+in every case.
+
+**Cost** (one laptop, all three parties on localhost under WSL2):
+
+| Encounters per batch | Time | Rounds | Data sent, all parties |
+| --- | --- | --- | --- |
+| 1,000 | 0.46 s | 231 | 105 MB |
+| 10,000 | 3.9 s | 1,073 | 1.05 GB |
+| 50,000 | 22.0 s | 4,815 | 5.26 GB |
+
+So about 0.44 ms of computation and 105 kB of traffic (35 kB per party) per
+encounter. Localhost hides the network, so we add it from the measured rounds and
+traffic:
+
+| Setting | Per encounter | Encounters per hour per cluster |
+| --- | --- | --- |
+| Localhost (measured) | 0.44 ms | 8.2 million |
+| LAN: 1 Gbit/s, 1 ms round trip (modelled) | about 0.8 ms | about 4.4 million |
+| WAN: 100 Mbit/s, 50 ms round trip (modelled) | about 8 ms | about 450,000 |
+| Literature figure used so far | | 18,000 |
+
+What changes in the paper:
+
+1. **The secure step is cheaper than assumed, by 25 times even over a slow WAN.** The
+   two-stage loads of section 9 (19 to 46 cluster-hours a day at the old figure,
+   i.e. 0.34 to 0.83 million secure evaluations a day) become 0.8 to 1.8 hours a
+   day over the WAN and 5 to 11 minutes on a LAN. A single all-pairs pass
+   (28.7 million pairs) takes about 64 h over the WAN instead of about 1,594 h.
+2. **The ratio is unchanged.** The two-stage scheme still needs about 1% of the
+   secure work of all-pairs screening; that is a count, not a speed.
+3. **Not like for like.** The literature figure covers a heavier secure
+   computation (secure state handling and the full Pc); ours keeps the geometry
+   public and computes only the decision from locally projected inputs. The
+   public geometry leaks nothing beyond the public catalogue, but the paper must
+   say which design the numbers are for. Semi-honest security only; a maliciously
+   secure protocol (e.g. SPDZ-wise replicated) costs several times more.
+4. The network rows are modelled from measured rounds and bytes, not measured on a
+   real network.
+
 ## Reproduce
 
 ```bash
@@ -739,6 +798,7 @@ python research/latest_per_object.py <space-track 3le> data/historical/<name>_la
 PYTHONPATH=src python research/replay_2021.py data/historical/css_2021.tle
 PYTHONPATH=src:research python research/leakage.py research/cache/<cache>.npz --targets 25 --seed 1 --window-h 24
 python research/fig_leakage.py
+PYTHONPATH=src python research/mpc/make_inputs.py 50000 research/mpc/run50000   # then, in MP-SPDZ (WSL): ./compile.py -R 128 secure_pc 50000 show; Scripts/ring.sh secure_pc-50000-show
 PYTHONPATH=src:research python research/adversarial.py research/cache/<cache>.npz --k 8
 python research/fig_sweep.py research/results/<cache>__sweep.json
 ```

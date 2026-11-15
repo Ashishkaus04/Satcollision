@@ -1,0 +1,11 @@
+{
+ "framework": "MP-SPDZ 0.4.4 (release tarball, sha256 73d64735...), replicated secret sharing over Z_2^128, 3 parties (Scripts/ring.sh), semi-honest honest majority",
+ "machine": "one laptop (8 logical cores), WSL2 Ubuntu, all three parties on localhost",
+ "program": "research/mpc/secure_pc.mpc: m = m_a - m_b, C = C_a + C_b (each operator's private in-plane miss offset and covariance), act <=> q + ln det C <= -2 ln(2T/R^2); reveals only the act bit; sfix f=20, k=52",
+ "accuracy": "act bits identical to the plaintext Pc >= 1e-4 on all 61,000 test encounters (1,000 + 10,000 + 50,000)",
+ "runs": [
+  {"n": 1000, "seconds": 0.465, "rounds": 231, "global_MB": 105.3, "act": 28},
+  {"n": 10000, "seconds": 3.908, "rounds": 1073, "global_MB": 1052.0, "act": 277},
+  {"n": 50000, "seconds": 21.95, "rounds": 4815, "global_MB": 5259.3, "act": 1325, "max_rss_MB": 909}
+ ]
+}

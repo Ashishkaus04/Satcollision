@@ -12,3 +12,4 @@ __pycache__/
 data/historical/
 cache/
 research/logs/
+research/mpc/run*/
