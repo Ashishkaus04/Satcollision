@@ -333,6 +333,176 @@ Caveats: the error table is Starlink-only and from one week; TLE-vs-TLE
 consistency understates the true error for objects with shared observations;
 the precise sigma is still assumed. Results: `results/*__measured.json`.
 
+## 10. Hindcast on four weeks of real TLE history: baseline, +Foster, +Foster+FL
+
+`research/hindcast_fl.py` (modules `src/satcollision/hindcast.py`,
+`src/satcollision/error_learning.py`). Sections 2 to 9 draw the prediction
+error from a Gaussian. This section removes that: every error is a real one.
+
+**Data.** Space-Track `gp_history`, 16 Oct to 12 Nov 2026 (four weeks, 1.64
+million element sets, 28,732 objects, mean motion > 11.25 rev/day; the Oct 16
+and Oct 30 weeks were downloaded in two NORAD halves to stay under the
+500,000-row query cap). Members are the six operators of the
+`real_leo_history` world (Starlink 11,234, OneWeb 654, Kuiper 392, Planet 148,
+Spire 96, ICEYE 61); everything else (payloads and debris) is unowned.
+
+**Set-up.**
+
+* *Truth* at time t is the first element set published after t, propagated
+  back (blended over 10 min across switches). A prediction made at update u
+  uses sets with epoch <= u, so it never shares a set with its truth, and its
+  error at age a is exactly the TLE-vs-later-TLE error the public table
+  measures. (The world's nearest-epoch truth would give zero error to every
+  prediction within half a publication gap of its epoch.)
+* *Encounters*: every true approach under 10 km between a member's satellite
+  and an object that member does not fly, plus a thinned sample of 10-30 km
+  (1 in 10) and 30-100 km (1 in 100) approaches, weighted back, because an
+  over-confident model raises false alarms on wide approaches. 513,301
+  approaches kept (18.3 million weighted) with TCA in the last 4 days.
+* *Assessments*: at every 8-hourly update in the 72 h before TCA, each member
+  side predicts the other object from the public catalogue and knows its own
+  satellite exactly (precise sigma 0.354 km). Predicted miss = true miss minus
+  the in-plane part of the real prediction error (linear relative motion near
+  TCA, Foster's own assumption). 5.13 million assessments.
+* *Dangerous*: Pc on the true miss with both orbits precise >= 1e-4 (miss
+  under about 1.02 km): 447 a day. *Caught*: Pc >= threshold at some update.
+  *False alarm*: an alerted (approach, side) that is not dangerous.
+* *Train / test split in time*: the error table and every model see only
+  data before day 19.9; every test update is after it (TCAs on days 22.9 to
+  26.9). Three seeds (models and sample draws); the encounters are the same.
+
+**Error models of the other object's public prediction.**
+
+| Model | Trained on | Used for |
+| --- | --- | --- |
+| Public table (section 9) | TLE vs later TLE, all objects, Starlink / other, by age | +Foster |
+| Public model | the same public labels, a small network on set features (age, altitude, inclination, eccentricity, B*, ndot, publication cadence) | unowned objects in every +Foster+model row |
+| Local-only | one operator's own fleet (own ephemeris vs public TLE) | members' satellites, the assessor's own model |
+| FedAvg | all six fleets, model weights only (sqrt-of-sample weighting, early stopping on each operator's held-out objects) | members' satellites |
+| Pooled | all six fleets' data in one place (privacy-violating upper bound) | members' satellites |
+| Owners' models (suggested) | each operator shares its own fleet's model | that owner's satellites |
+
+The network predicts per RTN axis a bias and the scale of a Student-t (3 dof,
+for manoeuvre tails); the Pc uses the bias-corrected prediction and the robust
+sigma. 6,296 bytes per model update.
+
+**Error-model quality** (held-out NLL on each fleet's satellites in the test
+period, lower is better; mean of 3 seeds):
+
+| Fleet | Public table | Other operators' local models | FedAvg | Pooled | Owner's own model |
+| --- | --- | --- | --- | --- | --- |
+| Starlink | 1.99 | 2.66 | 1.58 | 1.27 | 1.25 |
+| Kuiper | 2.93 | 1.42 | 0.58 | 0.46 | 0.45 |
+| OneWeb | 0.17 | 5.2 | -0.47 | -0.79 | -0.78 |
+| Planet | 0.20 | 0.36 | 0.04 | -0.48 | -0.61 |
+| Spire | -0.67 | 0.12 | -0.29 | -1.04 | -1.15 |
+| ICEYE | -0.09 | 0.20 | -0.18 | -0.67 | -0.75 |
+
+On unowned objects the public table is badly calibrated where it matters: it
+covers 54% of along-track errors at its 1-sigma overall and only 11% at 36-72 h
+for the objects that actually conjunct (lower, more drag than the average
+catalogue object). The public model covers 69-73% (NLL -1.36 vs -1.02).
+
+**Screening.** Two views, because a better-calibrated covariance changes how
+many alerts a fixed threshold raises (honest, larger covariances dilute the Pc).
+At the fixed threshold 1e-4 (mean of 3 seeds):
+
+| Step | Caught | Caught >= 24 h | Median warning | False alarms / day | Member-vs-member: caught / FA per day |
+| --- | --- | --- | --- | --- | --- |
+| Baseline: circular, 0.5 km | 87.0% | 60.4% | 36.0 h | 1,333 | 63.3% / 309 |
+| + Foster, public table | 73.6% | 51.6% | 36.3 h | 1,046 | 53.1% / 197 |
+| + Foster, public model (unowned) | 65.7% | 39.6% | 31.3 h | 771 | 46.5% / 101 |
+| + Foster + local-only models | 63.2% | 37.9% | 31.2 h | 804 | 31.6% / 134 |
+| **+ Foster + FedAvg** | **65.4%** | **39.3%** | **31.2 h** | **809** | **44.6% / 139** |
+| + Foster + DP-FedAvg (eps 13-15) | 64.9% | 38.1% | 30.3 h | 795 | 41.9% / 125 |
+| + Foster + pooled | 65.7% | 39.6% | 31.4 h | 787 | 46.3% / 117 |
+| + Foster + owners' models | 67.0% | 41.5% | 32.1 h | 826 | 54.3% / 156 |
+
+(The "+ Foster + model" rows all use the public model for unowned objects; they
+differ only on members' satellites.)
+
+At equal false-alarm budgets (threshold set per scheme; share of dangerous
+encounters caught):
+
+| Step | All, 30 FA/day | All, 100 FA/day | All, 300 FA/day | Member-vs-member, 3 / 10 / 30 FA/day |
+| --- | --- | --- | --- | --- |
+| Baseline | 21.3% | 22.4% | 33.0% | 14.2% / 15.0% / 15.7% |
+| + Foster, public table | 12.5% | 19.6% | 37.3% | 6.9% / 7.3% / 8.9% |
+| + Foster, public model | 25.1% | 35.7% | 49.9% | 14.6% / 20.8% / 29.0% |
+| + Foster + local-only | 20.9% | 31.6% | 46.0% | 2.1% / 4.1% / 8.6% |
+| **+ Foster + FedAvg** | **24.3%** | **34.7%** | **49.2%** | **10.7% / 14.8% / 24.8%** |
+| + Foster + pooled | 24.7% | 35.2% | 49.6% | 11.6% / 17.9% / 27.6% |
+| + Foster + owners' models | 25.2% | 36.0% | 50.5% | 14.8% / 21.1% / 32.0% |
+
+Small operators (assessor's own encounters, threshold 1e-4, caught / false
+alarms a day, local-only vs FedAvg vs pooled): Spire 46% / 29.0, 46% / 21.5,
+45% / 11.6; ICEYE 59% / 19.8, 54% / 16.7, 50% / 12.3; Planet 38% / 81.6,
+45% / 71.7, 38% / 49.0. With 48 to 131 dangerous encounters each over 4 days,
+these are noisy.
+
+Figure: `figures/fig_hindcast_w4.png` (caught vs false alarms for both subsets,
+and the model-quality bars).
+
+What this says, honestly:
+
+1. **Foster with the public table is not, by itself, an improvement.** At the
+   fixed threshold it trades 13 points of recall for 22% fewer false alarms;
+   at equal false-alarm budgets it is worse than the circular baseline below
+   about 200 a day. The reason is calibration: the table is a population
+   average and under-states the along-track error of the objects that actually
+   conjunct. The anisotropic Pc is only as good as its covariance.
+2. **A calibrated, feature-based error model is what makes Foster pay off**:
+   60% more dangerous encounters caught at 100 false alarms a day (35.7% vs
+   22.4%), and 42% fewer false alarms at the fixed threshold (771 vs 1,333 a
+   day). The cost is recall at very large budgets (above about 1,000 false
+   alarms a day the circular baseline catches more) and about 5 h of median
+   warning: the probability-dilution effect, an honest wide covariance caps the
+   Pc of a long-range encounter.
+3. **Federation versus training alone.** For screening another member's
+   satellite, an operator's local model is the worst option (member-vs-member:
+   4% caught at 10 false alarms a day, against 15% for FedAvg and 18% pooled);
+   other operators' local models predict a fleet worse than even the public
+   table (NLL 5.2 vs 0.17 on OneWeb). FedAvg recovers most of the pooled
+   model's benefit without moving any data; for the small operators it mostly
+   shows up as fewer false alarms at the same recall (Spire 29.0 -> 21.5 a day,
+   pooled 11.6). FedAvg stays short of pooled training (non-IID fleets, one
+   dominant operator; sqrt weighting helps).
+4. **But in this data a public model does as well as federation.** Here the
+   operators' "own ephemeris" is the later TLE (the only truth we have), so the
+   federated labels are public information and the public model, trained on
+   every object, matches or beats FedAvg and pooled. The experiment validates
+   the protocol (FedAvg reaches near-pooled quality without pooling; secure
+   aggregation gives the same weights to 1e-3; DP at eps 13-15 costs 2-3
+   points), not the value of private labels. That value depends on operators'
+   precise ephemerides being better than TLE consistency, which these data
+   cannot show.
+5. **Suggested improvement: owners' models.** Each member shares one model of
+   its *own* fleet's public-catalogue error, and a twin uses the owner's model
+   for that owner's satellites. It is the best option on every measure here
+   (member-vs-member 21% at 10 FA/day vs 15% FedAvg, 18% pooled), costs one
+   model per operator instead of rounds of training, and avoids FedAvg's
+   non-IID drift. The privacy cost is that one operator's model is not
+   averaged with others'; DP on that model, or evaluating it only inside the
+   secure step, is the mitigation.
+
+Caveats. Four days of test encounters (one test window, three model seeds; a
+rolling multi-window evaluation is the next step). The truth is TLE-derived,
+so "dangerous" is relative to a later TLE, not to a precise ephemeris. Linear
+relative motion near TCA; approaches slower than 10 m/s dropped. The DP
+epsilon is operator-level per training run, by RDP composition, with no
+amplification by sampling.
+
+Reproduce (data in `data/historical/`, not in git):
+
+```bash
+D=data/historical
+PYTHONPATH=src python research/hindcast_fl.py $D/gp_history_oct16a.tle $D/gp_history_oct16b.tle \
+  $D/gp_history_oct23.tle $D/gp_history_oct30a.tle $D/gp_history_oct30b.tle $D/gp_history_week.tle \
+  --name w4 --seed 0     # screen ~10 min (then cached), ~8 min per seed
+PYTHONPATH=src python research/hindcast_table.py research/results/hindcast_w4_s*.json
+python research/fig_hindcast.py research/results/hindcast_w4_s*.json
+```
+
 ## Reproduce
 
 ```bash
@@ -355,4 +525,5 @@ The cache file (125 MB) is not committed; it regenerates in about 7 minutes.
 
 ## Next
 
-1. Paper draft written (Claude Doc); section 9 numbers to fold in.
+1. Paper draft written (Claude Doc); sections 9 and 10 folded in.
+2. Rolling evaluation of section 10 over several test windows; operator ephemerides (for example CelesTrak SupGP) as precise labels.
