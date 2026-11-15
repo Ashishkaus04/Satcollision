@@ -1,0 +1,47 @@
+# Secure Pc decision for a batch of conjunctions (MP-SPDZ high-level program).
+#
+# Parties 0 and 1 are the two operators, party 2 an independent server; run
+# with a three-party honest-majority protocol (replicated secret sharing over
+# a 128-bit ring, Scripts/ring.sh). For each encounter both operators know the
+# public encounter geometry (plane basis from the public relative velocity,
+# each object's RTN axes, a public reference point). Each operator locally
+# projects its *private* precise position into the plane, relative to the
+# public reference (2 numbers), and its private covariance into the plane
+# (3 numbers), and secret-shares them. The program computes
+#     m = m_a - m_b,   C = C_a + C_b,
+#     act  <=>  Pc = R^2 / (2 sqrt(det C)) exp(-q/2) >= T,  q = m^T C^-1 m
+#          <=>  q + ln(det C) <= K,   K = -2 ln(2 T / R^2)
+# and reveals only the act/no-act bits (never Pc, m or C).
+#
+# Usage: ./compile.py -R 128 secure_pc <n> [show]   then   Scripts/ring.sh secure_pc-<n>[-show]
+
+from Compiler import mpc_math
+import math
+
+n = int(program.args[1])
+show = len(program.args) > 2 and program.args[2] == "show"
+program.use_trunc_pr = True
+sfix.set_precision(20, 52)
+
+T = 1e-4
+R = 0.02
+K = -2 * math.log(2 * T / R ** 2)
+
+ma = [sfix.get_input_from(0, size=n) for _ in range(2)]
+ca = [sfix.get_input_from(0, size=n) for _ in range(3)]
+mb = [sfix.get_input_from(1, size=n) for _ in range(2)]
+cb = [sfix.get_input_from(1, size=n) for _ in range(3)]
+
+x = ma[0] - mb[0]
+y = ma[1] - mb[1]
+a = ca[0] + cb[0]
+b = ca[1] + cb[1]
+d = ca[2] + cb[2]
+det = a * d - b * b
+num = d * x * x - (b * x * y) * 2 + a * y * y
+lhs = num / det + mpc_math.log_fx(det, math.e)
+act = lhs <= K
+bits = act.reveal()          # the only output: one act/no-act bit per encounter
+if show:
+    print_ln('bits %s', bits)
+print_ln('pairs %s done', n)
