@@ -614,6 +614,82 @@ Planet and Kuiper every 6 h, from a Windows scheduled task ("Satcollision
 SupGP collector") that catches up after the laptop sleeps. ICEYE and Spire have
 no SupGP. Two to three weeks of it will give operator-quality labels.
 
+## 11. Ground truth from precise orbits: how wrong is the TLE-derived truth?
+
+`research/precise_orbits.py`, `research/precise_vs_tle.py`. Sections 9 and 10 measure
+public-catalogue error against the *next published TLE*. That has a floor: every
+TLE is itself a fit with its own error. Here two satellites with independent,
+centimetre-level orbits give real ground truth: ESA's Sentinel-1C and -1D
+(693 km, sun-synchronous), precise POEORB orbits to 26 Oct and restituted RESORB
+orbits (about 10 cm) after that, from ESA's public SNAP server (no login),
+12 Oct to 13 Nov 2026. State vectors are rotated from ITRF to TEME with IAU-82
+sidereal time (polar motion and the equation of the equinoxes ignored: tens of
+metres). Sanity check: the TLE fit error at each set's own epoch is 0.08 to
+0.11 km radial and 0.58 to 0.70 km along-track (robust sigma), the size
+usually quoted for TLEs.
+
+**1. TLE-vs-later-TLE understates the error, badly at short ages.** Along-track
+robust sigma of the public prediction, against the precise orbit and against the
+next TLE, at the same instants (Sentinel-1C / 1D):
+
+| Age of the public set | Real error (vs precise) | TLE-derived error (vs next TLE) | Understated by |
+| --- | --- | --- | --- |
+| 0-3 h | 0.49 / 0.62 km | 0.03 / 0.07 km | 17x / 8x |
+| 3-6 h | 0.64 / 0.86 km | 0.05 / 0.09 km | 14x / 9x |
+| 6-12 h | 0.86 / 0.81 km | 0.07 / 0.12 km | 12x / 7x |
+| 12-24 h | 0.75 / 0.71 km | 0.14 / 0.11 km | 6x / 6x |
+| 24-36 h | 0.73 / 1.03 km | 0.22 / 0.37 km | 3.4x / 2.8x |
+| 36-48 h | 1.53 / 0.70 km | 0.33 / 0.28 km | 4.6x / 2.5x |
+| 48-72 h | 1.35 / 1.48 km | 0.86 / 0.83 km | 1.6x / 1.8x |
+
+Consecutive TLEs agree with each other far better than either agrees with the
+real orbit (they share observations and fitting), so the TLE-derived truth
+itself is off by 0.5 to 0.9 km along-track at every age. For these two
+well-tracked, non-manoeuvring satellites the real error of a fresh TLE is about
+0.5 to 0.6 km along-track, not 30 to 70 m.
+
+**2. An owner with precise labels gains a lot.** Treating the two Sentinels as one
+operator's fleet: models trained on errors before day 19.9 (1,439 samples) and
+scored on held-out errors after it (452 samples), against the precise orbit.
+Mean of 3 seeds:
+
+| Model | Held-out NLL | Along-track 1-sigma coverage (target ~0.68) |
+| --- | --- | --- |
+| Public model (TLE labels, every object) | 1.67 +- 0.18 | 0.19 |
+| Owner's model trained on TLE labels | 1.66 +- 0.14 | 0.46 |
+| **Owner's model trained on precise labels** | **-0.03 +- 0.06** | **0.76** |
+| Owner's model, precise labels, DP-SGD epsilon 2 | 0.07 +- 0.05 | 0.65 |
+
+The gain is calibration, not bias: the median error after bias correction is the
+same for all four (0.43 to 0.44 km). A model trained on TLE consistency is
+over-confident by roughly an order of magnitude at short ages; one trained on the
+owner's precise orbit is not, and DP at epsilon 2 keeps nearly all of it.
+
+What this means:
+
+1. **It answers the question sections 10 and 10c left open.** With TLE labels, private
+   data added nothing because the labels were public in disguise. With real precise
+   labels, the owner's model is far better calibrated than anything public data
+   can train. This is the measured case for owners' models (10b), on two
+   satellites.
+2. **It qualifies every hindcast number.** Sections 9 and 10 score against a truth
+   with a 0.5 to 0.9 km along-track error of its own, and their public-error
+   models are over-confident at short ages. "Dangerous" (true miss under about
+   1 km) is defined against that noisy truth, so the absolute catch rates are
+   uncertain. The comparisons between schemes share the same truth, so their
+   ordering is more robust than their levels.
+3. **Limits.** Two satellites of one type (well tracked, no manoeuvres, little
+   drag at 693 km); Starlink and other low, manoeuvring fleets will differ. A few
+   hundred test samples. The SupGP collection (and CelesTrak's archive, if they
+   send it) is the way to repeat this for the member fleets.
+
+Reproduce:
+
+```bash
+python research/precise_orbits.py --start 2026-10-12 --end 2026-11-13     # ~500 files, a few minutes
+PYTHONPATH=src python research/precise_vs_tle.py data/precise/sentinel1_2026-10-12_2026-11-13.npz \n  data/historical/gp_history_oct16a.tle data/historical/gp_history_oct16b.tle data/historical/gp_history_oct23.tle \n  data/historical/gp_history_oct30a.tle data/historical/gp_history_oct30b.tle data/historical/gp_history_week.tle
+```
+
 ## Reproduce
 
 ```bash
