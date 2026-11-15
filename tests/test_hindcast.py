@@ -302,3 +302,13 @@ def test_dp_owner_model_meets_its_epsilon_and_still_learns():
     m = el.train_owner_dp(d, target_epsilon=4.0, epochs=3, batch=256)
     assert m.dp["epsilon"] <= 4.0 + 1e-6 and m.dp["unit"] == "one training sample"
     assert el.evaluate(m, test)["nll"] < el.evaluate(el.new_model(0), test)["nll"]
+
+
+def test_pc_max_is_the_peak_over_covariance_scaling():
+    m = np.array([[0.8, 0.3]])
+    C = np.array([[[0.5, 0.1], [0.1, 2.0]]])
+    best = max(hc.pc_small(m, C * k) [0] for k in np.logspace(-3, 3, 4001))
+    assert abs(hc.pc_max(m, C)[0] / best - 1) < 1e-3
+    # isotropic: depends only on the miss distance, R^2 / (e d^2)
+    d = 1.3
+    assert abs(hc.pc_max(np.array([[d, 0.0]]), np.eye(2)[None] * 7.0)[0] - 0.02 ** 2 / (math.e * d * d)) < 1e-12

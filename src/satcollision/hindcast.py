@@ -507,22 +507,38 @@ def predicted_miss(enc, asm, err, bias_rtn: Optional[np.ndarray] = None) -> np.n
     return np.where(oth_is_b[:, None], m_true - shift, m_true + shift)
 
 
+def pc_max(m: np.ndarray, C: np.ndarray, hbr_km: float = HBR_KM) -> np.ndarray:
+    """The largest Pc any scaling k^2 C of the covariance could give (Alfano's
+    maximum probability, small-hard-body form): at k^2 = q/2,
+    Pc_max = R^2 / (e sqrt(det C) q), q = m^T C^-1 m (capped at 1). It does
+    not fall when the covariance is honest and wide, so it flags close
+    predicted approaches that probability dilution hides from the Pc."""
+    a, b, d = C[..., 0, 0], C[..., 0, 1], C[..., 1, 1]
+    det = np.maximum(a * d - b * b, 1e-30)
+    x, y = m[..., 0], m[..., 1]
+    q = (d * x * x - 2 * b * x * y + a * y * y) / det
+    return np.minimum(hbr_km ** 2 / (math.e * np.sqrt(det) * np.maximum(q, 1e-12)), 1.0)
+
+
 def assess_pc(enc, asm, err, sigma_other_rtn: np.ndarray, precise_sigma_km: float = 0.354,
-              bias_rtn: Optional[np.ndarray] = None, circular_sigma_km: Optional[np.ndarray] = None) -> np.ndarray:
+              bias_rtn: Optional[np.ndarray] = None, circular_sigma_km: Optional[np.ndarray] = None,
+              with_max: bool = False):
     """Pc of every assessment. ``sigma_other_rtn`` (n, 3) per-axis sigma of
     the other object's public prediction. If ``circular_sigma_km`` is given
     (scalar or (n,)), the circular model with that combined sigma is used
-    instead (the covariance arguments are then ignored)."""
+    instead (the covariance arguments are then ignored). ``with_max``: also
+    return :func:`pc_max` of the same miss and covariance."""
     m = predicted_miss(enc, asm, err, bias_rtn)
     if circular_sigma_km is not None:
         s2 = np.broadcast_to(np.asarray(circular_sigma_km, float) ** 2, (len(m),))
         C = s2[:, None, None] * np.eye(2)[None]
-        return pc_small(m, C)
-    e = asm["enc"]
-    oth_is_b = asm["side"] == 0
-    P_oth = np.where(oth_is_b[:, None, None], enc["Pb"][e], enc["Pa"][e])
-    C = plane_cov(P_oth, sigma_other_rtn) + precise_sigma_km ** 2 * np.eye(2)[None]
-    return pc_small(m, C)
+    else:
+        e = asm["enc"]
+        oth_is_b = asm["side"] == 0
+        P_oth = np.where(oth_is_b[:, None, None], enc["Pb"][e], enc["Pa"][e])
+        C = plane_cov(P_oth, sigma_other_rtn) + precise_sigma_km ** 2 * np.eye(2)[None]
+    pc = pc_small(m, C)
+    return (pc, pc_max(m, C)) if with_max else pc
 
 
 def true_pc(enc, precise_sigma_km: float = 0.354) -> np.ndarray:
