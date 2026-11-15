@@ -545,7 +545,7 @@ Spire 46% / 29.0, 46% / 21.5, 49% / 12.6, 42% / 17.8; ICEYE 59% / 19.8,
 
 Reading:
 
-1. Without DP, owners' models are the best option on every measure.
+1. Without DP, owners' models are the best option on every measure in this window (but see 10c: over four windows the public model is level or better).
 2. DP costs most of their advantage on member-vs-member screening (21.1% ->
    14.7% at 10 false alarms a day), leaving them level with non-private
    FedAvg and ahead of DP-FedAvg (12.2%). Over all encounters the cost is
@@ -558,6 +558,61 @@ Reading:
    close to non-private FedAvg (14.7% vs 14.8% member-vs-member, 32.8% vs
    34.7% overall) and beat DP-FedAvg, at one 6.3 kB message per operator and
    with a formal per-sample guarantee. Without DP they are clearly best.
+
+### 10c. Rolling evaluation: four test windows
+
+`research/hindcast_rolling.py`. The same hindcast on four consecutive 4-day test
+windows (TCAs on days 10.9-14.9, 14.9-18.9, 18.9-22.9 and 22.9-26.9 of the four
+weeks), each with the error table and every model retrained only on the days
+before it (expanding window: Spire has 11,474 training samples for the first
+window and 26,383 for the last). One model seed per window; 447 to 523
+dangerous encounters a day. Mean +- standard deviation over the four windows:
+
+| Step | Caught at 1e-4 | False alarms / day at 1e-4 | Caught at 100 FA/day | Member vs member, caught at 10 FA/day |
+| --- | --- | --- | --- | --- |
+| Baseline: circular, 0.5 km | 85.7 +- 1.3% | 1,190 +- 145 | 22.9 +- 1.0% | 13.8 +- 1.8% |
+| + Foster, public table | 72.2 +- 1.4% | 900 +- 101 | 24.7 +- 3.4% | 11.8 +- 3.2% |
+| **+ Foster + owners' models** | **66.3 +- 1.3%** | **792 +- 68** | **35.1 +- 3.8%** | **18.7 +- 1.8%** |
+| + Foster + owners' models, DP epsilon 2 | 66.6 +- 1.1% | 835 +- 82 | 34.2 +- 4.2% | 15.7 +- 2.5% |
+| (comparison) public model only | 65.8 +- 1.4% | 766 +- 62 | 35.1 +- 4.1% | 20.2 +- 1.9% |
+| (comparison) FedAvg | 65.2 +- 1.5% | 805 +- 59 | 34.2 +- 3.8% | 13.2 +- 1.6% |
+| (comparison) local-only | 63.7 +- 1.6% | 814 +- 42 | 32.0 +- 2.5% | 3.6 +- 1.2% |
+
+Paired differences per window (percentage points, windows in time order):
+
+| Comparison | All, caught at 100 FA/day | Member vs member, caught at 10 FA/day |
+| --- | --- | --- |
+| Owners' models - baseline | +18.3, +9.4, +9.1, +12.0 | +5.9, +3.4, +4.6, +6.0 |
+| Owners' models - FedAvg | +0.7, +0.9, +0.8, +1.3 | +6.5, +4.5, +4.9, +6.4 |
+| Owners' models with DP eps 2 - FedAvg | +0.5, +0.7, -0.2, -1.1 | +6.0, +3.1, +1.3, -0.1 |
+| Owners' models - public model | -0.6, 0.0, 0.0, +0.7 | -3.0, -3.1, -2.2, +2.5 |
+
+What holds and what changes:
+
+1. **Holds in every window:** owners' models beat the circular baseline (by 9
+   to 18 points overall at 100 false alarms a day) and beat FedAvg on
+   member-against-member screening (by 4.5 to 6.5 points). Local-only models are
+   always the worst for screening another member's satellite.
+2. **With DP at epsilon 2**, owners' models stay ahead of FedAvg in three of
+   four windows on member-against-member screening, but the margin shrinks
+   from 6 points to zero over time.
+3. **Correction to 10b:** owners' models are not the best option on every
+   measure. Over four windows the public model, trained only on public TLE data,
+   is level overall and better on member-against-member screening in three of
+   four windows (by 2 to 3 points). The single-window result in 10b was within
+   window-to-window noise. This strengthens the point of section 10: with
+   TLE-derived labels, private data adds nothing measurable here, and only
+   operator-quality labels (the SupGP collection started on 15 Nov) can show
+   whether owners' models earn their place.
+4. **Foster with the public table** varies by window (+6.2, +1.6, +1.7 and
+   -2.6 points against the baseline at 100 false alarms a day, mean +1.8). The
+   calibrated model, not the formula, is what moves the result (+12 on average).
+
+SupGP collection. `scripts/collect_supgp.py` saves CelesTrak's supplemental
+element sets (fitted to the operators' own ephemerides) for Starlink, OneWeb,
+Planet and Kuiper every 6 h, from a Windows scheduled task ("Satcollision
+SupGP collector") that catches up after the laptop sleeps. ICEYE and Spire have
+no SupGP. Two to three weeks of it will give operator-quality labels.
 
 ## Reproduce
 
