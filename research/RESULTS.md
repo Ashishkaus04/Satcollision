@@ -476,7 +476,7 @@ What this says, honestly:
    points), not the value of private labels. That value depends on operators'
    precise ephemerides being better than TLE consistency, which these data
    cannot show.
-5. **Suggested improvement: owners' models.** Each member shares one model of
+5. **Suggested improvement: owners' models** (adopted; see 10b). Each member shares one model of
    its *own* fleet's public-catalogue error, and a twin uses the owner's model
    for that owner's satellites. It is the best option on every measure here
    (member-vs-member 21% at 10 FA/day vs 15% FedAvg, 18% pooled), costs one
@@ -502,6 +502,62 @@ PYTHONPATH=src python research/hindcast_fl.py $D/gp_history_oct16a.tle $D/gp_his
 PYTHONPATH=src python research/hindcast_table.py research/results/hindcast_w4_s*.json
 python research/fig_hindcast.py research/results/hindcast_w4_s*.json
 ```
+
+### 10b. Adopted design: owners' models (decided 15 Nov 2026)
+
+The project now uses owners' models as the third step: **baseline -> +Foster ->
++Foster + owners' models.** Each member trains one model of its own fleet's
+public-catalogue error and shares it with the federation (6.3 kB per operator,
+37.8 kB for all six; no training rounds). A twin uses the owner's model for that
+owner's satellites and the public model for objects no member flies
+(`error_learning.OwnerModels`). FedAvg and local-only stay in the paper as
+comparisons.
+
+Because a shared owner model is not averaged with anyone else's, it is trained
+with DP-SGD (`error_learning.train_owner_dp`, opacus, RDP accountant, 5 epochs,
+clip 1.0). The guarantee is per training sample (one error of one element set
+at one age); a satellite with k samples is covered at about k x epsilon by
+group privacy. (DP-FedAvg's epsilon 13 to 15 is per operator and per run, a
+different unit, so the two epsilons are not comparable.)
+
+Mean of 3 seeds:
+
+| Step | Caught at 1e-4 | Warned >= 24 h | False alarms / day | Caught at 100 FA/day | Member vs member at 10 FA/day |
+| --- | --- | --- | --- | --- | --- |
+| Baseline: circular, 0.5 km | 87.0% | 60.4% | 1,333 | 22.4% | 15.0% |
+| + Foster, public table | 73.6% | 51.6% | 1,046 | 19.6% | 7.3% |
+| **+ Foster + owners' models** | **67.0%** | **41.5%** | **826** | **36.0%** | **21.1%** |
+| + Foster + owners' models, DP epsilon 8 | 67.2% | 41.7% | 914 | 33.7% | 15.7% |
+| + Foster + owners' models, DP epsilon 2 | 67.1% | 41.6% | 912 | 32.8% | 14.7% |
+| (comparison) FedAvg, no DP | 65.4% | 39.3% | 809 | 34.7% | 14.8% |
+| (comparison) DP-FedAvg | 64.9% | 38.1% | 795 | 34.5% | 12.2% |
+| (comparison) local-only | 63.2% | 37.9% | 804 | 31.6% | 4.1% |
+
+Held-out NLL of the DP owner models (epsilon 2) against the same models without
+DP: Starlink 1.33 vs 1.25, Kuiper 0.52 vs 0.45, OneWeb -0.75 vs -0.78, Planet
+-0.43 vs -0.60, Spire -1.06 vs -1.15, ICEYE -0.51 vs -0.75.
+
+Small operators' own encounters at the fixed threshold (caught / false alarms
+a day; local-only, FedAvg, owners' models, owners' models with DP epsilon 2):
+Spire 46% / 29.0, 46% / 21.5, 49% / 12.6, 42% / 17.8; ICEYE 59% / 19.8,
+54% / 16.7, 51% / 12.8, 52% / 14.3; Planet 38% / 81.6, 45% / 71.7, 40% / 49.3,
+40% / 59.3.
+
+Reading:
+
+1. Without DP, owners' models are the best option on every measure.
+2. DP costs most of their advantage on member-vs-member screening (21.1% ->
+   14.7% at 10 false alarms a day), leaving them level with non-private
+   FedAvg and ahead of DP-FedAvg (12.2%). Over all encounters the cost is
+   3 points (36.0% -> 32.8%).
+3. Epsilon 2 and 8 differ by under 1 point, so the loss comes from DP-SGD's
+   clipping and short fixed training, not from the noise level. Better DP
+   training (more epochs at the same epsilon, tuned clipping) is the obvious
+   next step and may recover much of the gap.
+4. The paper's claim is therefore: owners' models with DP at epsilon 2 come
+   close to non-private FedAvg (14.7% vs 14.8% member-vs-member, 32.8% vs
+   34.7% overall) and beat DP-FedAvg, at one 6.3 kB message per operator and
+   with a formal per-sample guarantee. Without DP they are clearly best.
 
 ## Reproduce
 

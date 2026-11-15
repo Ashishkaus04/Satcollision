@@ -278,3 +278,27 @@ def test_dp_epsilon_shrinks_with_noise_and_grows_with_rounds():
     e1 = el.gaussian_rdp_epsilon(1.0, 10)
     assert el.gaussian_rdp_epsilon(2.0, 10) < e1 < el.gaussian_rdp_epsilon(1.0, 40)
     assert math.isinf(el.gaussian_rdp_epsilon(0.0, 10))
+
+
+def test_owner_models_route_each_object_to_its_owner():
+    a, b = el.train_local(_synthetic(800, 1.0, 13), epochs=2), el.train_local(_synthetic(800, 3.0, 14), epochs=2)
+    pub = el.train_local(_synthetic(800, 0.5, 15), epochs=2)
+    reg = el.OwnerModels({0: a, 1: b}, pub)
+    d = _synthetic(9, 1.0, 16)
+    owner = np.array([0, 0, 0, 1, 1, 1, -1, -1, -1])
+    bias, sig = reg.predict(d.X, d.age_h, owner)
+    for k, m in ((0, a), (1, b), (-1, pub)):
+        eb, es = el.predict(m, d.X[owner == k], d.age_h[owner == k])
+        assert np.allclose(bias[owner == k], eb) and np.allclose(sig[owner == k], es)
+    assert reg.wire_size_bytes() == 2 * el.flat(a).size * 4
+    fb = (np.ones((9, 3)), np.full((9, 3), 7.0))
+    _, s2 = el.OwnerModels({0: a}).predict(d.X, d.age_h, owner, fallback=fb)
+    assert np.all(s2[owner != 0] == 7.0)
+
+
+def test_dp_owner_model_meets_its_epsilon_and_still_learns():
+    d = _synthetic(4000, 1.0, 17)
+    test = _synthetic(2000, 1.0, 18)
+    m = el.train_owner_dp(d, target_epsilon=4.0, epochs=3, batch=256)
+    assert m.dp["epsilon"] <= 4.0 + 1e-6 and m.dp["unit"] == "one training sample"
+    assert el.evaluate(m, test)["nll"] < el.evaluate(el.new_model(0), test)["nll"]

@@ -438,3 +438,96 @@ def gaussian_rdp_epsilon(noise_multiplier: float, rounds: int, delta: float = 1e
         return float("inf")
     a = np.linspace(1.01, 512, 50000)
     return float(np.min(rounds * a / (2 * noise_multiplier ** 2) + math.log(1 / delta) / (a - 1)))
+
+
+# ---------------------------------------------------------------------------
+# Owners' models: the design the project adopted (15 Nov 2026)
+# ---------------------------------------------------------------------------
+#
+# Instead of averaging one model across fleets (FedAvg), every member trains
+# a model of its *own* fleet's public-catalogue error and shares that model
+# (6.3 kB) with the federation. A twin screening another member's satellite
+# uses that owner's model; for objects no member flies it uses a model
+# trained on public TLE data. In the four-week hindcast this beat FedAvg,
+# pooled training and the public model (research/RESULTS.md section 10).
+#
+# The shared model is trained on the owner's private labels (its precise
+# ephemeris against the public TLE) and, unlike a FedAvg update, is not
+# averaged with anyone else's, so it is trained with DP-SGD (Abadi et al.
+# 2016, via opacus): per-sample gradients clipped and noised, so the
+# released model is (epsilon, delta)-DP with respect to any one training
+# sample. One satellite contributes many samples; by group privacy a
+# satellite with k samples is protected at about k * epsilon, which the
+# paper states.
+
+
+def train_owner_dp(data: ErrorSamples, target_epsilon: float = 8.0, delta: float = 1e-5,
+                   epochs: int = 5, lr: float = 3e-3, batch: int = 1024, max_grad_norm: float = 1.0,
+                   seed: int = 0) -> ErrorNet:
+    """One owner's shareable model, trained with DP-SGD to ``target_epsilon``
+    (per training sample, ``delta``). Fixed epochs, no early stopping (a
+    validation-picked stopping point would spend privacy outside the
+    accountant). ``model.dp`` records the guarantee."""
+    from opacus import PrivacyEngine
+    from torch.utils.data import DataLoader, TensorDataset
+    import warnings
+
+    torch.manual_seed(seed)
+    model = new_model(seed)
+    if len(data) == 0:
+        return model
+    X, Y = _tensors(data)
+    loader = DataLoader(TensorDataset(X, Y), batch_size=min(batch, len(X)), shuffle=True)
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    engine = PrivacyEngine(accountant="rdp")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        model, opt, loader = engine.make_private_with_epsilon(
+            module=model, optimizer=opt, data_loader=loader, target_epsilon=target_epsilon,
+            target_delta=delta, epochs=epochs, max_grad_norm=max_grad_norm)
+        model.train()
+        for _ in range(epochs):
+            for xb, yb in loader:
+                if len(xb) == 0:
+                    continue
+                mu, ls = model(xb)
+                loss = t_nll(mu, ls, yb)
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+        eps = engine.get_epsilon(delta)
+    plain = new_model(seed)
+    plain.load_state_dict({k.replace("_module.", ""): v for k, v in model.state_dict().items()})
+    plain.dp = {"epsilon": float(eps), "delta": delta, "unit": "one training sample",
+                "epochs": epochs, "max_grad_norm": max_grad_norm, "n": len(data)}
+    return plain
+
+
+class OwnerModels:
+    """The federation's registry of shared owner models, plus a public model
+    for objects no member flies. ``predict`` routes each object to the model
+    of the operator that flies it."""
+
+    def __init__(self, models: Dict[int, ErrorNet], public: Optional[ErrorNet] = None):
+        self.models = dict(models)
+        self.public = public
+
+    def predict(self, X: np.ndarray, age_h: np.ndarray, owner: np.ndarray, fallback=None):
+        """(bias, sigma) per row; ``owner`` = operator index of each object
+        (-1: not a member). Rows with no model use ``fallback`` = (bias,
+        sigma) arrays, or zeros/NaN if None."""
+        n = len(X)
+        bias = np.zeros((n, 3)) if fallback is None else np.array(fallback[0], float, copy=True)
+        sig = np.full((n, 3), np.nan) if fallback is None else np.array(fallback[1], float, copy=True)
+        for k, mdl in self.models.items():
+            sel = owner == k
+            if sel.any():
+                bias[sel], sig[sel] = predict(mdl, X[sel], age_h[sel])
+        if self.public is not None:
+            sel = owner < 0
+            if sel.any():
+                bias[sel], sig[sel] = predict(self.public, X[sel], age_h[sel])
+        return bias, sig
+
+    def wire_size_bytes(self) -> int:
+        return sum(int(flat(m).size * 4) for m in self.models.values())

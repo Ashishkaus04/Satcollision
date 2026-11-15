@@ -15,10 +15,10 @@ import numpy as np  # noqa: E402
 OUT = Path(__file__).resolve().parent / "figures"
 SHOW = [("baseline", "Baseline (circular, 0.5 km)", "#888888", "--"),
         ("foster", "+ Foster (public error table)", "#1f77b4", "-"),
-        ("foster_pub_local", "+ Foster + local-only models", "#ff7f0e", ":"),
-        ("foster_pub_fl_sqrt", "+ Foster + FedAvg model", "#d62728", "-"),
-        ("foster_pub_central", "+ Foster + pooled model", "#2ca02c", "-."),
-        ("foster_pub_owner", "+ Foster + owners' models", "#9467bd", "-")]
+        ("foster_pub_owner", "+ Foster + owners' models", "#9467bd", "-"),
+        ("foster_pub_owner_dp2", "+ Foster + owners' models, DP eps 2", "#9467bd", ":"),
+        ("foster_pub_fl_sqrt", "FedAvg instead (comparison)", "#d62728", "-."),
+        ("foster_pub_local", "Local-only instead (comparison)", "#ff7f0e", ":")]
 
 
 def main(paths):
@@ -43,7 +43,7 @@ def main(paths):
     ax = axes[2]
     ops = list(runs[0]["model_quality"])
     keys = [("table", "Public table", "#1f77b4"), ("others_local", "Other operators' local models", "#ff7f0e"),
-            ("fedavg_sqrt", "FedAvg", "#d62728"), ("central", "Pooled", "#2ca02c"), ("own_local", "Owner's own model", "#9467bd")]
+            ("fedavg_sqrt", "FedAvg", "#d62728"), ("central", "Pooled", "#2ca02c"), ("own_local", "Owner's own model", "#9467bd"), ("owner_dp_eps2", "Owner's model, DP eps 2", "#c5b0d5")]
     x = np.arange(len(ops))
     for i, (k, lab, colr) in enumerate(keys):
         vals = []
@@ -51,7 +51,7 @@ def main(paths):
             q = [r["model_quality"][op] for r in runs]
             v = [qq["others_local_mean_nll"] if k == "others_local" else qq[k]["nll"] for qq in q]
             vals.append(np.mean([vv for vv in v if vv is not None]) if any(vv is not None for vv in v) else np.nan)
-        ax.bar(x + (i - 2) * 0.16, vals, 0.16, label=lab, color=colr)
+        ax.bar(x + (i - 2.5) * 0.14, vals, 0.14, label=lab, color=colr)
     ax.set_xticks(x, ops, rotation=20)
     ax.set_ylabel("Held-out NLL (lower is better)")
     ax.set_title("Error model on each fleet's satellites")

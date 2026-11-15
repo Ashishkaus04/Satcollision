@@ -369,6 +369,38 @@
     "mae_t_raw_km": 3.571127999657552,
     "mae_t_corrected_km": 4.118268189957396
    },
+   "owner_dp_eps2": {
+    "n": 49996,
+    "nll": 1.3355549573898315,
+    "cover1": [
+     0.6361508920713657,
+     0.5575446035682855,
+     0.6086686934954796
+    ],
+    "cover2": [
+     0.8370869669573566,
+     0.7756820545643651,
+     0.8373869909592767
+    ],
+    "mae_t_raw_km": 3.571127999657552,
+    "mae_t_corrected_km": 3.230062765829656
+   },
+   "owner_dp_eps8": {
+    "n": 49996,
+    "nll": 1.3293052911758423,
+    "cover1": [
+     0.6393911512921033,
+     0.5528642291383311,
+     0.6091487318985519
+    ],
+    "cover2": [
+     0.8393471477718217,
+     0.7708216657332586,
+     0.8382270581646531
+    ],
+    "mae_t_raw_km": 3.571127999657552,
+    "mae_t_corrected_km": 3.2141547682457148
+   },
    "others_local_mean_nll": 2.5655221462249758
   },
   "Kuiper": {
@@ -499,6 +531,38 @@
     ],
     "mae_t_raw_km": 2.2065050595369406,
     "mae_t_corrected_km": 3.0078192190840194
+   },
+   "owner_dp_eps2": {
+    "n": 36695,
+    "nll": 0.5044425129890442,
+    "cover1": [
+     0.6788390788935822,
+     0.6601171821774083,
+     0.6543398283144842
+    ],
+    "cover2": [
+     0.8902847799427714,
+     0.8614252622973158,
+     0.9011581959395013
+    ],
+    "mae_t_raw_km": 2.2065050595369406,
+    "mae_t_corrected_km": 1.8940986761208984
+   },
+   "owner_dp_eps8": {
+    "n": 36695,
+    "nll": 0.497245192527771,
+    "cover1": [
+     0.676795203706227,
+     0.6554571467502385,
+     0.6519689330971522
+    ],
+    "cover2": [
+     0.8879956397329336,
+     0.8592178770949721,
+     0.9008584275786892
+    ],
+    "mae_t_raw_km": 2.2065050595369406,
+    "mae_t_corrected_km": 1.8872450711190718
    },
    "others_local_mean_nll": 1.377381646633148
   },
@@ -631,6 +695,38 @@
     "mae_t_raw_km": 0.3228648859947387,
     "mae_t_corrected_km": 1.4216475470981875
    },
+   "owner_dp_eps2": {
+    "n": 50000,
+    "nll": -0.7490800619125366,
+    "cover1": [
+     0.65482,
+     0.7051,
+     0.719
+    ],
+    "cover2": [
+     0.8954,
+     0.90048,
+     0.88874
+    ],
+    "mae_t_raw_km": 0.3228648859947387,
+    "mae_t_corrected_km": 0.32366917318314503
+   },
+   "owner_dp_eps8": {
+    "n": 50000,
+    "nll": -0.7542542815208435,
+    "cover1": [
+     0.65874,
+     0.69484,
+     0.72092
+    ],
+    "cover2": [
+     0.8973,
+     0.89638,
+     0.88964
+    ],
+    "mae_t_raw_km": 0.3228648859947387,
+    "mae_t_corrected_km": 0.3219174487135616
+   },
    "others_local_mean_nll": 3.758704924583435
   },
   "Planet": {
@@ -761,6 +857,38 @@
     ],
     "mae_t_raw_km": 0.24763184433256707,
     "mae_t_corrected_km": 1.1402826436921525
+   },
+   "owner_dp_eps2": {
+    "n": 12043,
+    "nll": -0.42127907276153564,
+    "cover1": [
+     0.5778460516482604,
+     0.570954081209001,
+     0.5949514240637714
+    ],
+    "cover2": [
+     0.8343436020925019,
+     0.7610230009133937,
+     0.8225525201361787
+    ],
+    "mae_t_raw_km": 0.24763184433256707,
+    "mae_t_corrected_km": 0.26394555283359533
+   },
+   "owner_dp_eps8": {
+    "n": 12043,
+    "nll": -0.44938018918037415,
+    "cover1": [
+     0.5805031968778543,
+     0.5726147969774973,
+     0.5967782114091174
+    ],
+    "cover2": [
+     0.835589138918874,
+     0.7653408619114839,
+     0.8241302001162502
+    ],
+    "mae_t_raw_km": 0.24763184433256707,
+    "mae_t_corrected_km": 0.26257197686121403
    },
    "others_local_mean_nll": 0.27697706818580625
   },
@@ -893,6 +1021,38 @@
     "mae_t_raw_km": 0.18031098618094887,
     "mae_t_corrected_km": 1.0182607539386241
    },
+   "owner_dp_eps2": {
+    "n": 7733,
+    "nll": -1.0445789098739624,
+    "cover1": [
+     0.5652398810293547,
+     0.5396353291090134,
+     0.5718349928876245
+    ],
+    "cover2": [
+     0.8652528126212337,
+     0.7740850898745636,
+     0.844303633777318
+    ],
+    "mae_t_raw_km": 0.18031098618094887,
+    "mae_t_corrected_km": 0.207778975168524
+   },
+   "owner_dp_eps8": {
+    "n": 7733,
+    "nll": -1.0623447895050049,
+    "cover1": [
+     0.563817405922669,
+     0.560584507952929,
+     0.5718349928876245
+    ],
+    "cover2": [
+     0.8559420664683822,
+     0.7868873658347343,
+     0.8409414198887883
+    ],
+    "mae_t_raw_km": 0.18031098618094887,
+    "mae_t_corrected_km": 0.1896835520631283
+   },
    "others_local_mean_nll": -0.03374893218278885
   },
   "ICEYE": {
@@ -1024,6 +1184,38 @@
     "mae_t_raw_km": 0.19585096284937642,
     "mae_t_corrected_km": 1.2703388590991311
    },
+   "owner_dp_eps2": {
+    "n": 5730,
+    "nll": -0.49154219031333923,
+    "cover1": [
+     0.5465968586387434,
+     0.6300174520069808,
+     0.5849912739965096
+    ],
+    "cover2": [
+     0.7973821989528795,
+     0.7631762652705061,
+     0.7825479930191972
+    ],
+    "mae_t_raw_km": 0.19585096284937642,
+    "mae_t_corrected_km": 0.19797078968437265
+   },
+   "owner_dp_eps8": {
+    "n": 5730,
+    "nll": -0.5141124725341797,
+    "cover1": [
+     0.5452006980802793,
+     0.6279232111692845,
+     0.5893542757417103
+    ],
+    "cover2": [
+     0.8012216404886562,
+     0.7640488656195462,
+     0.7869109947643979
+    ],
+    "mae_t_raw_km": 0.19585096284937642,
+    "mae_t_corrected_km": 0.19712715717441404
+   },
    "others_local_mean_nll": 0.049686142802238466
   }
  },
@@ -1089,6 +1281,109 @@
  ],
  "fedavg_best_round": 2,
  "fedavg_sqrt_best_round": 8,
+ "owner_dp": {
+  "2": {
+   "Starlink": {
+    "epsilon": 1.994664252305726,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 299944
+   },
+   "Kuiper": {
+    "epsilon": 1.9983902921951406,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 117170
+   },
+   "OneWeb": {
+    "epsilon": 1.9997903137449364,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 211463
+   },
+   "Planet": {
+    "epsilon": 1.9960623351949267,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 37365
+   },
+   "Spire": {
+    "epsilon": 1.998190375127847,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 26383
+   },
+   "ICEYE": {
+    "epsilon": 1.9980570178935464,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 19699
+   }
+  },
+  "8": {
+   "Starlink": {
+    "epsilon": 7.992974784303482,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 299944
+   },
+   "Kuiper": {
+    "epsilon": 7.995066122278563,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 117170
+   },
+   "OneWeb": {
+    "epsilon": 7.994920117614357,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 211463
+   },
+   "Planet": {
+    "epsilon": 7.994832940566039,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 37365
+   },
+   "Spire": {
+    "epsilon": 7.9916962406547425,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 26383
+   },
+   "ICEYE": {
+    "epsilon": 7.9994339706015465,
+    "delta": 1e-05,
+    "unit": "one training sample",
+    "epochs": 5,
+    "max_grad_norm": 1.0,
+    "n": 19699
+   }
+  }
+ },
+ "owner_models_bytes": 37776,
  "dp": {
   "clip": 0.5,
   "noise_multiplier": 1.0,
@@ -2685,6 +2980,218 @@
     "false_alarms_per_day": 13.25,
     "alerts_per_day": 19.25,
     "precision": 0.3116883116883117
+   }
+  },
+  "foster_pub_owner_dp2": {
+   "all": {
+    "assessed": 20471416.0,
+    "dangerous": 1953.0,
+    "caught": 1296.0,
+    "caught_frac": 0.663594470046083,
+    "caught_24h_frac": 0.4019457245263697,
+    "median_warning_h": 31.123594952747226,
+    "warning_hours_per_dangerous": 21.941769374102446,
+    "false_alarms": 3799.0,
+    "false_alarms_per_day": 949.75,
+    "alerts_per_day": 1273.75,
+    "precision": 0.2543670264965653
+   },
+   "member_vs_member": {
+    "assessed": 4284084.0,
+    "dangerous": 332.0,
+    "caught": 185.0,
+    "caught_frac": 0.5572289156626506,
+    "caught_24h_frac": 0.286144578313253,
+    "median_warning_h": 25.124008163809776,
+    "warning_hours_per_dangerous": 15.675448391115271,
+    "false_alarms": 972.0,
+    "false_alarms_per_day": 243.0,
+    "alerts_per_day": 289.25,
+    "precision": 0.1598962834917891
+   },
+   "by_Starlink": {
+    "assessed": 17268956.0,
+    "dangerous": 1669.0,
+    "caught": 1152.0,
+    "caught_frac": 0.6902336728579987,
+    "caught_24h_frac": 0.4164170161773517,
+    "median_warning_h": 30.725198440253735,
+    "warning_hours_per_dangerous": 22.31220388303998,
+    "false_alarms": 3389.0,
+    "false_alarms_per_day": 847.25,
+    "alerts_per_day": 1135.25,
+    "precision": 0.2536886148425457
+   },
+   "by_Kuiper": {
+    "assessed": 467226.0,
+    "dangerous": 48.0,
+    "caught": 38.0,
+    "caught_frac": 0.7916666666666666,
+    "caught_24h_frac": 0.7291666666666666,
+    "median_warning_h": 65.35068011842668,
+    "warning_hours_per_dangerous": 46.64677305985242,
+    "false_alarms": 37.0,
+    "false_alarms_per_day": 9.25,
+    "alerts_per_day": 18.75,
+    "precision": 0.5066666666666667
+   },
+   "by_OneWeb": {
+    "assessed": 145354.0,
+    "dangerous": 8.0,
+    "caught": 7.0,
+    "caught_frac": 0.875,
+    "caught_24h_frac": 0.875,
+    "median_warning_h": 68.45670353248715,
+    "warning_hours_per_dangerous": 58.28549604630098,
+    "false_alarms": 2.0,
+    "false_alarms_per_day": 0.5,
+    "alerts_per_day": 2.25,
+    "precision": 0.7777777777777778
+   },
+   "by_Planet": {
+    "assessed": 1601558.0,
+    "dangerous": 131.0,
+    "caught": 53.0,
+    "caught_frac": 0.40458015267175573,
+    "caught_24h_frac": 0.15267175572519084,
+    "median_warning_h": 17.124008171260357,
+    "warning_hours_per_dangerous": 9.218446334411624,
+    "false_alarms": 247.0,
+    "false_alarms_per_day": 61.75,
+    "alerts_per_day": 75.0,
+    "precision": 0.17666666666666667
+   },
+   "by_Spire": {
+    "assessed": 672205.0,
+    "dangerous": 48.0,
+    "caught": 20.0,
+    "caught_frac": 0.4166666666666667,
+    "caught_24h_frac": 0.2708333333333333,
+    "median_warning_h": 33.41029048897326,
+    "warning_hours_per_dangerous": 14.541056657442823,
+    "false_alarms": 67.0,
+    "false_alarms_per_day": 16.75,
+    "alerts_per_day": 21.75,
+    "precision": 0.22988505747126436
+   },
+   "by_ICEYE": {
+    "assessed": 316117.0,
+    "dangerous": 49.0,
+    "caught": 26.0,
+    "caught_frac": 0.5306122448979592,
+    "caught_24h_frac": 0.30612244897959184,
+    "median_warning_h": 40.81954126060009,
+    "warning_hours_per_dangerous": 20.45491922897648,
+    "false_alarms": 57.0,
+    "false_alarms_per_day": 14.25,
+    "alerts_per_day": 20.75,
+    "precision": 0.3132530120481928
+   }
+  },
+  "foster_pub_owner_dp8": {
+   "all": {
+    "assessed": 20471416.0,
+    "dangerous": 1953.0,
+    "caught": 1297.0,
+    "caught_frac": 0.6641065028161802,
+    "caught_24h_frac": 0.40450588837685614,
+    "median_warning_h": 31.279191691428423,
+    "warning_hours_per_dangerous": 22.040664115385617,
+    "false_alarms": 3799.0,
+    "false_alarms_per_day": 949.75,
+    "alerts_per_day": 1274.0,
+    "precision": 0.2545133437990581
+   },
+   "member_vs_member": {
+    "assessed": 4284084.0,
+    "dangerous": 332.0,
+    "caught": 186.0,
+    "caught_frac": 0.5602409638554217,
+    "caught_24h_frac": 0.30120481927710846,
+    "median_warning_h": 25.390005799010396,
+    "warning_hours_per_dangerous": 16.257199685470795,
+    "false_alarms": 972.0,
+    "false_alarms_per_day": 243.0,
+    "alerts_per_day": 289.5,
+    "precision": 0.16062176165803108
+   },
+   "by_Starlink": {
+    "assessed": 17268956.0,
+    "dangerous": 1669.0,
+    "caught": 1153.0,
+    "caught_frac": 0.6908328340323547,
+    "caught_24h_frac": 0.41761533852606353,
+    "median_warning_h": 30.730743035674095,
+    "warning_hours_per_dangerous": 22.39385404698484,
+    "false_alarms": 3374.0,
+    "false_alarms_per_day": 843.5,
+    "alerts_per_day": 1131.75,
+    "precision": 0.2546940578749724
+   },
+   "by_Kuiper": {
+    "assessed": 467226.0,
+    "dangerous": 48.0,
+    "caught": 38.0,
+    "caught_frac": 0.7916666666666666,
+    "caught_24h_frac": 0.7291666666666666,
+    "median_warning_h": 65.35068011842668,
+    "warning_hours_per_dangerous": 46.64677305985242,
+    "false_alarms": 37.0,
+    "false_alarms_per_day": 9.25,
+    "alerts_per_day": 18.75,
+    "precision": 0.5066666666666667
+   },
+   "by_OneWeb": {
+    "assessed": 145354.0,
+    "dangerous": 8.0,
+    "caught": 7.0,
+    "caught_frac": 0.875,
+    "caught_24h_frac": 0.875,
+    "median_warning_h": 68.45670353248715,
+    "warning_hours_per_dangerous": 58.28549604630098,
+    "false_alarms": 3.0,
+    "false_alarms_per_day": 0.75,
+    "alerts_per_day": 2.5,
+    "precision": 0.7
+   },
+   "by_Planet": {
+    "assessed": 1601558.0,
+    "dangerous": 131.0,
+    "caught": 53.0,
+    "caught_frac": 0.40458015267175573,
+    "caught_24h_frac": 0.17557251908396945,
+    "median_warning_h": 19.006548900157213,
+    "warning_hours_per_dangerous": 9.638403958491697,
+    "false_alarms": 258.0,
+    "false_alarms_per_day": 64.5,
+    "alerts_per_day": 77.75,
+    "precision": 0.17041800643086816
+   },
+   "by_Spire": {
+    "assessed": 672205.0,
+    "dangerous": 48.0,
+    "caught": 21.0,
+    "caught_frac": 0.4375,
+    "caught_24h_frac": 0.2708333333333333,
+    "median_warning_h": 32.89874907955527,
+    "warning_hours_per_dangerous": 15.027734708739445,
+    "false_alarms": 67.0,
+    "false_alarms_per_day": 16.75,
+    "alerts_per_day": 22.0,
+    "precision": 0.23863636363636365
+   },
+   "by_ICEYE": {
+    "assessed": 316117.0,
+    "dangerous": 49.0,
+    "caught": 25.0,
+    "caught_frac": 0.5102040816326531,
+    "caught_24h_frac": 0.30612244897959184,
+    "median_warning_h": 42.42231924086809,
+    "warning_hours_per_dangerous": 20.01598679806505,
+    "false_alarms": 60.0,
+    "false_alarms_per_day": 15.0,
+    "alerts_per_day": 21.25,
+    "precision": 0.29411764705882354
    }
   }
  },
@@ -6427,6 +6934,510 @@
     "mm_caught_24h": 0.009036144578313253,
     "mm_fa_day": 0.0,
     "warn_h_per_dangerous": 0.8207318001983261
+   },
+   {
+    "T": 0.0017782794100389228,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.0031622776601683794,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.005623413251903491,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.01,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   }
+  ],
+  "foster_pub_owner_dp2": [
+   {
+    "T": 1e-08,
+    "caught": 0.9923195084485407,
+    "caught_24h": 0.9718381976446493,
+    "fa_day": 70853.75,
+    "mm_caught": 0.9789156626506024,
+    "mm_caught_24h": 0.9006024096385542,
+    "mm_fa_day": 22754.25,
+    "warn_h_per_dangerous": 63.67354787154246
+   },
+   {
+    "T": 1.7782794100389228e-08,
+    "caught": 0.9918074756784434,
+    "caught_24h": 0.9703020993343574,
+    "fa_day": 64014.5,
+    "mm_caught": 0.9759036144578314,
+    "mm_caught_24h": 0.8945783132530121,
+    "mm_fa_day": 20188.25,
+    "warn_h_per_dangerous": 63.414188687462136
+   },
+   {
+    "T": 3.162277660168379e-08,
+    "caught": 0.9918074756784434,
+    "caught_24h": 0.9672299027137736,
+    "fa_day": 57318.5,
+    "mm_caught": 0.9759036144578314,
+    "mm_caught_24h": 0.8795180722891566,
+    "mm_fa_day": 17599.25,
+    "warn_h_per_dangerous": 63.143835384856494
+   },
+   {
+    "T": 5.6234132519034905e-08,
+    "caught": 0.9918074756784434,
+    "caught_24h": 0.9662058371735791,
+    "fa_day": 51005.25,
+    "mm_caught": 0.9759036144578314,
+    "mm_caught_24h": 0.8795180722891566,
+    "mm_fa_day": 15388.5,
+    "warn_h_per_dangerous": 62.65638018773151
+   },
+   {
+    "T": 1e-07,
+    "caught": 0.9912954429083461,
+    "caught_24h": 0.9631336405529954,
+    "fa_day": 44850.25,
+    "mm_caught": 0.9759036144578314,
+    "mm_caught_24h": 0.8704819277108434,
+    "mm_fa_day": 13044.5,
+    "warn_h_per_dangerous": 62.11188412504056
+   },
+   {
+    "T": 1.7782794100389227e-07,
+    "caught": 0.9907834101382489,
+    "caught_24h": 0.9585253456221198,
+    "fa_day": 38081.75,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.8524096385542169,
+    "mm_fa_day": 10502.75,
+    "warn_h_per_dangerous": 61.55382360642727
+   },
+   {
+    "T": 3.162277660168379e-07,
+    "caught": 0.9902713773681515,
+    "caught_24h": 0.9564772145417306,
+    "fa_day": 31330.75,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.8463855421686747,
+    "mm_fa_day": 8205.0,
+    "warn_h_per_dangerous": 60.86175931321197
+   },
+   {
+    "T": 5.62341325190349e-07,
+    "caught": 0.989247311827957,
+    "caught_24h": 0.9523809523809523,
+    "fa_day": 25101.25,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.8403614457831325,
+    "mm_fa_day": 6379.75,
+    "warn_h_per_dangerous": 60.02734002402301
+   },
+   {
+    "T": 1e-06,
+    "caught": 0.9882232462877624,
+    "caught_24h": 0.9467485919098823,
+    "fa_day": 20264.5,
+    "mm_caught": 0.9698795180722891,
+    "mm_caught_24h": 0.8343373493975904,
+    "mm_fa_day": 4888.5,
+    "warn_h_per_dangerous": 58.739927462861516
+   },
+   {
+    "T": 1.778279410038923e-06,
+    "caught": 0.9836149513568868,
+    "caught_24h": 0.9365079365079365,
+    "fa_day": 15754.5,
+    "mm_caught": 0.9548192771084337,
+    "mm_caught_24h": 0.8162650602409639,
+    "mm_fa_day": 3498.0,
+    "warn_h_per_dangerous": 56.97378665148159
+   },
+   {
+    "T": 3.162277660168379e-06,
+    "caught": 0.9774705581157194,
+    "caught_24h": 0.9134664618535586,
+    "fa_day": 11975.0,
+    "mm_caught": 0.9457831325301205,
+    "mm_caught_24h": 0.786144578313253,
+    "mm_fa_day": 2477.0,
+    "warn_h_per_dangerous": 54.17502344658916
+   },
+   {
+    "T": 5.623413251903491e-06,
+    "caught": 0.9738863287250384,
+    "caught_24h": 0.883768561187916,
+    "fa_day": 8801.5,
+    "mm_caught": 0.9367469879518072,
+    "mm_caught_24h": 0.7560240963855421,
+    "mm_fa_day": 1718.75,
+    "warn_h_per_dangerous": 50.73089831163921
+   },
+   {
+    "T": 1e-05,
+    "caught": 0.9656938044034818,
+    "caught_24h": 0.8320532514080902,
+    "fa_day": 6188.0,
+    "mm_caught": 0.9186746987951807,
+    "mm_caught_24h": 0.713855421686747,
+    "mm_fa_day": 1236.25,
+    "warn_h_per_dangerous": 46.56059314233298
+   },
+   {
+    "T": 1.778279410038923e-05,
+    "caught": 0.9431643625192012,
+    "caught_24h": 0.7363031233998976,
+    "fa_day": 4422.25,
+    "mm_caught": 0.8704819277108434,
+    "mm_caught_24h": 0.6325301204819277,
+    "mm_fa_day": 898.5,
+    "warn_h_per_dangerous": 41.44068851419217
+   },
+   {
+    "T": 3.1622776601683795e-05,
+    "caught": 0.8812083973374296,
+    "caught_24h": 0.6415770609318996,
+    "fa_day": 2833.0,
+    "mm_caught": 0.7921686746987951,
+    "mm_caught_24h": 0.5421686746987951,
+    "mm_fa_day": 590.75,
+    "warn_h_per_dangerous": 35.45009742575925
+   },
+   {
+    "T": 5.623413251903491e-05,
+    "caught": 0.7931387608806963,
+    "caught_24h": 0.5253456221198156,
+    "fa_day": 1787.0,
+    "mm_caught": 0.6867469879518072,
+    "mm_caught_24h": 0.4186746987951807,
+    "mm_fa_day": 397.5,
+    "warn_h_per_dangerous": 28.839534080294055
+   },
+   {
+    "T": 0.0001,
+    "caught": 0.663594470046083,
+    "caught_24h": 0.4019457245263697,
+    "fa_day": 949.75,
+    "mm_caught": 0.5572289156626506,
+    "mm_caught_24h": 0.286144578313253,
+    "mm_fa_day": 243.0,
+    "warn_h_per_dangerous": 21.941769374102446
+   },
+   {
+    "T": 0.00017782794100389227,
+    "caught": 0.5140809011776754,
+    "caught_24h": 0.2939068100358423,
+    "fa_day": 440.5,
+    "mm_caught": 0.3885542168674699,
+    "mm_caught_24h": 0.19879518072289157,
+    "mm_fa_day": 131.5,
+    "warn_h_per_dangerous": 15.64920093998107
+   },
+   {
+    "T": 0.00031622776601683794,
+    "caught": 0.3568868407578085,
+    "caught_24h": 0.17204301075268819,
+    "fa_day": 153.25,
+    "mm_caught": 0.25903614457831325,
+    "mm_caught_24h": 0.1144578313253012,
+    "mm_fa_day": 57.5,
+    "warn_h_per_dangerous": 9.435831100732866
+   },
+   {
+    "T": 0.0005623413251903491,
+    "caught": 0.1827956989247312,
+    "caught_24h": 0.07578084997439836,
+    "fa_day": 20.5,
+    "mm_caught": 0.12650602409638553,
+    "mm_caught_24h": 0.045180722891566265,
+    "mm_fa_day": 7.5,
+    "warn_h_per_dangerous": 4.161642595272963
+   },
+   {
+    "T": 0.001,
+    "caught": 0.053763440860215055,
+    "caught_24h": 0.011264720942140297,
+    "fa_day": 1.5,
+    "mm_caught": 0.02710843373493976,
+    "mm_caught_24h": 0.009036144578313253,
+    "mm_fa_day": 0.5,
+    "warn_h_per_dangerous": 0.8484970693592377
+   },
+   {
+    "T": 0.0017782794100389228,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.0031622776601683794,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.005623413251903491,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   },
+   {
+    "T": 0.01,
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "fa_day": 0.0,
+    "mm_caught": 0.0,
+    "mm_caught_24h": 0.0,
+    "mm_fa_day": 0.0,
+    "warn_h_per_dangerous": 0.0
+   }
+  ],
+  "foster_pub_owner_dp8": [
+   {
+    "T": 1e-08,
+    "caught": 0.992831541218638,
+    "caught_24h": 0.9728622631848438,
+    "fa_day": 75532.25,
+    "mm_caught": 0.9819277108433735,
+    "mm_caught_24h": 0.9066265060240963,
+    "mm_fa_day": 27432.75,
+    "warn_h_per_dangerous": 63.74440695972006
+   },
+   {
+    "T": 1.7782794100389228e-08,
+    "caught": 0.992831541218638,
+    "caught_24h": 0.9713261648745519,
+    "fa_day": 68001.0,
+    "mm_caught": 0.9819277108433735,
+    "mm_caught_24h": 0.9006024096385542,
+    "mm_fa_day": 24174.75,
+    "warn_h_per_dangerous": 63.49043870574799
+   },
+   {
+    "T": 3.162277660168379e-08,
+    "caught": 0.992831541218638,
+    "caught_24h": 0.9692780337941628,
+    "fa_day": 60785.25,
+    "mm_caught": 0.9819277108433735,
+    "mm_caught_24h": 0.891566265060241,
+    "mm_fa_day": 21066.0,
+    "warn_h_per_dangerous": 63.19960409234036
+   },
+   {
+    "T": 5.6234132519034905e-08,
+    "caught": 0.992831541218638,
+    "caught_24h": 0.9672299027137736,
+    "fa_day": 53185.25,
+    "mm_caught": 0.9819277108433735,
+    "mm_caught_24h": 0.8855421686746988,
+    "mm_fa_day": 17568.5,
+    "warn_h_per_dangerous": 62.72034141952358
+   },
+   {
+    "T": 1e-07,
+    "caught": 0.9912954429083461,
+    "caught_24h": 0.9636456733230927,
+    "fa_day": 45988.0,
+    "mm_caught": 0.9759036144578314,
+    "mm_caught_24h": 0.8734939759036144,
+    "mm_fa_day": 14182.25,
+    "warn_h_per_dangerous": 62.161293037642025
+   },
+   {
+    "T": 1.7782794100389227e-07,
+    "caught": 0.9907834101382489,
+    "caught_24h": 0.9595494111623144,
+    "fa_day": 38825.75,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.858433734939759,
+    "mm_fa_day": 11246.75,
+    "warn_h_per_dangerous": 61.668518946925246
+   },
+   {
+    "T": 3.162277660168379e-07,
+    "caught": 0.9902713773681515,
+    "caught_24h": 0.9580133128520225,
+    "fa_day": 31840.75,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.8554216867469879,
+    "mm_fa_day": 8715.0,
+    "warn_h_per_dangerous": 61.041994848290024
+   },
+   {
+    "T": 5.62341325190349e-07,
+    "caught": 0.989247311827957,
+    "caught_24h": 0.953405017921147,
+    "fa_day": 25065.25,
+    "mm_caught": 0.9728915662650602,
+    "mm_caught_24h": 0.8463855421686747,
+    "mm_fa_day": 6343.75,
+    "warn_h_per_dangerous": 60.101072742922746
+   },
+   {
+    "T": 1e-06,
+    "caught": 0.9877112135176651,
+    "caught_24h": 0.9467485919098823,
+    "fa_day": 20156.25,
+    "mm_caught": 0.9668674698795181,
+    "mm_caught_24h": 0.8343373493975904,
+    "mm_fa_day": 4780.25,
+    "warn_h_per_dangerous": 58.73692127572982
+   },
+   {
+    "T": 1.778279410038923e-06,
+    "caught": 0.9836149513568868,
+    "caught_24h": 0.937532002048131,
+    "fa_day": 15685.25,
+    "mm_caught": 0.9548192771084337,
+    "mm_caught_24h": 0.822289156626506,
+    "mm_fa_day": 3428.75,
+    "warn_h_per_dangerous": 56.89677784959292
+   },
+   {
+    "T": 3.162277660168379e-06,
+    "caught": 0.9764464925755248,
+    "caught_24h": 0.9129544290834614,
+    "fa_day": 11915.25,
+    "mm_caught": 0.9397590361445783,
+    "mm_caught_24h": 0.7831325301204819,
+    "mm_fa_day": 2417.25,
+    "warn_h_per_dangerous": 54.076184236079726
+   },
+   {
+    "T": 5.623413251903491e-06,
+    "caught": 0.9738863287250384,
+    "caught_24h": 0.883768561187916,
+    "fa_day": 8790.5,
+    "mm_caught": 0.9367469879518072,
+    "mm_caught_24h": 0.7560240963855421,
+    "mm_fa_day": 1707.75,
+    "warn_h_per_dangerous": 50.702224476500405
+   },
+   {
+    "T": 1e-05,
+    "caught": 0.9656938044034818,
+    "caught_24h": 0.8320532514080902,
+    "fa_day": 6200.75,
+    "mm_caught": 0.9186746987951807,
+    "mm_caught_24h": 0.713855421686747,
+    "mm_fa_day": 1249.0,
+    "warn_h_per_dangerous": 46.6560823612041
+   },
+   {
+    "T": 1.778279410038923e-05,
+    "caught": 0.942652329749104,
+    "caught_24h": 0.7373271889400922,
+    "fa_day": 4424.75,
+    "mm_caught": 0.8674698795180723,
+    "mm_caught_24h": 0.6385542168674698,
+    "mm_fa_day": 901.0,
+    "warn_h_per_dangerous": 41.40831201308952
+   },
+   {
+    "T": 3.1622776601683795e-05,
+    "caught": 0.8812083973374296,
+    "caught_24h": 0.6426011264720942,
+    "fa_day": 2846.25,
+    "mm_caught": 0.7921686746987951,
+    "mm_caught_24h": 0.5481927710843374,
+    "mm_fa_day": 604.0,
+    "warn_h_per_dangerous": 35.3820134724466
+   },
+   {
+    "T": 5.623413251903491e-05,
+    "caught": 0.7936507936507936,
+    "caught_24h": 0.5263696876600102,
+    "fa_day": 1778.75,
+    "mm_caught": 0.6897590361445783,
+    "mm_caught_24h": 0.4246987951807229,
+    "mm_fa_day": 389.25,
+    "warn_h_per_dangerous": 28.802605342669285
+   },
+   {
+    "T": 0.0001,
+    "caught": 0.6641065028161802,
+    "caught_24h": 0.40450588837685614,
+    "fa_day": 949.75,
+    "mm_caught": 0.5602409638554217,
+    "mm_caught_24h": 0.30120481927710846,
+    "mm_fa_day": 243.0,
+    "warn_h_per_dangerous": 22.040664115385617
+   },
+   {
+    "T": 0.00017782794100389227,
+    "caught": 0.5161290322580645,
+    "caught_24h": 0.2944188428059396,
+    "fa_day": 445.0,
+    "mm_caught": 0.4006024096385542,
+    "mm_caught_24h": 0.20180722891566266,
+    "mm_fa_day": 136.0,
+    "warn_h_per_dangerous": 15.688165120957862
+   },
+   {
+    "T": 0.00031622776601683794,
+    "caught": 0.35535074244751663,
+    "caught_24h": 0.1715309779825909,
+    "fa_day": 152.75,
+    "mm_caught": 0.25,
+    "mm_caught_24h": 0.11144578313253012,
+    "mm_fa_day": 57.0,
+    "warn_h_per_dangerous": 9.440137591001259
+   },
+   {
+    "T": 0.0005623413251903491,
+    "caught": 0.18381976446492576,
+    "caught_24h": 0.07629288274449565,
+    "fa_day": 19.75,
+    "mm_caught": 0.13253012048192772,
+    "mm_caught_24h": 0.04819277108433735,
+    "mm_fa_day": 6.75,
+    "warn_h_per_dangerous": 4.181456227977109
+   },
+   {
+    "T": 0.001,
+    "caught": 0.05427547363031234,
+    "caught_24h": 0.011264720942140297,
+    "fa_day": 2.0,
+    "mm_caught": 0.030120481927710843,
+    "mm_caught_24h": 0.009036144578313253,
+    "mm_fa_day": 1.0,
+    "warn_h_per_dangerous": 0.8510661202263997
    },
    {
     "T": 0.0017782794100389228,

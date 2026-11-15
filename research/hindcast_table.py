@@ -6,7 +6,7 @@ import json, sys
 import numpy as np
 
 SCHEMES = ["baseline", "circular_meas", "foster", "foster_bias", "foster_local", "foster_fl", "foster_fl_sqrt", "foster_central",
-           "foster_pub", "foster_pub_local", "foster_pub_fl", "foster_pub_fl_sqrt", "foster_pub_central", "foster_pub_fl_dp", "foster_pub_owner"]
+           "foster_pub", "foster_pub_local", "foster_pub_fl", "foster_pub_fl_sqrt", "foster_pub_central", "foster_pub_fl_dp", "foster_pub_owner", "foster_pub_owner_dp2", "foster_pub_owner_dp8"]
 
 
 def at_budget(sweep, budget, c="caught", f="fa_day"):
