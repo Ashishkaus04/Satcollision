@@ -690,6 +690,41 @@ python research/precise_orbits.py --start 2026-10-12 --end 2026-11-13     # ~500
 PYTHONPATH=src python research/precise_vs_tle.py data/precise/sentinel1_2026-10-12_2026-11-13.npz \n  data/historical/gp_history_oct16a.tle data/historical/gp_history_oct16b.tle data/historical/gp_history_oct23.tle \n  data/historical/gp_history_oct30a.tle data/historical/gp_history_oct30b.tle data/historical/gp_history_week.tle
 ```
 
+## 12. Trying to recover the lost warning: a maximum-Pc rule (negative result)
+
+`research/hindcast_dilution.py`, `hindcast.pc_max`. Honest covariances lower the
+Pc of long-range encounters (probability dilution), and section 10 found the
+calibrated schemes warn later and catch fewer than the circular baseline at
+high false-alarm budgets. The standard remedy is to also look at the maximum Pc
+any scaling of the covariance could give (Alfano's maximum probability):
+alert if Pc >= 1e-4 OR Pc_max >= T2, with T2 set so the rule raises a chosen
+number of false alarms. Four rolling windows (10c), mean +- sd:
+
+| Rule | False alarms / day | Caught | Caught >= 24 h | Median warning |
+| --- | --- | --- | --- | --- |
+| Baseline (circular), Pc >= 1e-4 | 1,190 +- 145 | 85.7 +- 1.3% | 65.3 +- 5.4% | 44.3 h |
+| + Foster, table, Pc >= 1e-4 | 900 +- 101 | 72.2 +- 1.4% | 55.8 +- 4.1% | 47.6 h |
+| + Foster, table, + max-Pc at the baseline's false alarms | 1,190 | 80.8 +- 1.2% | 62.5 +- 3.5% | 47.2 h |
+| + Foster + owners' models, Pc >= 1e-4 | 792 +- 68 | 66.3 +- 1.3% | 45.7 +- 5.7% | 38.6 h |
+| ... + max-Pc, false alarms +25% | 990 | 66.9 +- 1.2% | 46.3 +- 5.5% | 39.1 h |
+| ... + max-Pc at the baseline's false alarms | 1,190 | 69.2 +- 0.7% | 47.4 +- 5.1% | 39.0 h |
+| Owners' models with DP eps 2, + max-Pc at the baseline's false alarms | 1,190 | 69.2 +- 0.9% | 47.6 +- 4.9% | 39.3 h |
+
+The rule does not recover the gap for owners' models: 50% more false alarms buy
+3 points of recall and half an hour of warning. It helps the public table more
+(72% -> 81%), but still falls short of the baseline at the same false alarms.
+
+Why: the maximum Pc favours encounters whose predicted miss lies along the
+large-uncertainty (along-track) direction, while what makes an encounter
+dangerous *in this hindcast* is a small true miss, and here the predicted miss is
+already close to the true one, because the truth is the next TLE (section 11:
+that truth understates the real error 3 to 17 times). A rule that ranks by plain
+predicted miss distance, which is what the 0.5 km circular baseline amounts to,
+is flattered by that truth. So the baseline's advantage at large budgets is, at
+least partly, an artefact of TLE-derived truth, and should not be "fixed" by
+tuning against it. The fair test is against precise or operator-fitted truth
+(section 11, the SupGP collection).
+
 ## Reproduce
 
 ```bash
