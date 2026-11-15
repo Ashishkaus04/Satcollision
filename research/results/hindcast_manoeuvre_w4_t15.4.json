@@ -1,0 +1,325 @@
+{
+ "n_jumps": 44235,
+ "n_manoeuvring_sats": 8385,
+ "test_days": 4.0,
+ "groups": {
+  "one_manoeuvred": {
+   "encounters": 645453.0,
+   "dangerous": 37.0
+  },
+  "both_manoeuvred": {
+   "encounters": 74786.0,
+   "dangerous": 3.0
+  },
+  "none_manoeuvred": {
+   "encounters": 1449549.0,
+   "dangerous": 107.0
+  }
+ },
+ "baseline": {
+  "one_manoeuvred": {
+   "not_manoeuvring_side_alone": {
+    "caught": 0.43243243243243246,
+    "caught_24h": 0.13513513513513514,
+    "median_warning_h": 13.945147762075067,
+    "false_alarms_per_day": 31.5
+   },
+   "manoeuvring_side_alone": {
+    "caught": 0.43243243243243246,
+    "caught_24h": 0.2702702702702703,
+    "median_warning_h": 35.36523103527725,
+    "false_alarms_per_day": 33.0
+   },
+   "both_sides": {
+    "caught": 0.6486486486486487,
+    "caught_24h": 0.3783783783783784,
+    "median_warning_h": 35.36523103527725,
+    "false_alarms_per_day": 58.75
+   },
+   "side0_at_equal_fa": {
+    "T": 2.5118864315095822e-05,
+    "false_alarms_per_day": 60.75,
+    "caught": 0.5675675675675675,
+    "caught_24h": 0.2972972972972973
+   },
+   "side1_at_equal_fa": {
+    "T": 1e-05,
+    "false_alarms_per_day": 85.0,
+    "caught": 0.6216216216216216,
+    "caught_24h": 0.2972972972972973
+   }
+  },
+  "both_manoeuvred": {
+   "side_a_alone": {
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 8.613647975027561,
+    "false_alarms_per_day": 3.25
+   },
+   "side_b_alone": {
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "median_warning_h": 0.0,
+    "false_alarms_per_day": 1.5
+   },
+   "both_sides": {
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 8.613647975027561,
+    "false_alarms_per_day": 4.5
+   },
+   "side0_at_equal_fa": {
+    "T": 1.584893192461114e-05,
+    "false_alarms_per_day": 4.5,
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333
+   },
+   "side1_at_equal_fa": {
+    "T": 1.584893192461114e-05,
+    "false_alarms_per_day": 5.25,
+    "caught": 0.0,
+    "caught_24h": 0.0
+   }
+  },
+  "none_manoeuvred": {
+   "side_a_alone": {
+    "caught": 0.4953271028037383,
+    "caught_24h": 0.22429906542056074,
+    "median_warning_h": 21.911068182438612,
+    "false_alarms_per_day": 101.5
+   },
+   "side_b_alone": {
+    "caught": 0.7476635514018691,
+    "caught_24h": 0.5046728971962616,
+    "median_warning_h": 39.2526015099138,
+    "false_alarms_per_day": 101.0
+   },
+   "both_sides": {
+    "caught": 0.897196261682243,
+    "caught_24h": 0.6448598130841121,
+    "median_warning_h": 47.25152612105012,
+    "false_alarms_per_day": 189.75
+   },
+   "side0_at_equal_fa": {
+    "T": 1.584893192461114e-05,
+    "false_alarms_per_day": 204.5,
+    "caught": 0.5887850467289719,
+    "caught_24h": 0.29906542056074764
+   },
+   "side1_at_equal_fa": {
+    "T": 3.981071705534969e-06,
+    "false_alarms_per_day": 206.5,
+    "caught": 0.8878504672897196,
+    "caught_24h": 0.6822429906542056
+   }
+  }
+ },
+ "foster": {
+  "one_manoeuvred": {
+   "not_manoeuvring_side_alone": {
+    "caught": 0.32432432432432434,
+    "caught_24h": 0.10810810810810811,
+    "median_warning_h": 11.003091322258115,
+    "false_alarms_per_day": 21.5
+   },
+   "manoeuvring_side_alone": {
+    "caught": 0.2972972972972973,
+    "caught_24h": 0.10810810810810811,
+    "median_warning_h": 17.04974439740181,
+    "false_alarms_per_day": 12.25
+   },
+   "both_sides": {
+    "caught": 0.4864864864864865,
+    "caught_24h": 0.21621621621621623,
+    "median_warning_h": 19.3735891263932,
+    "false_alarms_per_day": 32.25
+   },
+   "side0_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 49.5,
+    "caught": 0.4594594594594595,
+    "caught_24h": 0.16216216216216217
+   },
+   "side1_at_equal_fa": {
+    "T": 2.5118864315095822e-05,
+    "false_alarms_per_day": 36.5,
+    "caught": 0.4864864864864865,
+    "caught_24h": 0.1891891891891892
+   }
+  },
+  "both_manoeuvred": {
+   "side_a_alone": {
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 8.613647975027561,
+    "false_alarms_per_day": 3.5
+   },
+   "side_b_alone": {
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "median_warning_h": 0.0,
+    "false_alarms_per_day": 0.75
+   },
+   "both_sides": {
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 8.613647975027561,
+    "false_alarms_per_day": 4.25
+   },
+   "side0_at_equal_fa": {
+    "T": 2.5118864315095822e-05,
+    "false_alarms_per_day": 4.75,
+    "caught": 1.0,
+    "caught_24h": 0.3333333333333333
+   },
+   "side1_at_equal_fa": {
+    "T": 6.30957344480193e-06,
+    "false_alarms_per_day": 5.5,
+    "caught": 0.3333333333333333,
+    "caught_24h": 0.3333333333333333
+   }
+  },
+  "none_manoeuvred": {
+   "side_a_alone": {
+    "caught": 0.3364485981308411,
+    "caught_24h": 0.1308411214953271,
+    "median_warning_h": 13.409126752987504,
+    "false_alarms_per_day": 22.5
+   },
+   "side_b_alone": {
+    "caught": 0.5887850467289719,
+    "caught_24h": 0.4392523364485981,
+    "median_warning_h": 46.62761263176799,
+    "false_alarms_per_day": 38.25
+   },
+   "both_sides": {
+    "caught": 0.7476635514018691,
+    "caught_24h": 0.5700934579439252,
+    "median_warning_h": 47.388380544260144,
+    "false_alarms_per_day": 57.25
+   },
+   "side0_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 61.5,
+    "caught": 0.5700934579439252,
+    "caught_24h": 0.205607476635514
+   },
+   "side1_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 74.5,
+    "caught": 0.7476635514018691,
+    "caught_24h": 0.514018691588785
+   }
+  }
+ },
+ "foster_owner": {
+  "one_manoeuvred": {
+   "not_manoeuvring_side_alone": {
+    "caught": 0.2702702702702703,
+    "caught_24h": 0.16216216216216217,
+    "median_warning_h": 42.79882677085698,
+    "false_alarms_per_day": 11.75
+   },
+   "manoeuvring_side_alone": {
+    "caught": 0.32432432432432434,
+    "caught_24h": 0.24324324324324326,
+    "median_warning_h": 34.48857539892197,
+    "false_alarms_per_day": 11.0
+   },
+   "both_sides": {
+    "caught": 0.4594594594594595,
+    "caught_24h": 0.35135135135135137,
+    "median_warning_h": 42.74106524884701,
+    "false_alarms_per_day": 22.25
+   },
+   "side0_at_equal_fa": {
+    "T": 6.309573444801929e-05,
+    "false_alarms_per_day": 23.5,
+    "caught": 0.4594594594594595,
+    "caught_24h": 0.2972972972972973
+   },
+   "side1_at_equal_fa": {
+    "T": 6.309573444801929e-05,
+    "false_alarms_per_day": 22.5,
+    "caught": 0.4594594594594595,
+    "caught_24h": 0.1891891891891892
+   }
+  },
+  "both_manoeuvred": {
+   "side_a_alone": {
+    "caught": 0.6666666666666666,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 19.80801542289555,
+    "false_alarms_per_day": 1.0
+   },
+   "side_b_alone": {
+    "caught": 0.0,
+    "caught_24h": 0.0,
+    "median_warning_h": 0.0,
+    "false_alarms_per_day": 0.75
+   },
+   "both_sides": {
+    "caught": 0.6666666666666666,
+    "caught_24h": 0.3333333333333333,
+    "median_warning_h": 19.80801542289555,
+    "false_alarms_per_day": 1.75
+   },
+   "side0_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 3.75,
+    "caught": 1.0,
+    "caught_24h": 0.6666666666666666
+   },
+   "side1_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 3.25,
+    "caught": 0.0,
+    "caught_24h": 0.0
+   }
+  },
+  "none_manoeuvred": {
+   "side_a_alone": {
+    "caught": 0.35514018691588783,
+    "caught_24h": 0.14018691588785046,
+    "median_warning_h": 12.6122841630131,
+    "false_alarms_per_day": 30.5
+   },
+   "side_b_alone": {
+    "caught": 0.5514018691588785,
+    "caught_24h": 0.37383177570093457,
+    "median_warning_h": 38.1210347302258,
+    "false_alarms_per_day": 39.25
+   },
+   "both_sides": {
+    "caught": 0.7102803738317757,
+    "caught_24h": 0.5046728971962616,
+    "median_warning_h": 40.028129087761045,
+    "false_alarms_per_day": 61.25
+   },
+   "side0_at_equal_fa": {
+    "T": 3.9810717055349695e-05,
+    "false_alarms_per_day": 105.5,
+    "caught": 0.6355140186915887,
+    "caught_24h": 0.35514018691588783
+   },
+   "side1_at_equal_fa": {
+    "T": 6.309573444801929e-05,
+    "false_alarms_per_day": 65.25,
+    "caught": 0.6728971962616822,
+    "caught_24h": 0.514018691588785
+   }
+  }
+ },
+ "public_error_along_track_km": {
+  "other manoeuvred": {
+   "n": 180485,
+   "median": 22.649998847502584,
+   "p90": 257.16510033074644
+  },
+  "other did not": {
+   "n": 870580,
+   "median": 5.448976799702199,
+   "p90": 63.68691678094282
+  }
+ }
+}
