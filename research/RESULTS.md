@@ -784,6 +784,55 @@ What changes in the paper:
 4. The network rows are modelled from measured rounds and bytes, not measured on a
    real network.
 
+## 14. Manoeuvres as private knowledge
+
+`research/hindcast_manoeuvre.py`, results `results/hindcast_manoeuvre_w4*.json`. An operator
+knows its own manoeuvres; others see them only when the next TLE appears. A shared
+error model cannot take "a manoeuvre is planned" as an input without revealing the
+plan, so we measure the knowledge where it naturally lives: in the operator's own
+assessment, which in the hindcast uses its real (manoeuvred) orbit.
+
+Manoeuvres: jumps between consecutive element sets of member satellites (more than
+10 robust sigma and 1 km, the world's rule), dated halfway between the sets: 50,385
+on 8,855 member satellites in the four weeks. They make the public prediction of the
+manoeuvring satellite about three times worse: median along-track error 19.4 km
+(90th percentile 206 km), against 6.6 km (91 km) without a manoeuvre in the 72 h
+before TCA.
+
+Member-vs-member encounters where one satellite manoeuvred in the 72 h before TCA
+(37 to 53 dangerous per 4-day window), four rolling windows, mean (sd), owners' models
+with Foster Pc at 1e-4:
+
+| Who assesses | Caught | Caught >= 24 h | False alarms / day |
+| --- | --- | --- | --- |
+| The operator that did not manoeuvre, alone (public view of the manoeuvre) | 34% (7) | 16% | 23 |
+| The operator that manoeuvred, alone (knows its own orbit) | 44% (10) | 29% | 13 |
+| **Both, either alert counts (two-stage scheme)** | **62% (9)** | **43%** | **34** |
+| One side alone, threshold lowered to both sides' false alarms | 52 to 56% | 30 to 34% | 37 to 43 |
+
+Without a manoeuvre (100 to 115 dangerous per window): one side 42% / 61%, both 76%,
+one side at equal false alarms 62 to 70%. The baseline and the public-table Foster
+show the same pattern.
+
+What this says:
+
+1. **The operator that manoeuvred sees its encounters better**: 10 points more
+   recall, twice the 24-hour warnings and half the false alarms of the operator that
+   only sees the manoeuvre in the public catalogue. The direction holds on average
+   but varies between windows (sd 7 to 10 points on 37 to 53 encounters).
+2. **The robust gain is combining both operators' views**, with or without a
+   manoeuvre: +6 to +10 points over the better single side at the same false-alarm
+   rate, and more early warnings. That is the two-stage scheme's alert union: each
+   operator contributes what only it knows (its own orbit, including its manoeuvres),
+   without sharing it.
+3. So manoeuvre knowledge is best used through the federation (each side alerts on
+   its own satellites, the secure step uses the owners' precise, manoeuvre-including
+   orbits), not as an input to shared error models, which would leak plans.
+
+Caveats: the manoeuvre times are inferred from TLE jumps (some jumps are bad fits,
+and small station-keeping burns are missed); truth is TLE-derived (section 11); small
+counts per window.
+
 ## Reproduce
 
 ```bash
