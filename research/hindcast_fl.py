@@ -290,6 +290,27 @@ def main():
                                                         bias_rtn=owner_dp_bs[eps][0]) for eps in a.owner_eps},
     }
 
+    results_baseline_fa = hc.score(asm, schemes["baseline"], dangerous, n_days, THRESHOLD,
+                                   enc_weight=w_enc)["false_alarms_per_day"]
+    # ---- dilution-aware rule: alert if Pc >= 1e-4 OR max-Pc >= T2 ----
+    hybrid = {}
+    for hname, (sg, bs) in {"foster": (sig_table, None), "foster_pub_owner": (s_own, b_own),
+                           **{f"foster_pub_owner_dp{eps:g}": (owner_dp_bs[eps][1], owner_dp_bs[eps][0])
+                              for eps in a.owner_eps}}.items():
+        pc_h, pmax = hc.assess_pc(enc, asm, err, sg, PRECISE, bias_rtn=bs, with_max=True)
+        rows = []
+        for T2 in np.logspace(-4, -1, 13):
+            comb = np.maximum(pc_h, pmax * (THRESHOLD / T2))
+            s_all = hc.score(asm, comb, dangerous, n_days, THRESHOLD, enc_weight=w_enc)
+            s_mm = hc.score(asm, comb, dangerous, n_days, THRESHOLD, mask=member_other, enc_weight=w_enc)
+            rows.append({"T2": float(T2), **{k: s_all[k] for k in ("caught_frac", "caught_24h_frac", "median_warning_h",
+                                                                   "false_alarms_per_day", "warning_hours_per_dangerous")},
+                         "mm_caught": s_mm["caught_frac"], "mm_fa_day": s_mm["false_alarms_per_day"]})
+        hybrid[hname] = rows
+        b = min(rows, key=lambda r: abs(math.log(max(r["false_alarms_per_day"], 1e-9) / results_baseline_fa)))
+        log(f"hybrid {hname:22s} at baseline's FA ({results_baseline_fa:.0f}/day): T2 {b['T2']:.1e} caught "
+            f"{b['caught_frac']:.3f} (>=24h {b['caught_24h_frac']:.3f}) median warn {b['median_warning_h']:.1f} h")
+
     subsets = {"all": None, "member_vs_member": member_other}
     for k, op in enumerate(ops):
         subsets[f"by_{op}"] = asm["operator"] == k
@@ -324,7 +345,7 @@ def main():
         "dangerous_member_member": int(dangerous[np.unique(asm["enc"][member_other])].sum()),
         "train_samples": {op: len(train[op]) for op in ops}, "fedavg_bytes_per_update": fed_log.bytes_per_update,
         "secure_aggregation_max_abs_diff": secure_check, "table": table.to_dict(),
-        "model_quality": quality, "model_quality_unowned": quality_unowned,
+        "hybrid": hybrid, "model_quality": quality, "model_quality_unowned": quality_unowned,
         "fedavg_history": fed_log.history, "fedavg_best_round": fed_log.best_round,
         "fedavg_sqrt_best_round": fsq_log.best_round,
         "owner_dp": {f"{eps:g}": {op: owner_dp[eps][op].dp for op in ops} for eps in a.owner_eps},
