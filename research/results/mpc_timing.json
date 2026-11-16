@@ -4,8 +4,70 @@
  "program": "research/mpc/secure_pc.mpc: m = m_a - m_b, C = C_a + C_b (each operator's private in-plane miss offset and covariance), act <=> q + ln det C <= -2 ln(2T/R^2); reveals only the act bit; sfix f=20, k=52",
  "accuracy": "act bits identical to the plaintext Pc >= 1e-4 on all 61,000 test encounters (1,000 + 10,000 + 50,000)",
  "runs": [
-  {"n": 1000, "seconds": 0.465, "rounds": 231, "global_MB": 105.3, "act": 28},
-  {"n": 10000, "seconds": 3.908, "rounds": 1073, "global_MB": 1052.0, "act": 277},
-  {"n": 50000, "seconds": 21.95, "rounds": 4815, "global_MB": 5259.3, "act": 1325, "max_rss_MB": 909}
- ]
+  {
+   "n": 1000,
+   "seconds": 0.465,
+   "rounds": 231,
+   "global_MB": 105.3,
+   "act": 28
+  },
+  {
+   "n": 10000,
+   "seconds": 3.908,
+   "rounds": 1073,
+   "global_MB": 1052.0,
+   "act": 277
+  },
+  {
+   "n": 50000,
+   "seconds": 21.95,
+   "rounds": 4815,
+   "global_MB": 5259.3,
+   "act": 1325,
+   "max_rss_MB": 909
+  }
+ ],
+ "malicious": {
+  "note": "exact truncation (malicious protocols do not support probabilistic truncation); n=10,000 unless stated; localhost",
+  "runs": [
+   {
+    "protocol": "ring (semi-honest), exact truncation",
+    "n": 10000,
+    "seconds": 13.6,
+    "global_MB": 2531.2
+   },
+   {
+    "protocol": "ring (semi-honest), exact truncation",
+    "n": 1000,
+    "seconds": 1.08,
+    "rounds": 839
+   },
+   {
+    "protocol": "sy-rep-ring (malicious, honest majority, SPDZ-wise replicated)",
+    "n": 10000,
+    "seconds": 139.1,
+    "global_MB": 13146.1,
+    "rounds": 201261,
+    "bit_mismatches": 1
+   },
+   {
+    "protocol": "sy-rep-ring",
+    "n": 1000,
+    "seconds": 14.69,
+    "rounds": 21957
+   },
+   {
+    "protocol": "ps-rep-ring (malicious, post-sacrifice)",
+    "n": 10000,
+    "seconds": 272.5,
+    "global_MB": 12028.5
+   },
+   {
+    "protocol": "mal-rep-ring (malicious, replicated with triple sacrifice)",
+    "n": 10000,
+    "seconds": 283.8,
+    "global_MB": 13640.3
+   }
+  ]
+ }
 }

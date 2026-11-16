@@ -19,8 +19,8 @@ from Compiler import mpc_math
 import math
 
 n = int(program.args[1])
-show = len(program.args) > 2 and program.args[2] == "show"
-program.use_trunc_pr = True
+show = "show" in program.args[2:]
+program.use_trunc_pr = "exact" not in program.args   # malicious protocols need exact truncation
 sfix.set_precision(20, 52)
 
 T = 1e-4

@@ -784,6 +784,30 @@ What changes in the paper:
 4. The network rows are modelled from measured rounds and bytes, not measured on a
    real network.
 
+**Against parties that cheat.** The numbers above are for semi-honest parties. Maliciously
+secure 3-party protocols in MP-SPDZ need exact truncation, so the same program was rerun
+with it (10,000 encounters, localhost):
+
+| Protocol | Security | Time | Per encounter | Data, all parties | Rounds |
+| --- | --- | --- | --- | --- | --- |
+| ring, probabilistic truncation | semi-honest | 3.9 s | 0.39 ms | 1.05 GB | 1,073 |
+| ring, exact truncation | semi-honest | 13.6 s | 1.4 ms | 2.5 GB | about 8,000 |
+| sy-rep-ring (SPDZ-wise replicated) | malicious, honest majority | 139 s | 13.9 ms | 13.1 GB | 201,261 |
+| ps-rep-ring | malicious, honest majority | 272 s | 27 ms | 12.0 GB | |
+| mal-rep-ring | malicious, honest majority | 284 s | 28 ms | 13.6 GB | |
+
+The fastest maliciously secure protocol costs 10 times the semi-honest one with exact
+truncation, and 35 times the probabilistic version: about 260,000 encounters an hour on
+one laptop. Its decisions matched the plaintext ones on 9,999 of 10,000 encounters; the one
+difference sits on the threshold, within fixed-point rounding. The catch is rounds: about
+20 per encounter here, because the compiled exact comparison and division are not batched
+well. On a LAN (1 ms) that adds about 20 ms per encounter (roughly 100,000 an hour); on a
+50 ms WAN, run one batch at a time, it would be latency-bound at a few thousand an hour,
+below the literature figure, unless many batches run in parallel or the program is
+restructured to batch the comparison. The paper should quote the semi-honest numbers as the
+design point and the malicious ones as the current cost of stronger security, with this
+caveat.
+
 ## 14. Manoeuvres as private knowledge
 
 `research/hindcast_manoeuvre.py`, results `results/hindcast_manoeuvre_w4*.json`. An operator
