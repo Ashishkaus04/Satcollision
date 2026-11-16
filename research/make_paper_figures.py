@@ -260,6 +260,27 @@ def fig_hybrid():
     save(fig, "hybrid_filter")
 
 
+def fig_conformal():
+    """Section 17: along-track 1-sigma coverage before/after conformal scaling, precise-orbit missions."""
+    d = load("conformal.json")
+    if not d:
+        return print("skip conformal")
+    ms = list(d["B"])
+    rows = [("public_model", "before", "Public model", C["public"], 0.35),
+            ("public_model", "after", "Public model + owner's calibration numbers", C["public"], 1.0),
+            ("owner_model_precise", "before", "Owner model (precise labels)", C["owner"], 0.35),
+            ("owner_model_precise", "after", "Owner model + calibration", C["owner"], 1.0)]
+    fig, ax = plt.subplots(figsize=(8, 4))
+    x = np.arange(len(ms))
+    for i, (k, ba, lab, col, alpha) in enumerate(rows):
+        ax.bar(x + (i - 1.5) * 0.2, [d["B"][m][k][ba]["cover1_t"] * 100 for m in ms], 0.2, color=col, alpha=alpha, label=lab)
+    ax.axhline(68.3, color="#555555", lw=0.8, ls="--")
+    ax.text(len(ms) - 0.5, 69.5, "target 68.3%", fontsize=8, ha="right")
+    ax.set_xticks(x, ms); ax.set_ylabel("Along-track errors inside 1 sigma (%)")
+    ax.set_title("Conformal calibration against precise orbits"); ax.legend(fontsize=7, loc="lower right")
+    save(fig, "conformal")
+
+
 if __name__ == "__main__":
-    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid):
+    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid, fig_conformal):
         f()

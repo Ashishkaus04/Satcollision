@@ -531,3 +531,56 @@ class OwnerModels:
 
     def wire_size_bytes(self) -> int:
         return sum(int(flat(m).size * 4) for m in self.models.values())
+
+
+# ---------------------------------------------------------------------------
+# Conformal calibration of the predicted spread
+# ---------------------------------------------------------------------------
+#
+# Split conformal prediction (Vovk et al. 2005; Angelopoulos & Bates 2021),
+# per axis and per age bin ("Mondrian" conformal): on a calibration set the
+# model has not trained on, the score of each sample is |y - bias| / sigma;
+# the scale for a bin is the empirical quantile of those scores at the target
+# level (with the finite-sample correction ceil((n+1) q) / n), divided by the
+# same quantile of a unit normal. Multiplying sigma by that scale makes the
+# central interval at the target level cover at least that share of future
+# errors drawn like the calibration set (exchangeability), whatever the model.
+# An owner can compute these few numbers on its own precise data and share
+# only them.
+
+CONFORMAL_AGE_BINS_H = (0.0, 3.0, 6.0, 12.0, 24.0, 48.0, 1e9)
+
+
+def conformal_scales(bias: np.ndarray, sigma: np.ndarray, y: np.ndarray, age_h: np.ndarray,
+                     level: float = 0.6827, bins=CONFORMAL_AGE_BINS_H, min_n: int = 30) -> np.ndarray:
+    """(n_bins, 3) multiplicative scales for sigma; 1.0 where a bin has fewer
+    than ``min_n`` calibration samples."""
+    from scipy.stats import norm
+    z_ref = norm.ppf(0.5 + level / 2.0)
+    scores = np.abs(y - bias) / np.maximum(sigma, 1e-9)
+    out = np.ones((len(bins) - 1, 3))
+    idx = np.digitize(age_h, bins) - 1
+    for b in range(len(bins) - 1):
+        s = scores[idx == b]
+        if len(s) < min_n:
+            continue
+        q = min(1.0, np.ceil((len(s) + 1) * level) / len(s))
+        out[b] = np.quantile(s, q, axis=0, method="higher") / z_ref
+    return out
+
+
+def apply_scales(sigma: np.ndarray, age_h: np.ndarray, scales: np.ndarray, bins=CONFORMAL_AGE_BINS_H) -> np.ndarray:
+    idx = np.clip(np.digitize(age_h, bins) - 1, 0, len(scales) - 1)
+    return sigma * scales[idx]
+
+
+def coverage(bias: np.ndarray, sigma: np.ndarray, y: np.ndarray, k: float = 1.0) -> list:
+    """Share of errors inside +-k sigma, per axis."""
+    return [float(v) for v in (np.abs(y - bias) <= k * sigma).mean(axis=0)]
+
+
+def gaussian_nll(bias: np.ndarray, sigma: np.ndarray, y: np.ndarray, ref: np.ndarray) -> float:
+    """Mean Gaussian NLL in normalised units (ref = reference_scale), so
+    tables, models and calibrated variants compare on one scale."""
+    z = (y - bias) / sigma
+    return float(np.mean(np.log(sigma / ref) + 0.5 * z * z))

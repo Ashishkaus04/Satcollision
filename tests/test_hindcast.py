@@ -312,3 +312,19 @@ def test_pc_max_is_the_peak_over_covariance_scaling():
     # isotropic: depends only on the miss distance, R^2 / (e d^2)
     d = 1.3
     assert abs(hc.pc_max(np.array([[d, 0.0]]), np.eye(2)[None] * 7.0)[0] - 0.02 ** 2 / (math.e * d * d)) < 1e-12
+
+
+def test_conformal_scales_restore_coverage():
+    rng = np.random.default_rng(3)
+    n = 6000
+    age = rng.uniform(0, 72, n)
+    true_sd = 0.2 + 0.05 * age
+    y = rng.standard_normal((n, 3)) * true_sd[:, None]
+    sigma = np.full((n, 3), 0.3)                      # badly over-confident at long ages
+    cal = np.arange(n) < n // 2
+    sc = el.conformal_scales(np.zeros((cal.sum(), 3)), sigma[cal], y[cal], age[cal])
+    s2 = el.apply_scales(sigma[~cal], age[~cal], sc)
+    cov_before = el.coverage(np.zeros(((~cal).sum(), 3)), sigma[~cal], y[~cal])
+    cov_after = el.coverage(np.zeros(((~cal).sum(), 3)), s2, y[~cal])
+    assert max(cov_before) < 0.5
+    assert all(0.64 < c < 0.73 for c in cov_after)
