@@ -690,6 +690,49 @@ python research/precise_orbits.py --start 2026-10-12 --end 2026-11-13     # ~500
 PYTHONPATH=src python research/precise_vs_tle.py data/precise/sentinel1_2026-10-12_2026-11-13.npz \n  data/historical/gp_history_oct16a.tle data/historical/gp_history_oct16b.tle data/historical/gp_history_oct23.tle \n  data/historical/gp_history_oct30a.tle data/historical/gp_history_oct30b.tle data/historical/gp_history_week.tle
 ```
 
+### 11b. Nine satellites, three missions
+
+`research/precise_orbits_more.py` adds two more public, no-login sources of precise
+orbits over the same four weeks: ESA's Swarm A, B and C (Level 1b GPS orbits, about 460 and
+510 km, more drag) and UCAR's COSMIC-2 FM1, FM2, FM5 and FM6 (near-real-time GPS orbits,
+about 550 km, 24 deg inclination). SP3 epochs converted from GPS time to UTC. The TLE fit
+error at each set's epoch is 0.44 to 0.65 km along-track for every satellite, consistent
+with Sentinel-1, which also confirms the satellite identification.
+
+Real along-track error (vs precise orbit) over TLE-derived error (vs next TLE), by age of
+the public set, range over each mission's satellites:
+
+| Age | Sentinel-1 (693 km, 2 sats) | Swarm (460-510 km, 3 sats) | COSMIC-2 (550 km, 4 sats) |
+| --- | --- | --- | --- |
+| 0-3 h | 8 to 17x | 6.1 to 6.3x | 3.5 to 4.7x |
+| 6-12 h | 7 to 12x | 2.8 to 4.0x | 2.0 to 2.7x |
+| 12-24 h | 6x | 1.3 to 1.9x | 1.4 to 2.5x |
+| 24-36 h | 2.8 to 3.4x | 1.1 to 1.5x | 0.8 to 1.4x |
+| 48-72 h | 1.6 to 1.8x | 1.1 to 1.2x | 0.9 to 1.1x |
+
+The real along-track error of a fresh TLE is 0.49 to 0.67 km for all nine satellites. TLE
+consistency understates it most at short ages (where consecutive sets share observations)
+and least for the lower, drag-dominated orbits, where real errors grow faster than the
+TLE noise floor; after a day the two agree for Swarm and COSMIC-2.
+
+Each mission as one owner (precise labels before day 19.9, scored on later precise errors,
+mean of 3 seeds, held-out NLL; along-track 1-sigma coverage in brackets):
+
+| Model | Sentinel-1 | Swarm | COSMIC-2 |
+| --- | --- | --- | --- |
+| Public model (TLE labels, every object) | 1.67 (0.19) | 0.43 (0.93) | 0.15 (0.73) |
+| Owner, TLE labels | 1.66 (0.46) | 1.92 (0.28) | 0.76 (0.32) |
+| **Owner, precise labels** | **-0.03 (0.76)** | **0.03 (0.58)** | **0.00 (0.63)** |
+| Owner, precise labels, DP eps 2 | 0.07 (0.65) | 0.08 (0.47) | 0.12 (0.46) |
+
+In all three missions the owner model trained on precise orbits is the best calibrated, and
+an owner model trained on TLE labels is the worst (too confident). The public model errs in
+both directions (too confident for Sentinel-1, too cautious for Swarm). DP at epsilon 2 keeps
+most of the gain for Sentinel-1 and Swarm and about a fifth of it for COSMIC-2, where the
+public model is already close. This is the measured case for owners' models with private
+labels, now on nine satellites at three altitudes; the member fleets (SupGP) remain the
+test that matters for screening.
+
 ## 12. Trying to recover the lost warning: a maximum-Pc rule (negative result)
 
 `research/hindcast_dilution.py`, `hindcast.pc_max`. Honest covariances lower the
