@@ -1,0 +1,2052 @@
+{
+ "windows": {
+  "w4": {
+   "fixed_radius": [
+    {
+     "caught": 0.5100401606425703,
+     "caught_24h": 0.19477911646586346,
+     "false_alarms_per_day": 16.25,
+     "secure_evals_per_day": 1182.0,
+     "R": 2
+    },
+    {
+     "caught": 0.5983935742971888,
+     "caught_24h": 0.2650602409638554,
+     "false_alarms_per_day": 23.0,
+     "secure_evals_per_day": 2725.5,
+     "R": 3
+    },
+    {
+     "caught": 0.7108433734939759,
+     "caught_24h": 0.3795180722891566,
+     "false_alarms_per_day": 30.666666666666668,
+     "secure_evals_per_day": 7891.5,
+     "R": 5
+    },
+    {
+     "caught": 0.7690763052208837,
+     "caught_24h": 0.43574297188755023,
+     "false_alarms_per_day": 36.75,
+     "secure_evals_per_day": 17963.0,
+     "R": 7
+    },
+    {
+     "caught": 0.8253012048192772,
+     "caught_24h": 0.47389558232931733,
+     "false_alarms_per_day": 41.583333333333336,
+     "secure_evals_per_day": 40448.25,
+     "R": 10
+    },
+    {
+     "caught": 0.8614457831325302,
+     "caught_24h": 0.5622489959839357,
+     "false_alarms_per_day": 47.0,
+     "secure_evals_per_day": 95865.0,
+     "R": 15
+    },
+    {
+     "caught": 0.9056224899598394,
+     "caught_24h": 0.6224899598393575,
+     "false_alarms_per_day": 51.0,
+     "secure_evals_per_day": 170908.75,
+     "R": 20
+    },
+    {
+     "caught": 0.9236947791164658,
+     "caught_24h": 0.7028112449799196,
+     "false_alarms_per_day": 55.666666666666664,
+     "secure_evals_per_day": 388498.25,
+     "R": 30
+    },
+    {
+     "caught": 0.9678714859437751,
+     "caught_24h": 0.8092369477911646,
+     "false_alarms_per_day": 61.583333333333336,
+     "secure_evals_per_day": 1215488.75,
+     "R": 50
+    }
+   ],
+   "table": [
+    {
+     "caught": 0.3373493975903614,
+     "caught_24h": 0.14056224899598393,
+     "false_alarms_per_day": 4.416666666666667,
+     "secure_evals_per_day": 408.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3714859437751004,
+     "caught_24h": 0.18674698795180722,
+     "false_alarms_per_day": 5.416666666666667,
+     "secure_evals_per_day": 706.0,
+     "k": 0.3
+    },
+    {
+     "caught": 0.40963855421686746,
+     "caught_24h": 0.27309236947791166,
+     "false_alarms_per_day": 7.5,
+     "secure_evals_per_day": 1209.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.47188755020080325,
+     "caught_24h": 0.3654618473895583,
+     "false_alarms_per_day": 10.416666666666666,
+     "secure_evals_per_day": 2576.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.5702811244979921,
+     "caught_24h": 0.49196787148594373,
+     "false_alarms_per_day": 15.416666666666666,
+     "secure_evals_per_day": 4730.0,
+     "k": 1
+    },
+    {
+     "caught": 0.678714859437751,
+     "caught_24h": 0.6184738955823293,
+     "false_alarms_per_day": 25.75,
+     "secure_evals_per_day": 10199.25,
+     "k": 1.5
+    },
+    {
+     "caught": 0.7550200803212851,
+     "caught_24h": 0.7108433734939759,
+     "false_alarms_per_day": 33.166666666666664,
+     "secure_evals_per_day": 17872.5,
+     "k": 2
+    },
+    {
+     "caught": 0.895582329317269,
+     "caught_24h": 0.8473895582329317,
+     "false_alarms_per_day": 45.333333333333336,
+     "secure_evals_per_day": 37648.25,
+     "k": 3
+    },
+    {
+     "caught": 0.9236947791164658,
+     "caught_24h": 0.8875502008032128,
+     "false_alarms_per_day": 53.166666666666664,
+     "secure_evals_per_day": 63140.25,
+     "k": 4
+    },
+    {
+     "caught": 0.9497991967871485,
+     "caught_24h": 0.9136546184738955,
+     "false_alarms_per_day": 58.916666666666664,
+     "secure_evals_per_day": 95143.75,
+     "k": 5
+    },
+    {
+     "caught": 0.9779116465863454,
+     "caught_24h": 0.9377510040160643,
+     "false_alarms_per_day": 64.58333333333333,
+     "secure_evals_per_day": 172441.5,
+     "k": 7
+    },
+    {
+     "caught": 0.9939759036144579,
+     "caught_24h": 0.9558232931726908,
+     "false_alarms_per_day": 68.08333333333333,
+     "secure_evals_per_day": 308795.5,
+     "k": 10
+    },
+    {
+     "caught": 0.9939759036144579,
+     "caught_24h": 0.9618473895582329,
+     "false_alarms_per_day": 70.33333333333333,
+     "secure_evals_per_day": 523779.75,
+     "k": 15
+    }
+   ],
+   "public_model": [
+    {
+     "caught": 0.35542168674698793,
+     "caught_24h": 0.15060240963855423,
+     "false_alarms_per_day": 6.083333333333333,
+     "secure_evals_per_day": 3846.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.39156626506024095,
+     "caught_24h": 0.17068273092369476,
+     "false_alarms_per_day": 7.416666666666667,
+     "secure_evals_per_day": 8177.0,
+     "k": 0.3
+    },
+    {
+     "caught": 0.49598393574297184,
+     "caught_24h": 0.2991967871485944,
+     "false_alarms_per_day": 9.916666666666666,
+     "secure_evals_per_day": 18804.5,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5763052208835342,
+     "caught_24h": 0.41566265060240964,
+     "false_alarms_per_day": 13.5,
+     "secure_evals_per_day": 30606.25,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6566265060240964,
+     "caught_24h": 0.5421686746987951,
+     "false_alarms_per_day": 19.416666666666668,
+     "secure_evals_per_day": 48714.25,
+     "k": 1
+    },
+    {
+     "caught": 0.8052208835341365,
+     "caught_24h": 0.7429718875502008,
+     "false_alarms_per_day": 30.25,
+     "secure_evals_per_day": 78021.25,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8995983935742972,
+     "caught_24h": 0.8534136546184738,
+     "false_alarms_per_day": 40.166666666666664,
+     "secure_evals_per_day": 109401.25,
+     "k": 2
+    },
+    {
+     "caught": 0.9678714859437751,
+     "caught_24h": 0.9477911646586347,
+     "false_alarms_per_day": 52.833333333333336,
+     "secure_evals_per_day": 167745.75,
+     "k": 3
+    },
+    {
+     "caught": 0.9819277108433736,
+     "caught_24h": 0.963855421686747,
+     "false_alarms_per_day": 61.0,
+     "secure_evals_per_day": 225960.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9899598393574297,
+     "caught_24h": 0.9738955823293173,
+     "false_alarms_per_day": 65.25,
+     "secure_evals_per_day": 279336.75,
+     "k": 5
+    },
+    {
+     "caught": 0.9919678714859438,
+     "caught_24h": 0.9839357429718875,
+     "false_alarms_per_day": 68.25,
+     "secure_evals_per_day": 386457.75,
+     "k": 7
+    },
+    {
+     "caught": 0.9959839357429718,
+     "caught_24h": 0.9859437751004015,
+     "false_alarms_per_day": 70.58333333333333,
+     "secure_evals_per_day": 552000.25,
+     "k": 10
+    },
+    {
+     "caught": 0.9979919678714859,
+     "caught_24h": 0.9919678714859438,
+     "false_alarms_per_day": 71.5,
+     "secure_evals_per_day": 804112.0,
+     "k": 15
+    }
+   ],
+   "owner_models": [
+    {
+     "caught": 0.3795180722891566,
+     "caught_24h": 0.20481927710843376,
+     "false_alarms_per_day": 7.583333333333333,
+     "secure_evals_per_day": 3834.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.4317269076305221,
+     "caught_24h": 0.251004016064257,
+     "false_alarms_per_day": 8.916666666666666,
+     "secure_evals_per_day": 7359.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.5240963855421686,
+     "caught_24h": 0.3714859437751004,
+     "false_alarms_per_day": 12.333333333333334,
+     "secure_evals_per_day": 17103.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5843373493975904,
+     "caught_24h": 0.42369477911646586,
+     "false_alarms_per_day": 15.833333333333334,
+     "secure_evals_per_day": 29015.0,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6646586345381525,
+     "caught_24h": 0.5602409638554217,
+     "false_alarms_per_day": 20.5,
+     "secure_evals_per_day": 47948.0,
+     "k": 1
+    },
+    {
+     "caught": 0.785140562248996,
+     "caught_24h": 0.7208835341365463,
+     "false_alarms_per_day": 28.25,
+     "secure_evals_per_day": 77337.5,
+     "k": 1.5
+    },
+    {
+     "caught": 0.857429718875502,
+     "caught_24h": 0.8092369477911646,
+     "false_alarms_per_day": 37.166666666666664,
+     "secure_evals_per_day": 106077.25,
+     "k": 2
+    },
+    {
+     "caught": 0.9558232931726908,
+     "caught_24h": 0.9216867469879518,
+     "false_alarms_per_day": 49.583333333333336,
+     "secure_evals_per_day": 155513.0,
+     "k": 3
+    },
+    {
+     "caught": 0.9738955823293173,
+     "caught_24h": 0.9437751004016063,
+     "false_alarms_per_day": 57.333333333333336,
+     "secure_evals_per_day": 201213.5,
+     "k": 4
+    },
+    {
+     "caught": 0.9839357429718875,
+     "caught_24h": 0.9658634538152611,
+     "false_alarms_per_day": 62.75,
+     "secure_evals_per_day": 243779.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9919678714859437,
+     "caught_24h": 0.9779116465863454,
+     "false_alarms_per_day": 67.5,
+     "secure_evals_per_day": 328602.75,
+     "k": 7
+    },
+    {
+     "caught": 0.9959839357429718,
+     "caught_24h": 0.9859437751004015,
+     "false_alarms_per_day": 70.08333333333333,
+     "secure_evals_per_day": 450672.75,
+     "k": 10
+    },
+    {
+     "caught": 0.9959839357429718,
+     "caught_24h": 0.9859437751004015,
+     "false_alarms_per_day": 71.16666666666667,
+     "secure_evals_per_day": 645960.25,
+     "k": 15
+    }
+   ],
+   "owner_models_dp2": [
+    {
+     "caught": 0.3534136546184739,
+     "caught_24h": 0.20481927710843373,
+     "false_alarms_per_day": 7.416666666666667,
+     "secure_evals_per_day": 1350.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3755020080321285,
+     "caught_24h": 0.2168674698795181,
+     "false_alarms_per_day": 7.75,
+     "secure_evals_per_day": 1849.75,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4317269076305221,
+     "caught_24h": 0.29718875502008035,
+     "false_alarms_per_day": 9.916666666666666,
+     "secure_evals_per_day": 4036.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5080321285140562,
+     "caught_24h": 0.3714859437751004,
+     "false_alarms_per_day": 12.833333333333334,
+     "secure_evals_per_day": 6873.25,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6224899598393575,
+     "caught_24h": 0.4959839357429719,
+     "false_alarms_per_day": 17.666666666666668,
+     "secure_evals_per_day": 12950.5,
+     "k": 1
+    },
+    {
+     "caught": 0.7369477911646586,
+     "caught_24h": 0.6546184738955824,
+     "false_alarms_per_day": 26.5,
+     "secure_evals_per_day": 26464.0,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8293172690763052,
+     "caught_24h": 0.7429718875502008,
+     "false_alarms_per_day": 33.75,
+     "secure_evals_per_day": 39225.75,
+     "k": 2
+    },
+    {
+     "caught": 0.9136546184738955,
+     "caught_24h": 0.8534136546184738,
+     "false_alarms_per_day": 44.333333333333336,
+     "secure_evals_per_day": 71916.75,
+     "k": 3
+    },
+    {
+     "caught": 0.9337349397590362,
+     "caught_24h": 0.9016064257028112,
+     "false_alarms_per_day": 52.083333333333336,
+     "secure_evals_per_day": 105658.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9538152610441767,
+     "caught_24h": 0.9257028112449799,
+     "false_alarms_per_day": 56.666666666666664,
+     "secure_evals_per_day": 142591.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9819277108433734,
+     "caught_24h": 0.9558232931726908,
+     "false_alarms_per_day": 63.416666666666664,
+     "secure_evals_per_day": 224573.5,
+     "k": 7
+    },
+    {
+     "caught": 0.9879518072289156,
+     "caught_24h": 0.9658634538152611,
+     "false_alarms_per_day": 68.08333333333333,
+     "secure_evals_per_day": 342423.5,
+     "k": 10
+    },
+    {
+     "caught": 0.9899598393574297,
+     "caught_24h": 0.9759036144578314,
+     "false_alarms_per_day": 70.5,
+     "secure_evals_per_day": 535210.75,
+     "k": 15
+    }
+   ]
+  },
+  "w4_t7.4": {
+   "fixed_radius": [
+    {
+     "caught": 0.4444444444444444,
+     "caught_24h": 0.18594104308390022,
+     "false_alarms_per_day": 14.916666666666666,
+     "secure_evals_per_day": 1175.25,
+     "R": 2
+    },
+    {
+     "caught": 0.5646258503401361,
+     "caught_24h": 0.272108843537415,
+     "false_alarms_per_day": 22.25,
+     "secure_evals_per_day": 2748.25,
+     "R": 3
+    },
+    {
+     "caught": 0.6870748299319728,
+     "caught_24h": 0.3945578231292517,
+     "false_alarms_per_day": 31.75,
+     "secure_evals_per_day": 8338.5,
+     "R": 5
+    },
+    {
+     "caught": 0.7482993197278912,
+     "caught_24h": 0.4807256235827664,
+     "false_alarms_per_day": 36.416666666666664,
+     "secure_evals_per_day": 17426.75,
+     "R": 7
+    },
+    {
+     "caught": 0.8231292517006802,
+     "caught_24h": 0.5850340136054422,
+     "false_alarms_per_day": 42.5,
+     "secure_evals_per_day": 41323.25,
+     "R": 10
+    },
+    {
+     "caught": 0.873015873015873,
+     "caught_24h": 0.673469387755102,
+     "false_alarms_per_day": 48.0,
+     "secure_evals_per_day": 98435.25,
+     "R": 15
+    },
+    {
+     "caught": 0.9024943310657596,
+     "caught_24h": 0.7324263038548753,
+     "false_alarms_per_day": 52.583333333333336,
+     "secure_evals_per_day": 173949.75,
+     "R": 20
+    },
+    {
+     "caught": 0.9160997732426304,
+     "caught_24h": 0.7981859410430839,
+     "false_alarms_per_day": 58.25,
+     "secure_evals_per_day": 402092.0,
+     "R": 30
+    },
+    {
+     "caught": 0.9274376417233561,
+     "caught_24h": 0.8458049886621316,
+     "false_alarms_per_day": 62.25,
+     "secure_evals_per_day": 1231737.0,
+     "R": 50
+    }
+   ],
+   "table": [
+    {
+     "caught": 0.25396825396825395,
+     "caught_24h": 0.14058956916099774,
+     "false_alarms_per_day": 5.0,
+     "secure_evals_per_day": 420.5,
+     "k": 0.2
+    },
+    {
+     "caught": 0.27210884353741494,
+     "caught_24h": 0.16099773242630386,
+     "false_alarms_per_day": 6.166666666666667,
+     "secure_evals_per_day": 697.5,
+     "k": 0.3
+    },
+    {
+     "caught": 0.37188208616780044,
+     "caught_24h": 0.2675736961451247,
+     "false_alarms_per_day": 8.75,
+     "secure_evals_per_day": 1608.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.47392290249433106,
+     "caught_24h": 0.38095238095238093,
+     "false_alarms_per_day": 11.333333333333334,
+     "secure_evals_per_day": 2661.5,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6099773242630385,
+     "caught_24h": 0.5306122448979592,
+     "false_alarms_per_day": 17.75,
+     "secure_evals_per_day": 5319.25,
+     "k": 1
+    },
+    {
+     "caught": 0.7573696145124716,
+     "caught_24h": 0.7120181405895692,
+     "false_alarms_per_day": 29.25,
+     "secure_evals_per_day": 10743.75,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8276643990929706,
+     "caught_24h": 0.7959183673469387,
+     "false_alarms_per_day": 38.416666666666664,
+     "secure_evals_per_day": 18248.5,
+     "k": 2
+    },
+    {
+     "caught": 0.9047619047619048,
+     "caught_24h": 0.8707482993197279,
+     "false_alarms_per_day": 50.0,
+     "secure_evals_per_day": 43868.25,
+     "k": 3
+    },
+    {
+     "caught": 0.9365079365079366,
+     "caught_24h": 0.891156462585034,
+     "false_alarms_per_day": 56.583333333333336,
+     "secure_evals_per_day": 76800.25,
+     "k": 4
+    },
+    {
+     "caught": 0.9410430839002267,
+     "caught_24h": 0.891156462585034,
+     "false_alarms_per_day": 59.583333333333336,
+     "secure_evals_per_day": 116846.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9546485260770975,
+     "caught_24h": 0.9092970521541951,
+     "false_alarms_per_day": 63.416666666666664,
+     "secure_evals_per_day": 217629.75,
+     "k": 7
+    },
+    {
+     "caught": 0.9727891156462585,
+     "caught_24h": 0.9274376417233561,
+     "false_alarms_per_day": 66.16666666666667,
+     "secure_evals_per_day": 370132.0,
+     "k": 10
+    },
+    {
+     "caught": 0.9795918367346937,
+     "caught_24h": 0.9433106575963719,
+     "false_alarms_per_day": 68.33333333333333,
+     "secure_evals_per_day": 614568.25,
+     "k": 15
+    }
+   ],
+   "public_model": [
+    {
+     "caught": 0.2947845804988662,
+     "caught_24h": 0.17913832199546484,
+     "false_alarms_per_day": 7.166666666666667,
+     "secure_evals_per_day": 2285.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3401360544217687,
+     "caught_24h": 0.22675736961451246,
+     "false_alarms_per_day": 7.833333333333333,
+     "secure_evals_per_day": 4482.0,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4535147392290249,
+     "caught_24h": 0.3219954648526077,
+     "false_alarms_per_day": 10.5,
+     "secure_evals_per_day": 9812.75,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5759637188208616,
+     "caught_24h": 0.4217687074829932,
+     "false_alarms_per_day": 14.583333333333334,
+     "secure_evals_per_day": 17312.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6802721088435374,
+     "caught_24h": 0.5532879818594104,
+     "false_alarms_per_day": 18.25,
+     "secure_evals_per_day": 26603.75,
+     "k": 1
+    },
+    {
+     "caught": 0.7709750566893424,
+     "caught_24h": 0.6802721088435374,
+     "false_alarms_per_day": 25.75,
+     "secure_evals_per_day": 42745.25,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8888888888888888,
+     "caught_24h": 0.8412698412698413,
+     "false_alarms_per_day": 33.5,
+     "secure_evals_per_day": 61598.0,
+     "k": 2
+    },
+    {
+     "caught": 0.9750566893424036,
+     "caught_24h": 0.945578231292517,
+     "false_alarms_per_day": 46.25,
+     "secure_evals_per_day": 100900.5,
+     "k": 3
+    },
+    {
+     "caught": 0.9841269841269842,
+     "caught_24h": 0.9614512471655328,
+     "false_alarms_per_day": 54.666666666666664,
+     "secure_evals_per_day": 138844.5,
+     "k": 4
+    },
+    {
+     "caught": 0.9841269841269842,
+     "caught_24h": 0.9637188208616779,
+     "false_alarms_per_day": 59.0,
+     "secure_evals_per_day": 178995.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9863945578231292,
+     "caught_24h": 0.9682539682539683,
+     "false_alarms_per_day": 64.33333333333333,
+     "secure_evals_per_day": 260210.0,
+     "k": 7
+    },
+    {
+     "caught": 0.9863945578231292,
+     "caught_24h": 0.9682539682539683,
+     "false_alarms_per_day": 67.91666666666667,
+     "secure_evals_per_day": 390373.0,
+     "k": 10
+    },
+    {
+     "caught": 0.9863945578231292,
+     "caught_24h": 0.9705215419501133,
+     "false_alarms_per_day": 69.5,
+     "secure_evals_per_day": 620989.0,
+     "k": 15
+    }
+   ],
+   "owner_models": [
+    {
+     "caught": 0.29705215419501135,
+     "caught_24h": 0.15192743764172337,
+     "false_alarms_per_day": 6.166666666666667,
+     "secure_evals_per_day": 3083.5,
+     "k": 0.2
+    },
+    {
+     "caught": 0.30158730158730157,
+     "caught_24h": 0.15646258503401358,
+     "false_alarms_per_day": 6.583333333333333,
+     "secure_evals_per_day": 7195.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.3650793650793651,
+     "caught_24h": 0.217687074829932,
+     "false_alarms_per_day": 8.25,
+     "secure_evals_per_day": 12707.5,
+     "k": 0.5
+    },
+    {
+     "caught": 0.44671201814058953,
+     "caught_24h": 0.29705215419501135,
+     "false_alarms_per_day": 10.083333333333334,
+     "secure_evals_per_day": 19912.0,
+     "k": 0.7
+    },
+    {
+     "caught": 0.5691609977324263,
+     "caught_24h": 0.42403628117913833,
+     "false_alarms_per_day": 14.833333333333334,
+     "secure_evals_per_day": 29524.0,
+     "k": 1
+    },
+    {
+     "caught": 0.7210884353741497,
+     "caught_24h": 0.5714285714285715,
+     "false_alarms_per_day": 21.333333333333332,
+     "secure_evals_per_day": 44964.75,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8004535147392291,
+     "caught_24h": 0.6893424036281179,
+     "false_alarms_per_day": 27.583333333333332,
+     "secure_evals_per_day": 63083.0,
+     "k": 2
+    },
+    {
+     "caught": 0.8843537414965986,
+     "caught_24h": 0.8321995464852607,
+     "false_alarms_per_day": 39.75,
+     "secure_evals_per_day": 97930.75,
+     "k": 3
+    },
+    {
+     "caught": 0.9365079365079364,
+     "caught_24h": 0.9002267573696145,
+     "false_alarms_per_day": 49.166666666666664,
+     "secure_evals_per_day": 131168.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9501133786848072,
+     "caught_24h": 0.9229024943310659,
+     "false_alarms_per_day": 54.833333333333336,
+     "secure_evals_per_day": 162407.25,
+     "k": 5
+    },
+    {
+     "caught": 0.9795918367346937,
+     "caught_24h": 0.9591836734693877,
+     "false_alarms_per_day": 62.416666666666664,
+     "secure_evals_per_day": 228836.75,
+     "k": 7
+    },
+    {
+     "caught": 0.9841269841269842,
+     "caught_24h": 0.9614512471655328,
+     "false_alarms_per_day": 66.25,
+     "secure_evals_per_day": 338720.25,
+     "k": 10
+    },
+    {
+     "caught": 0.9841269841269842,
+     "caught_24h": 0.9614512471655328,
+     "false_alarms_per_day": 69.33333333333333,
+     "secure_evals_per_day": 538620.0,
+     "k": 15
+    }
+   ],
+   "owner_models_dp2": [
+    {
+     "caught": 0.2766439909297052,
+     "caught_24h": 0.1360544217687075,
+     "false_alarms_per_day": 6.166666666666667,
+     "secure_evals_per_day": 655.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.2766439909297052,
+     "caught_24h": 0.1360544217687075,
+     "false_alarms_per_day": 6.416666666666667,
+     "secure_evals_per_day": 1116.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.31972789115646255,
+     "caught_24h": 0.17460317460317462,
+     "false_alarms_per_day": 6.75,
+     "secure_evals_per_day": 2142.25,
+     "k": 0.5
+    },
+    {
+     "caught": 0.37414965986394555,
+     "caught_24h": 0.20634920634920637,
+     "false_alarms_per_day": 8.666666666666666,
+     "secure_evals_per_day": 4899.5,
+     "k": 0.7
+    },
+    {
+     "caught": 0.47165532879818595,
+     "caught_24h": 0.29931972789115646,
+     "false_alarms_per_day": 12.0,
+     "secure_evals_per_day": 9309.5,
+     "k": 1
+    },
+    {
+     "caught": 0.5873015873015873,
+     "caught_24h": 0.43990929705215415,
+     "false_alarms_per_day": 15.583333333333334,
+     "secure_evals_per_day": 16864.0,
+     "k": 1.5
+    },
+    {
+     "caught": 0.7074829931972789,
+     "caught_24h": 0.564625850340136,
+     "false_alarms_per_day": 21.083333333333332,
+     "secure_evals_per_day": 23108.5,
+     "k": 2
+    },
+    {
+     "caught": 0.8458049886621316,
+     "caught_24h": 0.7301587301587302,
+     "false_alarms_per_day": 31.666666666666668,
+     "secure_evals_per_day": 37817.75,
+     "k": 3
+    },
+    {
+     "caught": 0.8979591836734694,
+     "caught_24h": 0.8299319727891157,
+     "false_alarms_per_day": 42.333333333333336,
+     "secure_evals_per_day": 52970.25,
+     "k": 4
+    },
+    {
+     "caught": 0.9183673469387755,
+     "caught_24h": 0.8616780045351473,
+     "false_alarms_per_day": 49.166666666666664,
+     "secure_evals_per_day": 70052.75,
+     "k": 5
+    },
+    {
+     "caught": 0.9591836734693877,
+     "caught_24h": 0.9342403628117913,
+     "false_alarms_per_day": 57.583333333333336,
+     "secure_evals_per_day": 110051.75,
+     "k": 7
+    },
+    {
+     "caught": 0.981859410430839,
+     "caught_24h": 0.9569160997732427,
+     "false_alarms_per_day": 64.0,
+     "secure_evals_per_day": 177752.25,
+     "k": 10
+    },
+    {
+     "caught": 0.9863945578231292,
+     "caught_24h": 0.9659863945578232,
+     "false_alarms_per_day": 67.66666666666667,
+     "secure_evals_per_day": 314997.5,
+     "k": 15
+    }
+   ]
+  },
+  "w4_t11.4": {
+   "fixed_radius": [
+    {
+     "caught": 0.5534188034188035,
+     "caught_24h": 0.21153846153846154,
+     "false_alarms_per_day": 16.75,
+     "secure_evals_per_day": 1412.0,
+     "R": 2
+    },
+    {
+     "caught": 0.6517094017094017,
+     "caught_24h": 0.2670940170940171,
+     "false_alarms_per_day": 24.166666666666668,
+     "secure_evals_per_day": 3288.75,
+     "R": 3
+    },
+    {
+     "caught": 0.7222222222222222,
+     "caught_24h": 0.35042735042735046,
+     "false_alarms_per_day": 32.833333333333336,
+     "secure_evals_per_day": 9367.0,
+     "R": 5
+    },
+    {
+     "caught": 0.80982905982906,
+     "caught_24h": 0.46367521367521364,
+     "false_alarms_per_day": 38.833333333333336,
+     "secure_evals_per_day": 20189.25,
+     "R": 7
+    },
+    {
+     "caught": 0.8504273504273504,
+     "caught_24h": 0.6047008547008547,
+     "false_alarms_per_day": 43.166666666666664,
+     "secure_evals_per_day": 45830.75,
+     "R": 10
+    },
+    {
+     "caught": 0.8931623931623931,
+     "caught_24h": 0.6752136752136751,
+     "false_alarms_per_day": 48.083333333333336,
+     "secure_evals_per_day": 106730.25,
+     "R": 15
+    },
+    {
+     "caught": 0.9166666666666666,
+     "caught_24h": 0.7414529914529915,
+     "false_alarms_per_day": 51.666666666666664,
+     "secure_evals_per_day": 185723.75,
+     "R": 20
+    },
+    {
+     "caught": 0.9337606837606837,
+     "caught_24h": 0.8354700854700855,
+     "false_alarms_per_day": 56.083333333333336,
+     "secure_evals_per_day": 422116.75,
+     "R": 30
+    },
+    {
+     "caught": 0.9465811965811964,
+     "caught_24h": 0.9017094017094017,
+     "false_alarms_per_day": 60.083333333333336,
+     "secure_evals_per_day": 1283254.0,
+     "R": 50
+    }
+   ],
+   "table": [
+    {
+     "caught": 0.34401709401709396,
+     "caught_24h": 0.10042735042735045,
+     "false_alarms_per_day": 4.583333333333333,
+     "secure_evals_per_day": 571.0,
+     "k": 0.2
+    },
+    {
+     "caught": 0.37606837606837606,
+     "caught_24h": 0.1452991452991453,
+     "false_alarms_per_day": 5.75,
+     "secure_evals_per_day": 869.5,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4337606837606838,
+     "caught_24h": 0.25213675213675213,
+     "false_alarms_per_day": 7.666666666666667,
+     "secure_evals_per_day": 2106.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5235042735042734,
+     "caught_24h": 0.40811965811965817,
+     "false_alarms_per_day": 11.0,
+     "secure_evals_per_day": 3939.25,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6431623931623931,
+     "caught_24h": 0.5576923076923077,
+     "false_alarms_per_day": 18.166666666666668,
+     "secure_evals_per_day": 7283.5,
+     "k": 1
+    },
+    {
+     "caught": 0.7649572649572649,
+     "caught_24h": 0.7200854700854702,
+     "false_alarms_per_day": 29.666666666666668,
+     "secure_evals_per_day": 14802.0,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8397435897435898,
+     "caught_24h": 0.8076923076923076,
+     "false_alarms_per_day": 38.333333333333336,
+     "secure_evals_per_day": 24884.25,
+     "k": 2
+    },
+    {
+     "caught": 0.9038461538461537,
+     "caught_24h": 0.8782051282051282,
+     "false_alarms_per_day": 46.916666666666664,
+     "secure_evals_per_day": 51619.75,
+     "k": 3
+    },
+    {
+     "caught": 0.923076923076923,
+     "caught_24h": 0.8931623931623931,
+     "false_alarms_per_day": 52.416666666666664,
+     "secure_evals_per_day": 86973.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9487179487179488,
+     "caught_24h": 0.9209401709401709,
+     "false_alarms_per_day": 56.166666666666664,
+     "secure_evals_per_day": 126812.0,
+     "k": 5
+    },
+    {
+     "caught": 0.9636752136752137,
+     "caught_24h": 0.9423076923076922,
+     "false_alarms_per_day": 60.75,
+     "secure_evals_per_day": 226252.0,
+     "k": 7
+    },
+    {
+     "caught": 0.9722222222222222,
+     "caught_24h": 0.9487179487179486,
+     "false_alarms_per_day": 63.5,
+     "secure_evals_per_day": 378446.0,
+     "k": 10
+    },
+    {
+     "caught": 0.9807692307692307,
+     "caught_24h": 0.9615384615384616,
+     "false_alarms_per_day": 65.16666666666667,
+     "secure_evals_per_day": 614824.5,
+     "k": 15
+    }
+   ],
+   "public_model": [
+    {
+     "caught": 0.3867521367521367,
+     "caught_24h": 0.21153846153846154,
+     "false_alarms_per_day": 4.0,
+     "secure_evals_per_day": 1783.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.42094017094017094,
+     "caught_24h": 0.2799145299145299,
+     "false_alarms_per_day": 5.916666666666667,
+     "secure_evals_per_day": 3460.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.47222222222222215,
+     "caught_24h": 0.3525641025641025,
+     "false_alarms_per_day": 9.5,
+     "secure_evals_per_day": 8879.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5427350427350427,
+     "caught_24h": 0.46581196581196577,
+     "false_alarms_per_day": 13.333333333333334,
+     "secure_evals_per_day": 15903.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6645299145299145,
+     "caught_24h": 0.6025641025641026,
+     "false_alarms_per_day": 20.916666666666668,
+     "secure_evals_per_day": 27136.5,
+     "k": 1
+    },
+    {
+     "caught": 0.80982905982906,
+     "caught_24h": 0.7542735042735043,
+     "false_alarms_per_day": 30.75,
+     "secure_evals_per_day": 49695.25,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8760683760683761,
+     "caught_24h": 0.8183760683760685,
+     "false_alarms_per_day": 40.0,
+     "secure_evals_per_day": 72697.75,
+     "k": 2
+    },
+    {
+     "caught": 0.9252136752136751,
+     "caught_24h": 0.8803418803418803,
+     "false_alarms_per_day": 51.166666666666664,
+     "secure_evals_per_day": 119801.0,
+     "k": 3
+    },
+    {
+     "caught": 0.9380341880341879,
+     "caught_24h": 0.9081196581196581,
+     "false_alarms_per_day": 57.0,
+     "secure_evals_per_day": 163083.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9636752136752137,
+     "caught_24h": 0.9487179487179486,
+     "false_alarms_per_day": 61.0,
+     "secure_evals_per_day": 209993.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9700854700854701,
+     "caught_24h": 0.9594017094017094,
+     "false_alarms_per_day": 64.75,
+     "secure_evals_per_day": 317584.0,
+     "k": 7
+    },
+    {
+     "caught": 0.9871794871794872,
+     "caught_24h": 0.9807692307692308,
+     "false_alarms_per_day": 68.0,
+     "secure_evals_per_day": 491595.25,
+     "k": 10
+    },
+    {
+     "caught": 1.0,
+     "caught_24h": 0.9935897435897436,
+     "false_alarms_per_day": 68.91666666666667,
+     "secure_evals_per_day": 772916.5,
+     "k": 15
+    }
+   ],
+   "owner_models": [
+    {
+     "caught": 0.358974358974359,
+     "caught_24h": 0.17521367521367523,
+     "false_alarms_per_day": 7.083333333333333,
+     "secure_evals_per_day": 1835.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.38247863247863245,
+     "caught_24h": 0.20726495726495728,
+     "false_alarms_per_day": 8.416666666666666,
+     "secure_evals_per_day": 3201.5,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4615384615384615,
+     "caught_24h": 0.30982905982905984,
+     "false_alarms_per_day": 10.666666666666666,
+     "secure_evals_per_day": 8596.5,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5299145299145299,
+     "caught_24h": 0.3803418803418803,
+     "false_alarms_per_day": 12.666666666666666,
+     "secure_evals_per_day": 15380.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6217948717948718,
+     "caught_24h": 0.49572649572649574,
+     "false_alarms_per_day": 18.083333333333332,
+     "secure_evals_per_day": 28175.75,
+     "k": 1
+    },
+    {
+     "caught": 0.7371794871794872,
+     "caught_24h": 0.6688034188034188,
+     "false_alarms_per_day": 27.166666666666668,
+     "secure_evals_per_day": 50264.75,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8333333333333334,
+     "caught_24h": 0.7606837606837606,
+     "false_alarms_per_day": 34.916666666666664,
+     "secure_evals_per_day": 69779.5,
+     "k": 2
+    },
+    {
+     "caught": 0.9294871794871794,
+     "caught_24h": 0.8632478632478633,
+     "false_alarms_per_day": 47.416666666666664,
+     "secure_evals_per_day": 111979.75,
+     "k": 3
+    },
+    {
+     "caught": 0.9423076923076922,
+     "caught_24h": 0.8867521367521367,
+     "false_alarms_per_day": 53.583333333333336,
+     "secure_evals_per_day": 154930.25,
+     "k": 4
+    },
+    {
+     "caught": 0.9487179487179488,
+     "caught_24h": 0.9188034188034188,
+     "false_alarms_per_day": 59.166666666666664,
+     "secure_evals_per_day": 199918.5,
+     "k": 5
+    },
+    {
+     "caught": 0.9615384615384616,
+     "caught_24h": 0.9444444444444443,
+     "false_alarms_per_day": 63.75,
+     "secure_evals_per_day": 293567.0,
+     "k": 7
+    },
+    {
+     "caught": 0.9743589743589743,
+     "caught_24h": 0.9636752136752137,
+     "false_alarms_per_day": 65.25,
+     "secure_evals_per_day": 445687.75,
+     "k": 10
+    },
+    {
+     "caught": 0.9743589743589743,
+     "caught_24h": 0.9700854700854701,
+     "false_alarms_per_day": 66.16666666666667,
+     "secure_evals_per_day": 704648.75,
+     "k": 15
+    }
+   ],
+   "owner_models_dp2": [
+    {
+     "caught": 0.32478632478632474,
+     "caught_24h": 0.16666666666666666,
+     "false_alarms_per_day": 6.5,
+     "secure_evals_per_day": 852.75,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3397435897435898,
+     "caught_24h": 0.1923076923076923,
+     "false_alarms_per_day": 6.666666666666667,
+     "secure_evals_per_day": 1635.0,
+     "k": 0.3
+    },
+    {
+     "caught": 0.39957264957264954,
+     "caught_24h": 0.26495726495726496,
+     "false_alarms_per_day": 8.5,
+     "secure_evals_per_day": 3868.5,
+     "k": 0.5
+    },
+    {
+     "caught": 0.4914529914529915,
+     "caught_24h": 0.3717948717948718,
+     "false_alarms_per_day": 10.666666666666666,
+     "secure_evals_per_day": 6780.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.5641025641025641,
+     "caught_24h": 0.452991452991453,
+     "false_alarms_per_day": 14.416666666666666,
+     "secure_evals_per_day": 11748.5,
+     "k": 1
+    },
+    {
+     "caught": 0.7115384615384616,
+     "caught_24h": 0.608974358974359,
+     "false_alarms_per_day": 21.416666666666668,
+     "secure_evals_per_day": 19652.5,
+     "k": 1.5
+    },
+    {
+     "caught": 0.7713675213675213,
+     "caught_24h": 0.6709401709401709,
+     "false_alarms_per_day": 29.666666666666668,
+     "secure_evals_per_day": 29260.0,
+     "k": 2
+    },
+    {
+     "caught": 0.8675213675213675,
+     "caught_24h": 0.7905982905982906,
+     "false_alarms_per_day": 41.833333333333336,
+     "secure_evals_per_day": 53406.75,
+     "k": 3
+    },
+    {
+     "caught": 0.9252136752136751,
+     "caught_24h": 0.8782051282051282,
+     "false_alarms_per_day": 49.833333333333336,
+     "secure_evals_per_day": 80850.75,
+     "k": 4
+    },
+    {
+     "caught": 0.9316239316239315,
+     "caught_24h": 0.8974358974358975,
+     "false_alarms_per_day": 54.666666666666664,
+     "secure_evals_per_day": 109329.75,
+     "k": 5
+    },
+    {
+     "caught": 0.9594017094017094,
+     "caught_24h": 0.9380341880341879,
+     "false_alarms_per_day": 61.916666666666664,
+     "secure_evals_per_day": 174738.5,
+     "k": 7
+    },
+    {
+     "caught": 0.967948717948718,
+     "caught_24h": 0.9551282051282052,
+     "false_alarms_per_day": 64.16666666666667,
+     "secure_evals_per_day": 288067.25,
+     "k": 10
+    },
+    {
+     "caught": 0.9722222222222222,
+     "caught_24h": 0.9636752136752137,
+     "false_alarms_per_day": 65.58333333333333,
+     "secure_evals_per_day": 501369.25,
+     "k": 15
+    }
+   ]
+  },
+  "w4_t15.4": {
+   "fixed_radius": [
+    {
+     "caught": 0.41723356009070295,
+     "caught_24h": 0.15419501133786848,
+     "false_alarms_per_day": 13.416666666666666,
+     "secure_evals_per_day": 1147.75,
+     "R": 2
+    },
+    {
+     "caught": 0.5419501133786848,
+     "caught_24h": 0.21995464852607713,
+     "false_alarms_per_day": 21.75,
+     "secure_evals_per_day": 2696.75,
+     "R": 3
+    },
+    {
+     "caught": 0.6825396825396824,
+     "caught_24h": 0.3877551020408163,
+     "false_alarms_per_day": 30.583333333333332,
+     "secure_evals_per_day": 8761.75,
+     "R": 5
+    },
+    {
+     "caught": 0.7596371882086167,
+     "caught_24h": 0.46258503401360546,
+     "false_alarms_per_day": 35.75,
+     "secure_evals_per_day": 19481.25,
+     "R": 7
+    },
+    {
+     "caught": 0.8321995464852607,
+     "caught_24h": 0.5419501133786849,
+     "false_alarms_per_day": 41.0,
+     "secure_evals_per_day": 43836.75,
+     "R": 10
+    },
+    {
+     "caught": 0.9024943310657596,
+     "caught_24h": 0.6802721088435374,
+     "false_alarms_per_day": 47.666666666666664,
+     "secure_evals_per_day": 105156.75,
+     "R": 15
+    },
+    {
+     "caught": 0.9206349206349206,
+     "caught_24h": 0.746031746031746,
+     "false_alarms_per_day": 51.166666666666664,
+     "secure_evals_per_day": 183679.25,
+     "R": 20
+    },
+    {
+     "caught": 0.9410430839002268,
+     "caught_24h": 0.8117913832199547,
+     "false_alarms_per_day": 55.0,
+     "secure_evals_per_day": 417100.0,
+     "R": 30
+    },
+    {
+     "caught": 0.9614512471655328,
+     "caught_24h": 0.8752834467120181,
+     "false_alarms_per_day": 60.083333333333336,
+     "secure_evals_per_day": 1290094.25,
+     "R": 50
+    }
+   ],
+   "table": [
+    {
+     "caught": 0.2743764172335601,
+     "caught_24h": 0.10657596371882087,
+     "false_alarms_per_day": 4.666666666666667,
+     "secure_evals_per_day": 385.5,
+     "k": 0.2
+    },
+    {
+     "caught": 0.30385487528344673,
+     "caught_24h": 0.1473922902494331,
+     "false_alarms_per_day": 5.333333333333333,
+     "secure_evals_per_day": 631.75,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4013605442176871,
+     "caught_24h": 0.2811791383219954,
+     "false_alarms_per_day": 7.416666666666667,
+     "secure_evals_per_day": 1484.5,
+     "k": 0.5
+    },
+    {
+     "caught": 0.49659863945578236,
+     "caught_24h": 0.4013605442176871,
+     "false_alarms_per_day": 10.666666666666666,
+     "secure_evals_per_day": 2780.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.6462585034013606,
+     "caught_24h": 0.5782312925170068,
+     "false_alarms_per_day": 17.0,
+     "secure_evals_per_day": 5934.5,
+     "k": 1
+    },
+    {
+     "caught": 0.7981859410430839,
+     "caught_24h": 0.7528344671201813,
+     "false_alarms_per_day": 29.416666666666668,
+     "secure_evals_per_day": 14921.5,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8934240362811791,
+     "caught_24h": 0.8480725623582765,
+     "false_alarms_per_day": 36.5,
+     "secure_evals_per_day": 25768.0,
+     "k": 2
+    },
+    {
+     "caught": 0.9365079365079366,
+     "caught_24h": 0.9047619047619048,
+     "false_alarms_per_day": 46.666666666666664,
+     "secure_evals_per_day": 54404.25,
+     "k": 3
+    },
+    {
+     "caught": 0.9387755102040817,
+     "caught_24h": 0.9229024943310659,
+     "false_alarms_per_day": 53.166666666666664,
+     "secure_evals_per_day": 91408.5,
+     "k": 4
+    },
+    {
+     "caught": 0.945578231292517,
+     "caught_24h": 0.9251700680272109,
+     "false_alarms_per_day": 56.583333333333336,
+     "secure_evals_per_day": 136494.75,
+     "k": 5
+    },
+    {
+     "caught": 0.9614512471655328,
+     "caught_24h": 0.9342403628117913,
+     "false_alarms_per_day": 60.666666666666664,
+     "secure_evals_per_day": 233673.0,
+     "k": 7
+    },
+    {
+     "caught": 0.9614512471655328,
+     "caught_24h": 0.9410430839002268,
+     "false_alarms_per_day": 62.25,
+     "secure_evals_per_day": 386067.0,
+     "k": 10
+    },
+    {
+     "caught": 0.9614512471655328,
+     "caught_24h": 0.9410430839002268,
+     "false_alarms_per_day": 64.5,
+     "secure_evals_per_day": 607030.0,
+     "k": 15
+    }
+   ],
+   "public_model": [
+    {
+     "caught": 0.3310657596371882,
+     "caught_24h": 0.17460317460317457,
+     "false_alarms_per_day": 6.0,
+     "secure_evals_per_day": 1115.0,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3673469387755102,
+     "caught_24h": 0.21995464852607713,
+     "false_alarms_per_day": 6.916666666666667,
+     "secure_evals_per_day": 2098.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.43537414965986393,
+     "caught_24h": 0.31746031746031744,
+     "false_alarms_per_day": 9.416666666666666,
+     "secure_evals_per_day": 4510.75,
+     "k": 0.5
+    },
+    {
+     "caught": 0.5328798185941044,
+     "caught_24h": 0.43990929705215426,
+     "false_alarms_per_day": 12.5,
+     "secure_evals_per_day": 7865.75,
+     "k": 0.7
+    },
+    {
+     "caught": 0.671201814058957,
+     "caught_24h": 0.582766439909297,
+     "false_alarms_per_day": 17.916666666666668,
+     "secure_evals_per_day": 15042.75,
+     "k": 1
+    },
+    {
+     "caught": 0.8117913832199547,
+     "caught_24h": 0.7528344671201813,
+     "false_alarms_per_day": 29.166666666666668,
+     "secure_evals_per_day": 29795.5,
+     "k": 1.5
+    },
+    {
+     "caught": 0.9070294784580498,
+     "caught_24h": 0.8616780045351473,
+     "false_alarms_per_day": 38.666666666666664,
+     "secure_evals_per_day": 49216.75,
+     "k": 2
+    },
+    {
+     "caught": 0.9523809523809522,
+     "caught_24h": 0.9138321995464853,
+     "false_alarms_per_day": 48.583333333333336,
+     "secure_evals_per_day": 94000.25,
+     "k": 3
+    },
+    {
+     "caught": 0.9637188208616779,
+     "caught_24h": 0.9251700680272109,
+     "false_alarms_per_day": 54.666666666666664,
+     "secure_evals_per_day": 142021.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9659863945578232,
+     "caught_24h": 0.9319727891156463,
+     "false_alarms_per_day": 58.75,
+     "secure_evals_per_day": 192463.0,
+     "k": 5
+    },
+    {
+     "caught": 0.9705215419501133,
+     "caught_24h": 0.9433106575963719,
+     "false_alarms_per_day": 62.666666666666664,
+     "secure_evals_per_day": 292741.5,
+     "k": 7
+    },
+    {
+     "caught": 0.9750566893424036,
+     "caught_24h": 0.9523809523809522,
+     "false_alarms_per_day": 64.75,
+     "secure_evals_per_day": 459538.75,
+     "k": 10
+    },
+    {
+     "caught": 0.9750566893424036,
+     "caught_24h": 0.9546485260770975,
+     "false_alarms_per_day": 65.66666666666667,
+     "secure_evals_per_day": 732737.0,
+     "k": 15
+    }
+   ],
+   "owner_models": [
+    {
+     "caught": 0.435374149659864,
+     "caught_24h": 0.2743764172335601,
+     "false_alarms_per_day": 7.666666666666667,
+     "secure_evals_per_day": 3283.5,
+     "k": 0.2
+    },
+    {
+     "caught": 0.48526077097505665,
+     "caught_24h": 0.3401360544217687,
+     "false_alarms_per_day": 9.333333333333334,
+     "secure_evals_per_day": 6279.0,
+     "k": 0.3
+    },
+    {
+     "caught": 0.5600907029478458,
+     "caught_24h": 0.42403628117913833,
+     "false_alarms_per_day": 12.5,
+     "secure_evals_per_day": 14947.0,
+     "k": 0.5
+    },
+    {
+     "caught": 0.6213151927437642,
+     "caught_24h": 0.4920634920634921,
+     "false_alarms_per_day": 15.833333333333334,
+     "secure_evals_per_day": 23585.5,
+     "k": 0.7
+    },
+    {
+     "caught": 0.72562358276644,
+     "caught_24h": 0.6235827664399093,
+     "false_alarms_per_day": 20.333333333333332,
+     "secure_evals_per_day": 36178.0,
+     "k": 1
+    },
+    {
+     "caught": 0.8117913832199547,
+     "caught_24h": 0.743764172335601,
+     "false_alarms_per_day": 28.916666666666668,
+     "secure_evals_per_day": 59018.25,
+     "k": 1.5
+    },
+    {
+     "caught": 0.8684807256235828,
+     "caught_24h": 0.8185941043083901,
+     "false_alarms_per_day": 36.166666666666664,
+     "secure_evals_per_day": 84344.75,
+     "k": 2
+    },
+    {
+     "caught": 0.9410430839002268,
+     "caught_24h": 0.9070294784580498,
+     "false_alarms_per_day": 46.333333333333336,
+     "secure_evals_per_day": 133146.0,
+     "k": 3
+    },
+    {
+     "caught": 0.9546485260770975,
+     "caught_24h": 0.9183673469387755,
+     "false_alarms_per_day": 53.416666666666664,
+     "secure_evals_per_day": 180529.0,
+     "k": 4
+    },
+    {
+     "caught": 0.9546485260770975,
+     "caught_24h": 0.9229024943310659,
+     "false_alarms_per_day": 58.75,
+     "secure_evals_per_day": 227294.25,
+     "k": 5
+    },
+    {
+     "caught": 0.9659863945578232,
+     "caught_24h": 0.9342403628117913,
+     "false_alarms_per_day": 63.083333333333336,
+     "secure_evals_per_day": 318927.25,
+     "k": 7
+    },
+    {
+     "caught": 0.9750566893424036,
+     "caught_24h": 0.9501133786848072,
+     "false_alarms_per_day": 64.91666666666667,
+     "secure_evals_per_day": 465766.75,
+     "k": 10
+    },
+    {
+     "caught": 0.9750566893424036,
+     "caught_24h": 0.9546485260770975,
+     "false_alarms_per_day": 65.83333333333333,
+     "secure_evals_per_day": 712851.25,
+     "k": 15
+    }
+   ],
+   "owner_models_dp2": [
+    {
+     "caught": 0.36734693877551017,
+     "caught_24h": 0.17233560090702948,
+     "false_alarms_per_day": 4.75,
+     "secure_evals_per_day": 560.25,
+     "k": 0.2
+    },
+    {
+     "caught": 0.3900226757369614,
+     "caught_24h": 0.20408163265306123,
+     "false_alarms_per_day": 5.333333333333333,
+     "secure_evals_per_day": 857.25,
+     "k": 0.3
+    },
+    {
+     "caught": 0.4535147392290249,
+     "caught_24h": 0.2834467120181406,
+     "false_alarms_per_day": 6.416666666666667,
+     "secure_evals_per_day": 1690.25,
+     "k": 0.5
+    },
+    {
+     "caught": 0.4920634920634921,
+     "caught_24h": 0.3310657596371882,
+     "false_alarms_per_day": 9.0,
+     "secure_evals_per_day": 2769.25,
+     "k": 0.7
+    },
+    {
+     "caught": 0.5782312925170068,
+     "caught_24h": 0.4489795918367347,
+     "false_alarms_per_day": 12.333333333333334,
+     "secure_evals_per_day": 5111.75,
+     "k": 1
+    },
+    {
+     "caught": 0.671201814058957,
+     "caught_24h": 0.5510204081632653,
+     "false_alarms_per_day": 18.416666666666668,
+     "secure_evals_per_day": 9490.75,
+     "k": 1.5
+    },
+    {
+     "caught": 0.7346938775510203,
+     "caught_24h": 0.6439909297052154,
+     "false_alarms_per_day": 24.583333333333332,
+     "secure_evals_per_day": 15515.5,
+     "k": 2
+    },
+    {
+     "caught": 0.852607709750567,
+     "caught_24h": 0.8163265306122449,
+     "false_alarms_per_day": 35.416666666666664,
+     "secure_evals_per_day": 33046.5,
+     "k": 3
+    },
+    {
+     "caught": 0.9115646258503401,
+     "caught_24h": 0.8639455782312925,
+     "false_alarms_per_day": 43.25,
+     "secure_evals_per_day": 51184.75,
+     "k": 4
+    },
+    {
+     "caught": 0.9342403628117913,
+     "caught_24h": 0.8888888888888888,
+     "false_alarms_per_day": 49.25,
+     "secure_evals_per_day": 73537.0,
+     "k": 5
+    },
+    {
+     "caught": 0.9523809523809524,
+     "caught_24h": 0.9183673469387755,
+     "false_alarms_per_day": 57.75,
+     "secure_evals_per_day": 123943.75,
+     "k": 7
+    },
+    {
+     "caught": 0.9659863945578232,
+     "caught_24h": 0.9342403628117913,
+     "false_alarms_per_day": 62.75,
+     "secure_evals_per_day": 211884.75,
+     "k": 10
+    },
+    {
+     "caught": 0.9727891156462585,
+     "caught_24h": 0.9501133786848072,
+     "false_alarms_per_day": 64.5,
+     "secure_evals_per_day": 371318.0,
+     "k": 15
+    }
+   ]
+  }
+ },
+ "summary": {
+  "fixed_radius": {
+   "10000": {
+    "caught": [
+     0.7136877428101305,
+     0.015171150948453366
+    ],
+    "caught_24h": [
+     0.39292697463947995,
+     0.02038570234582493
+    ],
+    "false_alarms_per_day": [
+     32.525162318593466,
+     0.7079737164763855
+    ]
+   },
+   "40000": {
+    "caught": [
+     0.828132796824377,
+     0.009127270912080912
+    ],
+    "caught_24h": [
+     0.5421883960427382,
+     0.04433908306304454
+    ],
+    "false_alarms_per_day": [
+     41.6605385995569,
+     0.8036140604047588
+    ]
+   },
+   "180000": {
+    "caught": [
+     0.9112819664408247,
+     0.006712841835871302
+    ],
+    "caught_24h": [
+     0.7110062245050127,
+     0.048277290326993044
+    ],
+    "false_alarms_per_day": [
+     51.653239419513284,
+     0.6872981180913281
+    ]
+   },
+   "400000": {
+    "caught": [
+     0.9283703611562443,
+     0.008926601869704945
+    ],
+    "caught_24h": [
+     0.7852630704944185,
+     0.04740837887499135
+    ],
+    "false_alarms_per_day": [
+     56.157723699821,
+     1.2560577995534294
+    ]
+   }
+  },
+  "table": {
+   "10000": {
+    "caught": [
+     0.7120250926504363,
+     0.026635251283491767
+    ],
+    "caught_24h": [
+     0.654013754775655,
+     0.03224114625603079
+    ],
+    "false_alarms_per_day": [
+     25.223757524466862,
+     1.8243136264523667
+    ]
+   },
+   "40000": {
+    "caught": [
+     0.8989356441748085,
+     0.01327519623209671
+    ],
+    "caught_24h": [
+     0.8624899408895839,
+     0.01169058442271148
+    ],
+    "false_alarms_per_day": [
+     45.35784660975689,
+     2.3906179204990896
+    ]
+   },
+   "180000": {
+    "caught": [
+     0.9602758750280611,
+     0.011166019336386534
+    ],
+    "caught_24h": [
+     0.9266365930402997,
+     0.01360839853941025
+    ],
+    "false_alarms_per_day": [
+     61.17794260149573,
+     2.5390671002597616
+    ]
+   },
+   "400000": {
+    "caught": [
+     0.9756138117270368,
+     0.011691478213241612
+    ],
+    "caught_24h": [
+     0.9449662722114416,
+     0.010738027424345284
+    ],
+    "false_alarms_per_day": [
+     65.45001801765667,
+     2.6120403766783373
+    ]
+   }
+  },
+  "public_model": {
+   "10000": {
+    "caught": [
+     0.48627332063112094,
+     0.06168087137150187
+    ],
+    "caught_24h": [
+     0.3488817189081108,
+     0.10444656357931768
+    ],
+    "false_alarms_per_day": [
+     10.861077159020454,
+     2.331052941535038
+    ]
+   },
+   "40000": {
+    "caught": [
+     0.7515583719481183,
+     0.08690047193907904
+    ],
+    "caught_24h": [
+     0.6668952708767311,
+     0.11765064695853418
+    ],
+    "false_alarms_per_day": [
+     25.893030227323628,
+     6.368418545125486
+    ]
+   },
+   "180000": {
+    "caught": [
+     0.9672225658676064,
+     0.012976276367701968
+    ],
+    "caught_24h": [
+     0.9424557564919973,
+     0.01599858776029773
+    ],
+    "false_alarms_per_day": [
+     57.564517850292944,
+     1.6735171134410116
+    ]
+   },
+   "400000": {
+    "caught": [
+     0.9828809796180742,
+     0.007094466522447789
+    ],
+    "caught_24h": [
+     0.9681944781280417,
+     0.012311569875627138
+    ],
+    "false_alarms_per_day": [
+     66.76258409338773,
+     1.7025047963110973
+    ]
+   }
+  },
+  "owner_models": {
+   "10000": {
+    "caught": [
+     0.4520926878150373,
+     0.06934168223316921
+    ],
+    "caught_24h": [
+     0.3000052339110446,
+     0.07028147554352768
+    ],
+    "false_alarms_per_day": [
+     9.981483617713739,
+     1.4586635025257124
+    ]
+   },
+   "40000": {
+    "caught": [
+     0.6873659210665712,
+     0.038379924987529956
+    ],
+    "caught_24h": [
+     0.5725392788231578,
+     0.05494643139910223
+    ],
+    "false_alarms_per_day": [
+     21.00465634683352,
+     1.924117450506228
+    ]
+   },
+   "180000": {
+    "caught": [
+     0.9564080153472863,
+     0.007251054471116556
+    ],
+    "caught_24h": [
+     0.9229686375328743,
+     0.011908249887245861
+    ],
+    "false_alarms_per_day": [
+     55.32659140703748,
+     1.6785679190001157
+    ]
+   },
+   "400000": {
+    "caught": [
+     0.9802608631746832,
+     0.009748823110510414
+    ],
+    "caught_24h": [
+     0.9616973249409109,
+     0.013980335809081403
+    ],
+    "false_alarms_per_day": [
+     66.37613290559791,
+     1.9710243041756759
+    ]
+   }
+  },
+  "owner_models_dp2": {
+   "10000": {
+    "caught": [
+     0.5705287888303814,
+     0.06991467162993531
+    ],
+    "caught_24h": [
+     0.4378790030904144,
+     0.08668642697568064
+    ],
+    "false_alarms_per_day": [
+     15.12880862348262,
+     2.57043834535553
+    ]
+   },
+   "40000": {
+    "caught": [
+     0.8465488606027054,
+     0.02191069500446006
+    ],
+    "caught_24h": [
+     0.765882467457605,
+     0.041493214876471285
+    ],
+    "false_alarms_per_day": [
+     35.58952448734934,
+     2.0946627367754247
+    ]
+   },
+   "180000": {
+    "caught": [
+     0.9679876794921302,
+     0.008634466022401513
+    ],
+    "caught_24h": [
+     0.9416821228082034,
+     0.009949097619327699
+    ],
+    "false_alarms_per_day": [
+     61.87220160170556,
+     1.445784378376615
+    ]
+   },
+   "400000": {
+    "caught": [
+     0.979565433486042,
+     0.009085147273965088
+    ],
+    "caught_24h": [
+     0.9647743315628203,
+     0.004582989907897406
+    ],
+    "false_alarms_per_day": [
+     66.96509441198594,
+     1.959212866015804
+    ]
+   }
+  }
+ }
+}

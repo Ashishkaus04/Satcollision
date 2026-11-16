@@ -1004,6 +1004,57 @@ in the 75 to 100 km band). The WAN figures inherit section 13's modelling; the m
 protocol's round count makes a real WAN slower unless batches run in parallel. Truth is
 TLE-derived (section 11).
 
+### 16b. Hybrid: the filter set per pair by an error model (adopted design, 16 Nov)
+
+`research/hindcast_hybrid.py`, results `results/hindcast_hybrid.json`, figure
+`figures/fig_hybrid_filter.png`. Instead of a fixed radius, a member pair goes to the secure
+Pc when its public predicted miss (after the predicted bias) is within k standard deviations
+of the two public predictions' combined covariance, or under 1 km. The covariance comes from
+the public error table, the public model, owners' models, or owners' models with DP at
+epsilon 2. Sweeping k (or R) traces each scheme's catches against its secure evaluations a
+day; schemes are compared at equal budgets. Four rolling windows, mean (sd), the secure step
+with noisy precise orbits as in section 16:
+
+| Secure evaluations / day | 10,000 | 40,000 | 180,000 | 400,000 |
+| --- | --- | --- | --- | --- |
+| Fixed radius: caught / >= 24 h | 71% / 39% | 83% / 54% | 91% / 71% | 93% / 79% |
+| Adaptive, public table | 71% / 65% | **90% / 86%** | 96% / 93% | 98% / 95% |
+| Adaptive, public model | 49% / 35% | 75% / 67% | 97% / 94% | 98% / 97% |
+| Adaptive, owners' models | 45% / 30% | 69% / 57% | 96% / 92% | 98% / 96% |
+| Adaptive, owners' models, DP eps 2 | 57% / 44% | 85% / 77% | **97% / 94%** | 98% / 97% |
+
+False alarms at 180,000 evaluations a day: 52 (fixed) and 55 to 62 (adaptive). For
+comparison, the two-stage design with owners' models (both operators' alerts): 71% / 52%,
+99 false alarms a day.
+
+What this says:
+
+1. **Letting an error model choose which pairs get a secure check is the best design found.**
+   At 180,000 secure evaluations a day (about 0.4 cluster-hours over a WAN), it catches 96 to
+   97% of dangerous member-pair encounters and 92 to 94% at least a day ahead, against 91% and
+   71% for the fixed 20 km filter and 71% and 52% for the two-stage design.
+2. **At that budget the four error models are equivalent.** The public table is best when the
+   budget is small (it ranks pairs by age-driven uncertainty, which is what matters most);
+   the learned models need a larger budget before they catch up. With TLE-derived labels the
+   owners' models add nothing over public data here, as in sections 10c and 15; the precise-
+   label results of section 11 suggest they could once trained on operator ephemerides (SupGP).
+3. **Adopted design:** public filter set per pair by an error model, then the secure Pc with
+   both owners' precise orbits, for member pairs; each operator alone, with its precise orbit
+   and the public model, for debris and non-members. Owners' models (with DP) are the
+   federated learning component: they are what the filter uses once operator-quality labels
+   exist; until then the public table or public model does the same job.
+
+Design comparison for the report (member-vs-member encounters, four windows, at the stated
+operating points):
+
+| Design | Caught | Caught >= 24 h | False alarms / day | What is shared | Secure compute / day (WAN) |
+| --- | --- | --- | --- | --- | --- |
+| Baseline: each twin alone, circular Pc | see section 10c | | | nothing | none |
+| Two-stage, owners' models (section 14) | 71% | 52% | 99 | alerts, owners' models (DP) | small |
+| Filter 20 km + secure Pc (section 16) | 91% | 71% | 51 | secret shares, decisions | 0.4 h |
+| **Adaptive filter + secure Pc (16b), DP owners' models** | **97%** | **94%** | **62** | **secret shares, decisions, owners' models (DP)** | **0.4 h** |
+| Full sharing of precise orbits (upper bound, no privacy) | about 100% | about 100% | | everything | none |
+
 ## Reproduce
 
 ```bash
