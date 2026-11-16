@@ -64,6 +64,7 @@ tr.sel td { background: #13243d; }
 tbody tr[onclick], tbody tr:has(button) { cursor: default; }
 .scroll { max-height: 360px; overflow: auto; } .scroll.short { max-height: 260px; }
 .pill { display: inline-block; font: 500 11px var(--fmono); padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; margin-right: 4px; }
+.p-secure, .p-secure_act { color: #4cc38a; } .p-secure_check { color: var(--text-dim); }
 .p-federated, .p-alert, .p-threshold { color: var(--accent); } .p-internal { color: var(--text-dim); } .p-private, .p-private_watch { color: var(--text-faint); }
 .p-unilateral, .p-critical { color: var(--danger); } .p-maneuver { color: var(--success); } .p-federation_round, .p-elevated { color: var(--warn); }
 .p-injection { color: var(--violet); } .p-cycle, .p-start, .p-resume { color: var(--text-dim); }
