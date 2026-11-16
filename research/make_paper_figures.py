@@ -231,6 +231,35 @@ def fig_secure_all():
     save(fig, "secure_all")
 
 
+def fig_hybrid():
+    """Section 16b: fixed vs model-adaptive filter, caught vs secure evaluations a day (mean of four windows)."""
+    d = load("hindcast_hybrid.json")
+    if not d:
+        return print("skip hybrid")
+
+    def at_b(curve, b, key):
+        x = np.log([max(p["secure_evals_per_day"], 1) for p in curve]); o = np.argsort(x)
+        if not (x[o][0] <= np.log(b) <= x[o][-1]):
+            return np.nan
+        return float(np.interp(np.log(b), x[o], np.array([p[key] for p in curve])[o]))
+
+    grid = np.logspace(3.5, 6.2, 40)
+    sch = [("fixed_radius", "Fixed radius", C["baseline"], "--"), ("table", "Adaptive: public table", C["foster"], "-"),
+           ("public_model", "Adaptive: public model", C["public"], "-"),
+           ("owner_models", "Adaptive: owners' models", C["owner"], "-"),
+           ("owner_models_dp2", "Adaptive: owners' models, DP eps 2", C["owner_dp"], ":")]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+    for ax, key, lab in ((axes[0], "caught", "Caught (%)"), (axes[1], "caught_24h", "Caught at least 24 h ahead (%)")):
+        for s_, l_, col, ls in sch:
+            y = [np.nanmean([at_b(d["windows"][w][s_], b, key) for w in d["windows"]]) * 100 for b in grid]
+            ax.plot(grid, y, ls, color=col, label=l_)
+        ax.set_xscale("log"); ax.set_xlabel("Secure evaluations per day"); ax.set_ylabel(lab)
+        ax.axvline(180_000, color="#bbbbbb", lw=0.8, ls=":")
+    axes[0].legend(fontsize=7)
+    fig.suptitle("Member-vs-member encounters: which pairs get a secure check (four windows)", fontsize=10)
+    save(fig, "hybrid_filter")
+
+
 if __name__ == "__main__":
-    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all):
+    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid):
         f()
