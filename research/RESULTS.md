@@ -1055,6 +1055,60 @@ operating points):
 | **Adaptive filter + secure Pc (16b), DP owners' models** | **97%** | **94%** | **62** | **secret shares, decisions, owners' models (DP)** | **0.4 h** |
 | Full sharing of precise orbits (upper bound, no privacy) | about 100% | about 100% | | everything | none |
 
+## 17. Calibration with a coverage guarantee (conformal)
+
+`research/conformal.py`, `error_learning.conformal_scales`, results `results/conformal.json`,
+figure `figures/fig_conformal.png`. Split conformal prediction per axis and per age bin
+(0-3, 3-6, 6-12, 12-24, 24-48, 48+ h): on held-out calibration data, the scale for a bin is
+the empirical quantile of |error - bias| / sigma at 68.3% (with the finite-sample
+correction), so the rescaled 1-sigma interval covers at least 68.3% of future errors drawn
+like the calibration data, whatever the model. The output is 18 numbers (6 bins x 3 axes).
+Models trained up to split - 3 days, calibrated on the 3 days before the split, tested after.
+Coverage is the main measure: Gaussian NLL is dominated by manoeuvre outliers (heavy tails)
+and is only indicative.
+
+**A. TLE labels (four weeks).** Along-track 1-sigma coverage on test errors, before -> after:
+
+| Fleet | Public table | Public model | Owner model |
+| --- | --- | --- | --- |
+| Non-members | 54% -> 70% | 71% -> 68% | |
+| Starlink | 37% -> 55% | 67% -> 64% | 65% -> 63% |
+| Kuiper | 3% -> 6% | 70% -> 67% | 76% -> 71% |
+| OneWeb | 18% -> 31% | 64% -> 61% | 75% -> 69% |
+| Planet | 19% -> 36% | 71% -> 67% | 64% -> 68% |
+| Spire | 26% -> 45% | 59% -> 54% | 58% -> 62% |
+| ICEYE | 26% -> 45% | 68% -> 65% | 71% -> 79% |
+
+The learned models are already close to calibrated (59 to 76%); conformal scaling moves
+them by a few points either way, because the calibration days are not exchangeable with the
+test days (the guarantee assumes they are). The public table is badly over-confident for
+every member fleet; one set of scales fitted on the whole catalogue lifts it a lot for
+non-members (54% -> 70%) but not enough for single fleets (Kuiper 3% -> 6%): fleet-specific
+miscalibration needs fleet-specific calibration.
+
+**B. Precise labels: an owner shares only 18 calibration numbers.** The public model,
+rescaled with scales the owner computes on its own precise orbits (the 3 days before the
+split), against a full owner model trained on precise labels (test after the split):
+
+| Mission | Public model, coverage before -> after | Gaussian NLL before -> after | Owner model (precise), coverage before -> after |
+| --- | --- | --- | --- |
+| Sentinel-1 | 18% -> 62% | 37.8 -> 6.5 | 75% -> 78% |
+| Swarm | 96% -> 70% | 1.04 -> 0.32 | 57% -> 59% |
+| COSMIC-2 | 86% -> 67% | 0.27 -> 0.12 | 58% -> 71% |
+
+Eighteen numbers from the owner fix most of the public model's miscalibration against the
+real orbit, in both directions (too confident for Sentinel-1, too cautious for Swarm and
+COSMIC-2), from only 270 to 463 calibration errors. A full owner model is still better
+(NLL 0.03 to 0.06 after calibration), but the calibration numbers reveal far less than a
+model: a lighter federated option between "public only" and "share a model".
+
+**C. Screening (last window, Foster Pc with the public model or table for every object).**
+Conformal scaling barely changes screening (caught at 1e-4: 66.7% -> 66.7% for the public
+model, 73.2% -> 73.4% for the table; at 100 false alarms a day: 35.6% -> 35.1% and
+20.7% -> 21.9%). Per-age rescaling hardly changes which encounters rank highest, so it
+fixes the stated uncertainty, not the ranking. Its value is honest covariances (a Pc that
+means what it says) and, with precise labels, an almost free owner contribution.
+
 ## Reproduce
 
 ```bash
