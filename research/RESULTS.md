@@ -955,6 +955,55 @@ of alerts cut along-track uncertainty to 18% of the prior). Caveat: labels are T
 an owner model trained on precise ephemerides could carry more information and should be
 re-tested on the SupGP data.
 
+## 16. Alternative design: public filter + secure Pc for every close member pair
+
+`research/hindcast_secure_all.py`, results `results/hindcast_secure_all.json`, figure
+`figures/fig_secure_all.png`. Section 13 measured the secure step at 25 times or more the
+throughput sections 2 to 9 assumed. That questions why member pairs need stage-1 alerts and
+error models at all. Alternative: from public element sets alone, list every member-vs-member
+approach predicted closer than R km (anyone can compute this list); for each, at every
+8-hourly update, the two owners input their precise orbit and covariance into the secure Pc
+(section 13), which returns only act/no-act. Debris and non-member objects are screened by
+each operator alone, as before (no one to share with).
+
+Hindcast on the four rolling windows (147 to 166 dangerous member-pair encounters per 4-day
+window). The secure step's input is each owner's precise orbit with 0.354 km of its own
+error, redrawn at every update (3 seeds), so its false alarms are counted:
+
+| Filter radius | Caught | Caught >= 24 h | False alarms / day | Secure evaluations / day | Cluster-hours / day, WAN (semi-honest) | ... laptop, malicious |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 km | 69.8 +- 2.3% | 37.5 +- 1.6% | 32 | 8,600 | 0.02 | 0.03 |
+| 10 km | 83.6 +- 2.7% | 54.5 +- 3.8% | 43 | 42,900 | 0.10 | 0.17 |
+| **20 km** | **91.1 +- 1.5%** | **71.0 +- 4.8%** | **51** | **179,000** | **0.40** | **0.69** |
+| 30 km | 93.1 +- 0.9% | 77.7 +- 6.0% | 57 | 407,000 | 0.91 | 1.57 |
+| 50 km | 95.0 +- 1.7% | 86.0 +- 3.1% | 61 | 1,255,000 | 2.8 | 4.9 |
+| Two-stage with owners' models (both operators' alerts, section 14) | 71.4% | 51.8% | 99 | | | |
+
+What this says:
+
+1. **For member pairs, the filter + secure design beats the two-stage design on every
+   measure:** at 20 km it catches 91% of dangerous member-pair encounters (two-stage 71%),
+   71% a day ahead (52%), with half the false alarms (51 vs 99 a day), for 0.4 cluster-hours a
+   day of secure computation over a WAN (0.7 h with maliciously secure MPC on one laptop).
+2. **No error models change hands for member pairs.** The model-sharing question of section
+   15 disappears there; owners' models are then not needed for screening at all (each
+   operator's own satellite is known precisely, and debris and non-members use the public
+   model). What the federation shares becomes: the secure computation's inputs (secret
+   shares) and its decisions.
+3. **Leakage:** every operator learns the act/no-act decision on its own close member
+   pairs. That is the "act now decisions only" channel of section 7, the floor any warning
+   service reveals; it is not larger than the hardened two-stage design.
+4. **The filter radius is the safety knob.** 20 to 30 km keeps the cost under an hour a
+   day; even 50 km is a few cluster-hours. Encounters missed are those whose public
+   prediction is off by more than R (manoeuvres, section 14).
+
+Caveats: secure evaluations are counted only for approaches whose true miss is under
+100 km (the hindcast's thinned screen); pairs predicted close but truly farther are not
+counted, so the evaluation counts are low by roughly 10 to 20% (5% of filtered pairs fall
+in the 75 to 100 km band). The WAN figures inherit section 13's modelling; the malicious
+protocol's round count makes a real WAN slower unless batches run in parallel. Truth is
+TLE-derived (section 11).
+
 ## Reproduce
 
 ```bash
