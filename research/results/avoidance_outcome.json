@@ -1,0 +1,268 @@
+{
+ "D_SAFE_km": 1.83,
+ "windows": {
+  "w4": {
+   "baseline": {
+    "risk_before_per_day": 0.016551397759693137,
+    "risk_after_per_day": 0.0047704657219375165,
+    "risk_removed_frac": 0.7117786792874488,
+    "burns_per_day": 323.75,
+    "delta_v_m_s_per_day": 1.754477120226359,
+    "median_dv_mm_s": 2.683395162100211,
+    "made_worse_per_day": 77.0
+   },
+   "two_stage": {
+    "risk_before_per_day": 0.016551397759693137,
+    "risk_after_per_day": 0.00817542925122483,
+    "risk_removed_frac": 0.5060580761865272,
+    "burns_per_day": 173.0,
+    "delta_v_m_s_per_day": 0.7006438392696707,
+    "median_dv_mm_s": 2.1313157912026566,
+    "made_worse_per_day": 40.5
+   },
+   "filter20": {
+    "risk_before_per_day": 0.016551397759693137,
+    "risk_after_per_day": 0.002563106265346217,
+    "risk_removed_frac": 0.8451426095511986,
+    "burns_per_day": 84.25,
+    "delta_v_m_s_per_day": 0.6051726087538796,
+    "median_dv_mm_s": 2.828068949492972,
+    "made_worse_per_day": 0.75
+   },
+   "adaptive": {
+    "risk_before_per_day": 0.016551397759693137,
+    "risk_after_per_day": 0.0016518629113699554,
+    "risk_removed_frac": 0.900197981140139,
+    "burns_per_day": 99.5,
+    "delta_v_m_s_per_day": 0.3878096582350027,
+    "median_dv_mm_s": 1.9166365847937334,
+    "made_worse_per_day": 1.0,
+    "k": 5.892307692307693,
+    "evals_per_day": 179323.25
+   },
+   "no_action": {
+    "risk_before_per_day": 0.016551397759693137
+   }
+  },
+  "w4_t7.4": {
+   "baseline": {
+    "risk_before_per_day": 0.013574727575357735,
+    "risk_after_per_day": 0.003620567852701016,
+    "risk_removed_frac": 0.7332861501196202,
+    "burns_per_day": 251.25,
+    "delta_v_m_s_per_day": 0.9848642321569385,
+    "median_dv_mm_s": 2.3889442899429896,
+    "made_worse_per_day": 60.0
+   },
+   "two_stage": {
+    "risk_before_per_day": 0.013574727575357735,
+    "risk_after_per_day": 0.007077078654416862,
+    "risk_removed_frac": 0.4786577767303474,
+    "burns_per_day": 108.75,
+    "delta_v_m_s_per_day": 0.5317745326903146,
+    "median_dv_mm_s": 2.0330957500231213,
+    "made_worse_per_day": 28.75
+   },
+   "filter20": {
+    "risk_before_per_day": 0.013574727575357735,
+    "risk_after_per_day": 0.0022997159846671624,
+    "risk_removed_frac": 0.8305884245631678,
+    "burns_per_day": 84.25,
+    "delta_v_m_s_per_day": 0.46938215686330553,
+    "median_dv_mm_s": 2.5782322796705133,
+    "made_worse_per_day": 0.75
+   },
+   "adaptive": {
+    "risk_before_per_day": 0.013574727575357735,
+    "risk_after_per_day": 0.0013053743293447574,
+    "risk_removed_frac": 0.9038378986172504,
+    "burns_per_day": 99.5,
+    "delta_v_m_s_per_day": 0.3812019070552687,
+    "median_dv_mm_s": 1.855368196517989,
+    "made_worse_per_day": 1.0,
+    "k": 10.099665551839465,
+    "evals_per_day": 180274.5
+   },
+   "no_action": {
+    "risk_before_per_day": 0.013574727575357735
+   }
+  },
+  "w4_t11.4": {
+   "baseline": {
+    "risk_before_per_day": 0.014398457044244238,
+    "risk_after_per_day": 0.004376060396177137,
+    "risk_removed_frac": 0.6960743513884732,
+    "burns_per_day": 353.0,
+    "delta_v_m_s_per_day": 1.645184942177642,
+    "median_dv_mm_s": 2.4417633922601363,
+    "made_worse_per_day": 65.5
+   },
+   "two_stage": {
+    "risk_before_per_day": 0.014398457044244238,
+    "risk_after_per_day": 0.009072824114719394,
+    "risk_removed_frac": 0.36987525213014116,
+    "burns_per_day": 115.5,
+    "delta_v_m_s_per_day": 0.5689671505293865,
+    "median_dv_mm_s": 1.9223776475349597,
+    "made_worse_per_day": 33.75
+   },
+   "filter20": {
+    "risk_before_per_day": 0.014398457044244238,
+    "risk_after_per_day": 0.0025447635306237483,
+    "risk_removed_frac": 0.8232613728815468,
+    "burns_per_day": 88.75,
+    "delta_v_m_s_per_day": 0.6473158006437856,
+    "median_dv_mm_s": 2.68714360686673,
+    "made_worse_per_day": 1.0
+   },
+   "adaptive": {
+    "risk_before_per_day": 0.014398457044244238,
+    "risk_after_per_day": 0.0017525810882204266,
+    "risk_removed_frac": 0.8782799377158945,
+    "burns_per_day": 99.25,
+    "delta_v_m_s_per_day": 0.3521896791835356,
+    "median_dv_mm_s": 1.8918968245987986,
+    "made_worse_per_day": 1.0,
+    "k": 7.129765886287625,
+    "evals_per_day": 179481.5
+   },
+   "no_action": {
+    "risk_before_per_day": 0.014398457044244238
+   }
+  },
+  "w4_t15.4": {
+   "baseline": {
+    "risk_before_per_day": 0.013546071838243565,
+    "risk_after_per_day": 0.004117524311829567,
+    "risk_removed_frac": 0.696035547352932,
+    "burns_per_day": 283.75,
+    "delta_v_m_s_per_day": 1.3068632354959773,
+    "median_dv_mm_s": 2.362127481814465,
+    "made_worse_per_day": 57.5
+   },
+   "two_stage": {
+    "risk_before_per_day": 0.013546071838243565,
+    "risk_after_per_day": 0.007819105044527756,
+    "risk_removed_frac": 0.4227769394775621,
+    "burns_per_day": 109.0,
+    "delta_v_m_s_per_day": 0.696982744642431,
+    "median_dv_mm_s": 2.031694256406646,
+    "made_worse_per_day": 28.5
+   },
+   "filter20": {
+    "risk_before_per_day": 0.013546071838243565,
+    "risk_after_per_day": 0.0016735334441151883,
+    "risk_removed_frac": 0.8764561812384287,
+    "burns_per_day": 86.25,
+    "delta_v_m_s_per_day": 0.5477200174023581,
+    "median_dv_mm_s": 2.6484275794477083,
+    "made_worse_per_day": 0.25
+   },
+   "adaptive": {
+    "risk_before_per_day": 0.013546071838243565,
+    "risk_after_per_day": 0.0013781049121630352,
+    "risk_removed_frac": 0.8982653474291832,
+    "burns_per_day": 96.75,
+    "delta_v_m_s_per_day": 0.3044112492971369,
+    "median_dv_mm_s": 1.9108507382198003,
+    "made_worse_per_day": 0.5,
+    "k": 8.961204013377925,
+    "evals_per_day": 179263.75
+   },
+   "no_action": {
+    "risk_before_per_day": 0.013546071838243565
+   }
+  }
+ },
+ "summary": {
+  "baseline": {
+   "risk_removed_frac": [
+    0.7092936820371185,
+    0.015267142611882648
+   ],
+   "burns_per_day": [
+    302.9375,
+    38.66255253795331
+   ],
+   "delta_v_m_s_per_day": [
+    1.4228473825142292,
+    0.30194943108430683
+   ],
+   "risk_after_per_day": [
+    0.004221154570661309,
+    0.0004174871830460736
+   ],
+   "made_worse_per_day": [
+    65.0,
+    7.508328708840604
+   ]
+  },
+  "two_stage": {
+   "risk_removed_frac": [
+    0.44434201113114447,
+    0.05243280215217693
+   ],
+   "burns_per_day": [
+    126.5625,
+    26.94692410554496
+   ],
+   "delta_v_m_s_per_day": [
+    0.6245920667829508,
+    0.07538817593392973
+   ],
+   "risk_after_per_day": [
+    0.00803610926622221,
+    0.0007178123504664406
+   ],
+   "made_worse_per_day": [
+    32.875,
+    4.875
+   ]
+  },
+  "filter20": {
+   "risk_removed_frac": [
+    0.8438621470585854,
+    0.02039971969103056
+   ],
+   "burns_per_day": [
+    85.875,
+    1.8498310733685928
+   ],
+   "delta_v_m_s_per_day": [
+    0.5673976459158322,
+    0.06672350491142012
+   ],
+   "risk_after_per_day": [
+    0.002270279806188079,
+    0.00035988239725424584
+   ],
+   "made_worse_per_day": [
+    0.6875,
+    0.2724311839712921
+   ]
+  },
+  "adaptive": {
+   "risk_removed_frac": [
+    0.8951452912256167,
+    0.009940648851542746
+   ],
+   "burns_per_day": [
+    98.75,
+    1.159202311936963
+   ],
+   "delta_v_m_s_per_day": [
+    0.356403123442736,
+    0.032871941629664496
+   ],
+   "risk_after_per_day": [
+    0.0015219808102745435,
+    0.00018551582817367382
+   ],
+   "made_worse_per_day": [
+    0.875,
+    0.21650635094610965
+   ]
+  },
+  "risk_before_per_day": 0.014517663554384668
+ }
+}

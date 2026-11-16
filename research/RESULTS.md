@@ -1109,6 +1109,49 @@ model, 73.2% -> 73.4% for the table; at 100 false alarms a day: 35.6% -> 35.1% a
 fixes the stated uncertainty, not the ranking. Its value is honest covariances (a Pc that
 means what it says) and, with precise labels, an almost free owner contribution.
 
+## 18. Closed loop: collision risk removed and fuel used
+
+`research/avoidance_outcome.py`, results `results/avoidance_outcome.json`, figure
+`figures/fig_avoidance.png`. Warnings only matter through the manoeuvres they trigger. Here
+operators act on each design's decisions, for member-vs-member encounters in the four rolling
+windows:
+
+* at the first update at which a design decides to act, one satellite makes one tangential
+  burn, planned from what the design believes then: enough to move the miss to 1.83 km (where
+  the precise-covariance Pc falls to 1e-6), at least 0.2 km, using the Clohessy-Wiltshire
+  secular drift (3 dv L along-track after lead L), so dv = shift / (3 L);
+* the true miss moves by that shift in the direction the planner thought was "away". A wrong
+  estimate can push the satellites closer.
+
+Risk is the expected number of collisions per day, the sum of the precise-covariance Pc of the
+true miss (hard-body radius 20 m) over member-pair encounters: 0.0145 a day before any action
+(about one collision every 69 days among these pairs).
+
+| Design | Risk removed | Risk left (collisions / day) | Burns / day | Total delta-v / day | Burns that made it worse / day |
+| --- | --- | --- | --- | --- | --- |
+| Each twin alone, circular Pc (baseline) | 70.9 +- 1.5% | 0.0042 | 303 | 1.42 m/s | 65 |
+| Each twin alone, owners' models (Foster Pc) | 44.4 +- 5.2% | 0.0080 | 127 | 0.62 m/s | 33 |
+| Fixed 20 km filter + secure Pc | 84.4 +- 2.0% | 0.0023 | 86 | 0.57 m/s | 0.7 |
+| **Model-set filter + secure Pc (adopted)** | **89.5 +- 1.0%** | **0.0015** | **99** | **0.36 m/s** | **0.9** |
+
+What this says:
+
+1. **The adopted design removes the most risk with the least fuel:** 89.5% of the expected
+   collisions (one every 670 days instead of every 69), a third of the baseline's burns and a
+   quarter of its delta-v. Earlier warnings make burns cheaper (dv falls with lead time).
+2. **Acting on public-data estimates is risky.** The baseline acts often and 65 of its 303
+   daily burns push satellites closer, because the burn direction comes from a public
+   prediction that is kilometres off. With owners' models but no secure step, the honest,
+   wider covariances make operators act less, and they remove less risk (44%). The secure
+   designs plan from both precise orbits, so almost no burn backfires.
+3. These are member pairs only; debris and non-member encounters are screened by each operator
+   alone in every design.
+
+Caveats: one burn per encounter, no re-planning at later updates; a simple drift model for
+the burn's effect (the world's avoidance.py optimiser is more exact); risk uses TLE-derived
+truth (section 11) and a 20 m hard-body radius; the two-stage design's secure confirmation
+step is not modelled here (its row is each operator acting on its own Pc).
+
 ## Reproduce
 
 ```bash

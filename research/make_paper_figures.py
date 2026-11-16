@@ -281,6 +281,27 @@ def fig_conformal():
     save(fig, "conformal")
 
 
+def fig_avoidance():
+    """Section 18: closed-loop outcome per design (member pairs, four windows)."""
+    d = load("avoidance_outcome.json")
+    if not d:
+        return print("skip avoidance")
+    S = d["summary"]
+    des = [("baseline", "Each twin alone,\ncircular Pc", C["baseline"]),
+           ("two_stage", "Each twin alone,\nowners' models", C["local"]),
+           ("filter20", "Filter 20 km\n+ secure Pc", C["foster"]),
+           ("adaptive", "Model-set filter\n+ secure Pc (adopted)", C["owner"])]
+    fig, axes = plt.subplots(1, 3, figsize=(16, 4.2))
+    for ax, key, lab, scale in ((axes[0], "risk_removed_frac", "Collision risk removed (%)", 100),
+                                (axes[1], "burns_per_day", "Avoidance burns per day", 1),
+                                (axes[2], "delta_v_m_s_per_day", "Total delta-v per day (m/s)", 1)):
+        ax.bar(range(4), [S[k][key][0] * scale for k, _, _ in des], yerr=[S[k][key][1] * scale for k, _, _ in des],
+               color=[c for *_, c in des], capsize=3)
+        ax.set_xticks(range(4), [l for _, l, _ in des], fontsize=7); ax.set_ylabel(lab)
+    fig.suptitle("Member-vs-member encounters when operators act on each design's decisions (four windows)", fontsize=10)
+    save(fig, "avoidance")
+
+
 if __name__ == "__main__":
-    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid, fig_conformal):
+    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid, fig_conformal, fig_avoidance):
         f()
