@@ -28,8 +28,10 @@ def main() -> int:
         status = 1
     else:
         new = 0
-        for f in sorted((CLONE / "supgp").glob("*.tle")):
-            if not (DEST / f.name).exists():
+        for f in sorted(p for pat in ("*.tle", "*.csv.gz", "collect.log") for p in (CLONE / "supgp").glob(pat)):
+            if f.name == "collect.log":                     # the cloud job's log, kept apart from the laptop's
+                shutil.copy2(f, DEST / "cloud_collect.log")
+            elif not (DEST / f.name).exists():
                 shutil.copy2(f, DEST / f.name)
                 new += 1
         msg = f"{now} pulled: {new} new file(s)"
