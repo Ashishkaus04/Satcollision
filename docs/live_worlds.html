@@ -58,7 +58,7 @@
   td.num{font-family:var(--fmono);text-align:right;white-space:nowrap}
   .scroll{max-height:340px;overflow:auto}
   .pill{display:inline-block;font:500 11px var(--fmono);padding:2px 7px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
-  .p-federated{color:var(--accent)} .p-internal{color:var(--text-dim)} .p-private{color:var(--text-faint)}
+  .p-secure,.p-secure_act{color:#4cc38a} .p-secure_check{color:var(--text-dim)} .p-federated{color:var(--accent)} .p-internal{color:var(--text-dim)} .p-private{color:var(--text-faint)}
   .p-unilateral{color:var(--danger)} .p-maneuver{color:var(--success)} .p-federation_round{color:var(--warn)}
   .p-injection{color:#b48cff} .p-cycle,.p-start,.p-resume{color:var(--text-dim)} .p-private_watch{color:var(--text-faint)}
   .feed{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
@@ -231,9 +231,13 @@
     const total = Object.values(w.fleet).reduce((a, b) => a + b, 0);
     $("tiles").innerHTML =
       tile(total.toLocaleString(), `objects · ${esc(w.source)}`) +
-      tile(c.encounters_shared, "cross-operator encounters shared") +
-      tile(c.maneuvers_agreed, "joint manoeuvre plans agreed") +
-      tile(c.unilateral, "one side stayed silent") +
+      (c.secure_checks !== undefined
+        ? tile(c.secure_checks, "member pairs sent to the secure check") +
+          tile(c.secure_acts || 0, "secure decisions: act (only the decision left the MPC)") +
+          tile(c.maneuvers_agreed, "avoidance plans applied")
+        : tile(c.encounters_shared, "cross-operator encounters shared") +
+          tile(c.maneuvers_agreed, "joint manoeuvre plans agreed") +
+          tile(c.unilateral, "one side stayed silent")) +
       tile(c.internal + c.private_watch, "kept private or handled in-house") +
       tile(c.federation_rounds, "federation rounds") +
       tile(s.ledger.entries.toLocaleString(), `signed ledger entries · ${s.ledger.verified_on_load ? "chain intact" : "TAMPERED"}`);
@@ -241,7 +245,12 @@
     // Upcoming
     $("upcount").textContent = s.n_upcoming ? `(${s.n_upcoming})` : "";
     $("upcoming").innerHTML = s.upcoming.length ? s.upcoming.map(e => {
-      const plan = e.plan ? `${esc(e.plan.primary)} +, ${esc(e.plan.secondary)} −`
+      const plan = e.handling === "secure"
+                 ? (e.secure_decision === "act"
+                    ? `<span class="p-secure_act">secure check: ACT</span>` + (e.plan ? `<div class="muted">${esc(e.plan.primary)} +, ${esc(e.plan.secondary)} −</div>` : "")
+                    : `<span class="muted">secure check: no action</span>`)
+                   + (e.filter ? `<div class="muted small">public: ${e.filter.public_miss_km.toFixed(1)} km, ${e.filter.public_sigmas_apart.toFixed(1)} σ apart</div>` : "")
+                 : e.plan ? `${esc(e.plan.primary)} +, ${esc(e.plan.secondary)} −`
                  : e.handling === "federated" ? `<span class="p-unilateral">no joint plan</span>` : `<span class="muted">—</span>`;
       return `<tr><td class="num">${fmtDur(e.time_to_tca_s)}</td>
         <td>${esc(e.labels[0])} × ${esc(e.labels[1])}${e.engineered ? ' <span class="muted">(engineered)</span>' : ""}<div class="muted">${esc(e.geometry)}, ${e.rel_speed_km_s} km/s</div></td>

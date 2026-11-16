@@ -75,6 +75,15 @@ DEFAULTS = {
     "fit_objects_per_group": 1500,
     "avoidance": {},            # see avoidance.DEFAULTS
     "error_bins_h": list(DEFAULT_BINS_H),
+    # How member-vs-member encounters are decided (research/RESULTS.md section 16b):
+    # "two_stage": each operator assesses alone and shares an abstracted alert;
+    # "secure_filter": a public filter (the pair's public predicted miss within
+    # filter_k sigma of the public covariance, or under filter_near_km) sends
+    # the pair to the secure Pc on both owners' precise orbits; only the
+    # act/no-act decision comes out.
+    "design": "two_stage",
+    "filter_k": 3.0,
+    "filter_near_km": 1.0,
 }
 
 _LOADED: Dict[Tuple[str, float, int], TLEHistory] = {}
@@ -222,6 +231,21 @@ def pc_with(ra, va, rb, vb, sig_a: Tuple[float, float, float], sig_b: Tuple[floa
     except ValueError:
         total = math.sqrt(sum(s * s for s in sig_a) / 3.0 + sum(s * s for s in sig_b) / 3.0)
         return compute_pc(float(np.linalg.norm(np.asarray(ra) - np.asarray(rb))), total, hbr_km)
+
+
+def public_filter_sigma(ra, va, rb, vb, sig_a, sig_b) -> Tuple[float, float]:
+    """(Mahalanobis distance, miss km) of the public predicted miss in the
+    encounter plane under the two public RTN covariances: how many public
+    sigmas apart the two predictions pass."""
+    from .hindcast import plane_basis, plane_cov, rtn_axes
+    ra, va, rb, vb = (np.asarray(x, float)[None] for x in (ra, va, rb, vb))
+    B = plane_basis(va - vb)
+    m = np.einsum("nij,ni->nj", B, ra - rb)[0]
+    Pa = np.einsum("nki,nij->nkj", rtn_axes(ra, va), B)
+    Pb = np.einsum("nki,nij->nkj", rtn_axes(rb, vb), B)
+    C = (plane_cov(Pa, np.asarray([sig_a], float)) + plane_cov(Pb, np.asarray([sig_b], float)))[0]
+    q = float(m @ np.linalg.solve(C, m))
+    return math.sqrt(max(q, 0.0)), float(np.linalg.norm(m))
 
 
 # ---------------------------------------------------------------------------

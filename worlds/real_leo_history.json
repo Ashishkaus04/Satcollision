@@ -1,20 +1,39 @@
 {
   "name": "real_leo_history",
   "title": "Real LEO (TLE history)",
-  "description": "A week of real Space-Track element sets (gp_history, every object in LEO), with the same six operators as Real LEO. The truth is the nearest element set at each moment, blended across each switch; every twin predicts from the newest set already published, so its predictions drift from the truth by the real TLE error, which is measured from the file itself (robust RTN sigma by TLE age, Starlink and everyone else separately) and drives the Foster Pc. An operator knows its own satellites precisely. Agreed avoidance burns are optimised for the least fuel that brings Pc under 1e-6 (checked at the precise covariance, re-screened for secondary conjunctions) and applied to the truth, and real manoeuvres show up as jumps between published element sets. The clock runs through the file's real dates and stops at the end.",
+  "description": "A week of real Space-Track element sets (gp_history, every object in LEO), with the same six operators as Real LEO. The truth is the nearest element set at each moment, blended across each switch; every twin predicts from the newest set already published, so its predictions drift from the truth by the real TLE error, which is measured from the file itself (robust RTN sigma by TLE age, Starlink and everyone else separately) and drives the Foster Pc. An operator knows its own satellites precisely. Agreed avoidance burns are optimised for the least fuel that brings Pc under 1e-6 (checked at the precise covariance, re-screened for secondary conjunctions) and applied to the truth, and real manoeuvres show up as jumps between published element sets. The clock runs through the file's real dates and stops at the end. Member pairs follow the adopted design (research/RESULTS.md 16b): a public filter, set per pair by the error model (public predicted miss within 3 public sigmas, or under 1 km), sends the pair to a secure Pc on both owners' precise orbits, of which only the act/no-act decision comes out; an act triggers the optimised avoidance. Debris and non-members are screened by each operator alone.",
   "fleet": {
     "type": "history",
     "file": "data/historical/gp_history_week.tle",
     "max_altitude_km": 2000,
     "at_end": "stop",
     "operators": {
-      "Starlink": ["STARLINK"],
-      "Kuiper": ["KUIPER"],
-      "OneWeb": ["ONEWEB"],
-      "Planet": ["FLOCK", "SKYSAT", "PELICAN", "TANAGER"],
-      "Spire": ["LEMUR"],
-      "ICEYE": ["ICEYE"]
-    }
+      "Starlink": [
+        "STARLINK"
+      ],
+      "Kuiper": [
+        "KUIPER"
+      ],
+      "OneWeb": [
+        "ONEWEB"
+      ],
+      "Planet": [
+        "FLOCK",
+        "SKYSAT",
+        "PELICAN",
+        "TANAGER"
+      ],
+      "Spire": [
+        "LEMUR"
+      ],
+      "ICEYE": [
+        "ICEYE"
+      ]
+    },
+    "design": "secure_filter",
+    "filter_k": 3.0,
+    "filter_near_km": 1.0,
+    "candidate_km": 20.0
   },
   "speed": 30,
   "tick_sim_s": 150,

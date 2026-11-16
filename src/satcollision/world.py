@@ -391,6 +391,8 @@ class World:
             "maneuvers_agreed": 0, "unilateral": 0, "passed": 0,
             "federation_rounds": 0, "injections": 0, "cycles": 0, "screened_pairs": 0,
         }
+        if self.history is not None and self.history.settings["design"] == "secure_filter":
+            self.counters.update(filter_screened=0, secure_checks=0, secure_acts=0, secure_no_act=0)
         self.ledger = SignedLog()
         self.ledger_verified = True
         self._pending_ledger_lines: List[str] = []
@@ -1293,6 +1295,10 @@ class World:
         if not members:
             return
         tca_jd = self._jd(tca_s)
+        if (self.history.settings["design"] == "secure_filter" and len(members) == 2
+                and self.mode != "operator"):
+            self._handle_secure_pair(c, tca_s, tca_jd, jd_now)
+            return
         sides = [self.me] if self.mode == "operator" else members
         assessed = {op: self._assess(c, tca_jd, jd_now, op) for op in sides}
         if any(s is None for s in assessed.values()):
@@ -1421,6 +1427,90 @@ class World:
                 encounter=encounter_id, operators=[a.operator, b.operator], silent=quiet,
             )
         self.encounters.append(record)
+
+    # ---- adopted design: public filter + secure Pc for member pairs ----
+
+    def _handle_secure_pair(self, c: Conjunction, tca_s: float, tca_jd: float, jd_now: float) -> None:
+        """A member-vs-member encounter under design "secure_filter"
+        (RESULTS.md 16b). Public step, which every party computes alike: the
+        pair passes the filter when its public predicted miss is within
+        ``filter_k`` sigma of the two public covariances (the error model's
+        sigma for each element set's age), or under ``filter_near_km``.
+        Secure step, for pairs that pass: the Pc on both owners' precise
+        orbits with the precise covariance. In a deployment this runs in the
+        three-party MPC (research/mpc/secure_pc.mpc) on secret-shared inputs
+        and only the act/no-act bit comes out; here the simulation computes it
+        from its own ephemerides and uses nothing but the bit (the observer
+        is also shown the Pc). An "act" goes to the same optimised avoidance
+        as the two-stage design."""
+        from .history_world import pc_with, public_filter_sigma, refine_tca
+        cfg = self.cfg
+        H = self.history
+        a, b = c.object_a, c.object_b
+        pub = [self._state_fn(o, "public", jd_now) for o in (a, b)]
+        found = refine_tca(pub[0], pub[1], tca_jd, H.settings["refine_window_s"])
+        if found is None:
+            return
+        _, tca_pub, ra, va, rb, vb = found
+        sig_a = self._public_sigma(a, tca_pub, jd_now)
+        sig_b = self._public_sigma(b, tca_pub, jd_now)
+        try:
+            k_sig, miss_pub = public_filter_sigma(ra, va, rb, vb, sig_a, sig_b)
+        except (np.linalg.LinAlgError, ValueError):
+            return
+        passed = k_sig <= float(H.settings["filter_k"]) or miss_pub <= float(H.settings["filter_near_km"])
+        self.counters["filter_screened"] = self.counters.get("filter_screened", 0) + 1
+        if not passed:
+            return
+        own = [self._state_fn(o, "own", jd_now) for o in (a, b)]
+        f_own = refine_tca(own[0], own[1], tca_jd, H.settings["refine_window_s"])
+        if f_own is None:
+            return
+        p = (H.precise,) * 3
+        pc_secure = pc_with(f_own[2], f_own[3], f_own[4], f_own[5], p, p)
+        act = pc_secure >= cfg.pc_threshold
+        self.counters["secure_checks"] = self.counters.get("secure_checks", 0) + 1
+        lo, hi = sorted((a.norad_id, b.norad_id))
+        encounter_id = f"ENC-{lo}-{hi}-{int(round(self.total_sim_s + (tca_s - self.elapsed_s)))}"
+        warning_s = tca_s - self.elapsed_s
+        self.encounters = [e for e in self.encounters if not (
+            e.get("observer_only") and e["pair"] == [lo, hi] and abs(e["tca_s"] - tca_s) <= 900)]
+        public = self._assess(c, tca_jd, jd_now, None)
+        record = {
+            "id": encounter_id, "pair": [lo, hi], "labels": [a.label, b.label],
+            "operators": [a.operator, b.operator], "tca_s": tca_s, "tca": _iso(self._at(tca_s)),
+            "detected": _iso(self.sim_time), "warning_s": warning_s,
+            "miss_km": round(miss_pub, 4), "pc": float(public.pc) if public else 0.0,
+            "geometry": c.geometry_class, "rel_speed_km_s": round(float(c.relative_speed_km_s), 3),
+            "engineered": False, "status": "upcoming", "handling": "secure",
+            "filter": {"public_sigmas_apart": round(k_sig, 2), "public_miss_km": round(miss_pub, 3),
+                       "k": float(H.settings["filter_k"])},
+            "secure_decision": "act" if act else "no_act",
+            "secure_pc": float(pc_secure),         # observer only: the MPC reveals just the decision
+        }
+        if self.mode != "operator":
+            record["truth"] = self._truth_miss(c, tca_jd)
+        if not act:
+            self.counters["secure_no_act"] = self.counters.get("secure_no_act", 0) + 1
+            self.encounters.append(record)
+            self._event("secure_check", f"{a.label} x {b.label}: public predictions {miss_pub:.1f} km apart "
+                                        f"({k_sig:.1f} public sigmas), so a secure check ran on both owners' precise "
+                                        f"orbits: no action needed. Neither operator saw the other's orbit.",
+                        encounter=encounter_id, operators=[a.operator, b.operator])
+            return
+        self.counters["secure_acts"] = self.counters.get("secure_acts", 0) + 1
+        self.counters["maneuvers_agreed"] += 1
+        record["plan"] = {"primary": a.label, "primary_operator": a.operator,
+                          "secondary": b.label, "secondary_operator": b.operator}
+        moved = (self._apply_avoidance(record, c, tca_jd) if H.avoid["avoidance"] == "fixed"
+                 else self._apply_optimal(record, c, tca_jd))
+        self.encounters.append(record)
+        self._event("secure_act", f"{a.label} x {b.label}: the secure check on both owners' precise orbits says "
+                                  f"ACT ({warning_s / 3600:.1f} h warning; public predictions were {miss_pub:.1f} km "
+                                  f"apart). Only that decision left the computation."
+                                  + (f" Applied to the truth: {moved}." if moved else ""),
+                    encounter=encounter_id, operators=[a.operator, b.operator])
+
 
     # ---- optimised avoidance (avoidance.py) ----
 

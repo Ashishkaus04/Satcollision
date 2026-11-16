@@ -368,6 +368,28 @@ def test_optimiser_meets_the_target_with_less_fuel_than_the_fixed_rule(hist_file
     assert events and all("optimal burns" in t and "precise covariance" in t for t in events)
 
 
+def test_secure_filter_design_checks_member_pairs_and_avoids(hist_file, tmp_path):
+    """Adopted design (RESULTS.md 16b): the engineered crossing passes the
+    public filter, the secure check on both precise orbits says act, only the
+    decision is recorded as shared, and the optimised avoidance moves both
+    satellites apart."""
+    w = _world(hist_file, tmp_path, fleet={"design": "secure_filter", "candidate_km": 20.0})
+    for _ in range(20):
+        w.tick()
+    e = next(e for e in w.encounters if e["id"] == ENC)
+    assert e["handling"] == "secure" and e["secure_decision"] == "act"
+    assert "sides" not in e and "signals_sent" not in e        # no alerts, no per-side sharing
+    assert e["filter"]["public_sigmas_apart"] <= e["filter"]["k"] or e["filter"]["public_miss_km"] <= 1.0
+    assert e["secure_pc"] >= w.cfg.pc_threshold
+    assert {m["norad_id"] for m in w.maneuvers} == {90001, 90011}
+    assert e["truth"]["miss_km"] > 2 * e["truth"]["miss_km_without_maneuver"]
+    assert w.counters["secure_checks"] >= 1 and w.counters["secure_acts"] >= 1
+    assert any(ev["kind"] == "secure_act" for ev in w.recent_events)
+    for op in ("Alpha", "Beta"):
+        mine = next(r for r in operator_view(w, op)["encounters"] if r["id"] == ENC)
+        assert mine["handling"] == "secure" and mine["plan"]
+
+
 def test_a_satellite_without_propulsion_does_not_burn(hist_file, tmp_path):
     w, plans = _run_to_both_encounters(hist_file, tmp_path,
                                        fleet={"avoidance": {"no_propulsion": {"Beta": ["BETA-1"]}}})
