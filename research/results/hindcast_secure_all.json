@@ -1,0 +1,521 @@
+{
+ "windows": {
+  "w4": {
+   "test_days": 4.0,
+   "member_pair_approaches": 2142042.0,
+   "dangerous": 166.0,
+   "radii": {
+    "1": {
+     "caught_ideal": 0.4036144578313253,
+     "caught_24h_ideal": 0.1144578313253012,
+     "median_warning_h": 16.096521701663733,
+     "caught": 0.2991967871485944,
+     "caught_24h": 0.08232931726907632,
+     "false_alarms_per_day": 4.166666666666667,
+     "secure_evals_per_day": 331.75
+    },
+    "2": {
+     "caught_ideal": 0.6204819277108434,
+     "caught_24h_ideal": 0.2710843373493976,
+     "median_warning_h": 21.61993444338441,
+     "caught": 0.5160642570281125,
+     "caught_24h": 0.19477911646586346,
+     "false_alarms_per_day": 15.916666666666666,
+     "secure_evals_per_day": 1182.0
+    },
+    "3": {
+     "caught_ideal": 0.6867469879518072,
+     "caught_24h_ideal": 0.3493975903614458,
+     "median_warning_h": 25.00066409446299,
+     "caught": 0.5963855421686747,
+     "caught_24h": 0.2891566265060241,
+     "false_alarms_per_day": 22.75,
+     "secure_evals_per_day": 2725.5
+    },
+    "5": {
+     "caught_ideal": 0.8012048192771084,
+     "caught_24h_ideal": 0.46987951807228917,
+     "median_warning_h": 31.891650069504976,
+     "caught": 0.6947791164658635,
+     "caught_24h": 0.3795180722891566,
+     "false_alarms_per_day": 30.0,
+     "secure_evals_per_day": 7891.5
+    },
+    "10": {
+     "caught_ideal": 0.9156626506024096,
+     "caught_24h_ideal": 0.5662650602409639,
+     "median_warning_h": 37.926270654425025,
+     "caught": 0.8393574297188756,
+     "caught_24h": 0.48995983935742976,
+     "false_alarms_per_day": 39.166666666666664,
+     "secure_evals_per_day": 40448.25
+    },
+    "20": {
+     "caught_ideal": 0.9698795180722891,
+     "caught_24h_ideal": 0.6987951807228916,
+     "median_warning_h": 46.9931178689003,
+     "caught": 0.9156626506024096,
+     "caught_24h": 0.6325301204819277,
+     "false_alarms_per_day": 51.083333333333336,
+     "secure_evals_per_day": 170908.75
+    },
+    "30": {
+     "caught_ideal": 0.9759036144578314,
+     "caught_24h_ideal": 0.7710843373493976,
+     "median_warning_h": 53.11100414022803,
+     "caught": 0.9317269076305221,
+     "caught_24h": 0.6827309236947791,
+     "false_alarms_per_day": 55.333333333333336,
+     "secure_evals_per_day": 388498.25
+    },
+    "50": {
+     "caught_ideal": 0.9939759036144579,
+     "caught_24h_ideal": 0.8734939759036144,
+     "median_warning_h": 64.12470290064812,
+     "caught": 0.9718875502008032,
+     "caught_24h": 0.8152610441767069,
+     "false_alarms_per_day": 62.0,
+     "secure_evals_per_day": 1215488.75
+    }
+   },
+   "no_filter": {
+    "caught": 1.0,
+    "caught_24h": 1.0
+   }
+  },
+  "w4_t11.4": {
+   "test_days": 4.0,
+   "member_pair_approaches": 2153486.0,
+   "dangerous": 156.0,
+   "radii": {
+    "1": {
+     "caught_ideal": 0.4358974358974359,
+     "caught_24h_ideal": 0.10897435897435898,
+     "median_warning_h": 14.947089364752173,
+     "caught": 0.3376068376068376,
+     "caught_24h": 0.08333333333333333,
+     "false_alarms_per_day": 3.8333333333333335,
+     "secure_evals_per_day": 391.5
+    },
+    "2": {
+     "caught_ideal": 0.6794871794871795,
+     "caught_24h_ideal": 0.28205128205128205,
+     "median_warning_h": 20.015644546598196,
+     "caught": 0.5576923076923077,
+     "caught_24h": 0.1987179487179487,
+     "false_alarms_per_day": 16.833333333333332,
+     "secure_evals_per_day": 1412.0
+    },
+    "3": {
+     "caught_ideal": 0.7692307692307693,
+     "caught_24h_ideal": 0.3782051282051282,
+     "median_warning_h": 23.88729931600392,
+     "caught": 0.6709401709401709,
+     "caught_24h": 0.28205128205128205,
+     "false_alarms_per_day": 24.5,
+     "secure_evals_per_day": 3288.75
+    },
+    "5": {
+     "caught_ideal": 0.8333333333333334,
+     "caught_24h_ideal": 0.4551282051282051,
+     "median_warning_h": 25.94417231529951,
+     "caught": 0.7307692307692308,
+     "caught_24h": 0.35042735042735046,
+     "false_alarms_per_day": 36.083333333333336,
+     "secure_evals_per_day": 9367.0
+    },
+    "10": {
+     "caught_ideal": 0.9166666666666666,
+     "caught_24h_ideal": 0.7115384615384616,
+     "median_warning_h": 42.77663575485349,
+     "caught": 0.8782051282051282,
+     "caught_24h": 0.5918803418803419,
+     "false_alarms_per_day": 48.5,
+     "secure_evals_per_day": 45830.75
+    },
+    "20": {
+     "caught_ideal": 0.9487179487179487,
+     "caught_24h_ideal": 0.8397435897435898,
+     "median_warning_h": 57.92748305015266,
+     "caught": 0.9294871794871794,
+     "caught_24h": 0.7564102564102564,
+     "false_alarms_per_day": 52.583333333333336,
+     "secure_evals_per_day": 185723.75
+    },
+    "30": {
+     "caught_ideal": 0.9487179487179487,
+     "caught_24h_ideal": 0.8910256410256411,
+     "median_warning_h": 64.21426759287715,
+     "caught": 0.9423076923076922,
+     "caught_24h": 0.8461538461538461,
+     "false_alarms_per_day": 56.583333333333336,
+     "secure_evals_per_day": 422116.75
+    },
+    "50": {
+     "caught_ideal": 0.9487179487179487,
+     "caught_24h_ideal": 0.9358974358974359,
+     "median_warning_h": 65.88317997381091,
+     "caught": 0.9423076923076922,
+     "caught_24h": 0.8952991452991452,
+     "false_alarms_per_day": 62.166666666666664,
+     "secure_evals_per_day": 1283254.0
+    }
+   },
+   "no_filter": {
+    "caught": 1.0,
+    "caught_24h": 1.0
+   }
+  },
+  "w4_t15.4": {
+   "test_days": 4.0,
+   "member_pair_approaches": 2163287.0,
+   "dangerous": 147.0,
+   "radii": {
+    "1": {
+     "caught_ideal": 0.2925170068027211,
+     "caught_24h_ideal": 0.05442176870748299,
+     "median_warning_h": 12.601475279778242,
+     "caught": 0.23129251700680273,
+     "caught_24h": 0.047619047619047616,
+     "false_alarms_per_day": 4.0,
+     "secure_evals_per_day": 237.0
+    },
+    "2": {
+     "caught_ideal": 0.5238095238095238,
+     "caught_24h_ideal": 0.2108843537414966,
+     "median_warning_h": 17.12916662916541,
+     "caught": 0.40589569160997735,
+     "caught_24h": 0.15192743764172334,
+     "false_alarms_per_day": 12.0,
+     "secure_evals_per_day": 1147.75
+    },
+    "3": {
+     "caught_ideal": 0.6462585034013606,
+     "caught_24h_ideal": 0.2857142857142857,
+     "median_warning_h": 20.9054265730083,
+     "caught": 0.54421768707483,
+     "caught_24h": 0.21995464852607713,
+     "false_alarms_per_day": 21.666666666666668,
+     "secure_evals_per_day": 2696.75
+    },
+    "5": {
+     "caught_ideal": 0.7619047619047619,
+     "caught_24h_ideal": 0.46258503401360546,
+     "median_warning_h": 31.827831991016865,
+     "caught": 0.6666666666666666,
+     "caught_24h": 0.3741496598639456,
+     "false_alarms_per_day": 29.5,
+     "secure_evals_per_day": 8761.75
+    },
+    "10": {
+     "caught_ideal": 0.891156462585034,
+     "caught_24h_ideal": 0.6258503401360545,
+     "median_warning_h": 38.1210347302258,
+     "caught": 0.8027210884353742,
+     "caught_24h": 0.5351473922902494,
+     "false_alarms_per_day": 39.916666666666664,
+     "secure_evals_per_day": 43836.75
+    },
+    "20": {
+     "caught_ideal": 0.9523809523809523,
+     "caught_24h_ideal": 0.8027210884353742,
+     "median_warning_h": 55.775755897164345,
+     "caught": 0.9092970521541951,
+     "caught_24h": 0.7414965986394558,
+     "false_alarms_per_day": 49.25,
+     "secure_evals_per_day": 183679.25
+    },
+    "30": {
+     "caught_ideal": 0.9591836734693877,
+     "caught_24h_ideal": 0.8639455782312925,
+     "median_warning_h": 62.192861672490835,
+     "caught": 0.9342403628117913,
+     "caught_24h": 0.8027210884353742,
+     "false_alarms_per_day": 54.333333333333336,
+     "secure_evals_per_day": 417100.0
+    },
+    "50": {
+     "caught_ideal": 0.9727891156462585,
+     "caught_24h_ideal": 0.9115646258503401,
+     "median_warning_h": 65.54789676144719,
+     "caught": 0.9569160997732427,
+     "caught_24h": 0.8798185941043083,
+     "false_alarms_per_day": 58.583333333333336,
+     "secure_evals_per_day": 1290094.25
+    }
+   },
+   "no_filter": {
+    "caught": 1.0,
+    "caught_24h": 1.0
+   }
+  },
+  "w4_t7.4": {
+   "test_days": 4.0,
+   "member_pair_approaches": 2150290.0,
+   "dangerous": 147.0,
+   "radii": {
+    "1": {
+     "caught_ideal": 0.2857142857142857,
+     "caught_24h_ideal": 0.10884353741496598,
+     "median_warning_h": 20.088031886145473,
+     "caught": 0.21768707482993196,
+     "caught_24h": 0.08843537414965986,
+     "false_alarms_per_day": 4.25,
+     "secure_evals_per_day": 267.0
+    },
+    "2": {
+     "caught_ideal": 0.5578231292517006,
+     "caught_24h_ideal": 0.24489795918367346,
+     "median_warning_h": 19.993967352434993,
+     "caught": 0.4557823129251701,
+     "caught_24h": 0.1768707482993197,
+     "false_alarms_per_day": 15.75,
+     "secure_evals_per_day": 1175.25
+    },
+    "3": {
+     "caught_ideal": 0.673469387755102,
+     "caught_24h_ideal": 0.3469387755102041,
+     "median_warning_h": 25.306128166615963,
+     "caught": 0.5600907029478458,
+     "caught_24h": 0.2811791383219954,
+     "false_alarms_per_day": 22.0,
+     "secure_evals_per_day": 2748.25
+    },
+    "5": {
+     "caught_ideal": 0.7959183673469388,
+     "caught_24h_ideal": 0.5034013605442177,
+     "median_warning_h": 30.319705612957478,
+     "caught": 0.7006802721088435,
+     "caught_24h": 0.3945578231292517,
+     "false_alarms_per_day": 31.166666666666668,
+     "secure_evals_per_day": 8338.5
+    },
+    "10": {
+     "caught_ideal": 0.891156462585034,
+     "caught_24h_ideal": 0.6802721088435374,
+     "median_warning_h": 42.59885100647807,
+     "caught": 0.8253968253968255,
+     "caught_24h": 0.5623582766439909,
+     "false_alarms_per_day": 45.916666666666664,
+     "secure_evals_per_day": 41323.25
+    },
+    "20": {
+     "caught_ideal": 0.9455782312925171,
+     "caught_24h_ideal": 0.7891156462585034,
+     "median_warning_h": 53.80801960453391,
+     "caught": 0.8888888888888888,
+     "caught_24h": 0.709750566893424,
+     "false_alarms_per_day": 51.416666666666664,
+     "secure_evals_per_day": 173949.75
+    },
+    "30": {
+     "caught_ideal": 0.9455782312925171,
+     "caught_24h_ideal": 0.8503401360544217,
+     "median_warning_h": 63.85046790540218,
+     "caught": 0.9160997732426304,
+     "caught_24h": 0.7755102040816326,
+     "false_alarms_per_day": 60.083333333333336,
+     "secure_evals_per_day": 402092.0
+    },
+    "50": {
+     "caught_ideal": 0.9523809523809523,
+     "caught_24h_ideal": 0.8843537414965986,
+     "median_warning_h": 65.89595626853406,
+     "caught": 0.9274376417233561,
+     "caught_24h": 0.8480725623582765,
+     "false_alarms_per_day": 61.833333333333336,
+     "secure_evals_per_day": 1231737.0
+    }
+   },
+   "no_filter": {
+    "caught": 1.0,
+    "caught_24h": 1.0
+   }
+  }
+ },
+ "throughput_per_h": {
+  "semi-honest, laptop (measured)": 8181818.181818182,
+  "semi-honest, LAN (modelled)": 4400000.0,
+  "semi-honest, WAN (modelled)": 450000.0,
+  "malicious, laptop (measured)": 258992.8057553957
+ },
+ "summary": {
+  "1": {
+   "caught": [
+    0.27144580414804165,
+    0.049116409813771626
+   ],
+   "caught_24h": [
+    0.07542926809277928,
+    0.01622230011067051
+   ],
+   "false_alarms_per_day": 4.0625,
+   "median_warning_h": 15.933279558084905,
+   "secure_evals_per_day": 306.8125,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 3.7499305555555556e-05,
+    "semi-honest, LAN (modelled)": 6.973011363636364e-05,
+    "semi-honest, WAN (modelled)": 0.0006818055555555555,
+    "malicious, laptop (measured)": 0.0011846371527777777
+   }
+  },
+  "2": {
+   "caught": [
+    0.4838586423138919,
+    0.05778216359037129
+   ],
+   "caught_24h": [
+    0.18057381278121382,
+    0.018475171290500386
+   ],
+   "false_alarms_per_day": 15.125,
+   "median_warning_h": 19.689678242895752,
+   "secure_evals_per_day": 1229.25,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.00015024166666666668,
+    "semi-honest, LAN (modelled)": 0.000279375,
+    "semi-honest, WAN (modelled)": 0.0027316666666666665,
+    "malicious, laptop (measured)": 0.004746270833333333
+   }
+  },
+  "3": {
+   "caught": [
+    0.5929085257828803,
+    0.04885906916485792
+   ],
+   "caught_24h": [
+    0.26808542385134465,
+    0.02796005037828812
+   ],
+   "false_alarms_per_day": 22.729166666666668,
+   "median_warning_h": 23.774879537522793,
+   "secure_evals_per_day": 2864.8125,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.00035014375,
+    "semi-honest, LAN (modelled)": 0.00065109375,
+    "semi-honest, WAN (modelled)": 0.00636625,
+    "malicious, laptop (measured)": 0.011061359375
+   }
+  },
+  "5": {
+   "caught": [
+    0.6982238215026512,
+    0.022764873314179705
+   ],
+   "caught_24h": [
+    0.3746632264274261,
+    0.015866678467590652
+   ],
+   "false_alarms_per_day": 31.687500000000004,
+   "median_warning_h": 29.995839997194707,
+   "secure_evals_per_day": 8589.6875,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.0010498506944444444,
+    "semi-honest, LAN (modelled)": 0.0019522017045454545,
+    "semi-honest, WAN (modelled)": 0.019088194444444446,
+    "malicious, laptop (measured)": 0.03316573784722222
+   }
+  },
+  "10": {
+   "caught": [
+    0.8364201179390509,
+    0.027439717798244757
+   ],
+   "caught_24h": [
+    0.544836462543003,
+    0.0375015413253571
+   ],
+   "false_alarms_per_day": 43.37499999999999,
+   "median_warning_h": 40.355698036495596,
+   "secure_evals_per_day": 42859.75,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.005238413888888889,
+    "semi-honest, LAN (modelled)": 0.009740852272727273,
+    "semi-honest, WAN (modelled)": 0.09524388888888889,
+    "malicious, laptop (measured)": 0.16548625694444444
+   }
+  },
+  "20": {
+   "caught": [
+    0.9108339427831682,
+    0.014621961923487942
+   ],
+   "caught_24h": [
+    0.7100468856062659,
+    0.04782149956426427
+   ],
+   "false_alarms_per_day": 51.083333333333336,
+   "median_warning_h": 53.6260941051878,
+   "secure_evals_per_day": 178565.375,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.021824656944444444,
+    "semi-honest, LAN (modelled)": 0.04058303977272727,
+    "semi-honest, WAN (modelled)": 0.39681194444444445,
+    "malicious, laptop (measured)": 0.6894607534722221
+   }
+  },
+  "30": {
+   "caught": [
+    0.931093683998159,
+    0.00949834066871396
+   ],
+   "caught_24h": [
+    0.7767790155914079,
+    0.05985923431487565
+   ],
+   "false_alarms_per_day": 56.583333333333336,
+   "median_warning_h": 60.84215032774955,
+   "secure_evals_per_day": 407451.75,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.04979965833333334,
+    "semi-honest, LAN (modelled)": 0.09260267045454545,
+    "semi-honest, WAN (modelled)": 0.9054483333333333,
+    "malicious, laptop (measured)": 1.5732164791666665
+   }
+  },
+  "50": {
+   "caught": [
+    0.9496372460012735,
+    0.016542389010119878
+   ],
+   "caught_24h": [
+    0.8596128364846092,
+    0.030749165377399548
+   ],
+   "false_alarms_per_day": 61.145833333333336,
+   "median_warning_h": 65.36293397611007,
+   "secure_evals_per_day": 1255143.5,
+   "hours_per_day": {
+    "semi-honest, laptop (measured)": 0.15340642777777777,
+    "semi-honest, LAN (modelled)": 0.28525988636363636,
+    "semi-honest, WAN (modelled)": 2.789207777777778,
+    "malicious, laptop (measured)": 4.846248513888889
+   }
+  }
+ },
+ "two_stage_owner_models_both_sides": {
+  "caught": 0.713624900896217,
+  "caught_24h": 0.517620287752138,
+  "false_alarms_per_day": 99.1875,
+  "groups": {
+   "one_manoeuvred": {
+    "caught": 0.6156478455386102,
+    "caught_24h": 0.430159534677906,
+    "false_alarms_per_day": 34.5,
+    "dangerous": 41.75
+   },
+   "none_manoeuvred": {
+    "caught": 0.7602667808285444,
+    "caught_24h": 0.5725916197441999,
+    "false_alarms_per_day": 61.1875,
+    "dangerous": 106.75
+   },
+   "both_manoeuvred": {
+    "caught": 0.5520833333333333,
+    "caught_24h": 0.11458333333333333,
+    "false_alarms_per_day": 3.5,
+    "dangerous": 5.5
+   }
+  }
+ }
+}

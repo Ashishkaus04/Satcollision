@@ -201,6 +201,36 @@ def fig_privacy():
     save(fig, "owner_privacy")
 
 
+def fig_secure_all():
+    """Section 16: public filter + secure Pc for every close member pair."""
+    d = load("hindcast_secure_all.json")
+    if not d:
+        return print("skip secure_all")
+    R = sorted(int(r) for r in d["summary"])
+    S = d["summary"]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+    ax = axes[0]
+    ax.errorbar(R, [S[str(r)]["caught"][0] * 100 for r in R], yerr=[S[str(r)]["caught"][1] * 100 for r in R],
+                fmt="-o", color=C["owner"], capsize=3, label="Caught")
+    ax.errorbar(R, [S[str(r)]["caught_24h"][0] * 100 for r in R], yerr=[S[str(r)]["caught_24h"][1] * 100 for r in R],
+                fmt="--o", color=C["owner"], capsize=3, label="Caught >= 24 h ahead")
+    ts = d.get("two_stage_owner_models_both_sides")
+    if ts:
+        ax.axhline(ts["caught"] * 100, color=C["fedavg"], lw=1, label="Two-stage, owners' models: caught")
+        ax.axhline(ts["caught_24h"] * 100, color=C["fedavg"], lw=1, ls="--", label="Two-stage: caught >= 24 h")
+    ax.set_xscale("log"); ax.set_xticks(R, [str(r) for r in R])
+    ax.set_xlabel("Public filter radius (km)"); ax.set_ylabel("Dangerous member-pair encounters (%)")
+    ax.set_title("Member vs member, four windows"); ax.legend(fontsize=7)
+    ax = axes[1]
+    for k, col in zip(d["throughput_per_h"], (C["foster"], C["public"], C["local"], C["fedavg"])):
+        ax.plot(R, [S[str(r)]["hours_per_day"][k] for r in R], "-o", ms=3, color=col, label=k)
+    ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xticks(R, [str(r) for r in R])
+    ax.axhline(24, color="#999999", lw=0.8, ls=":")
+    ax.set_xlabel("Public filter radius (km)"); ax.set_ylabel("Secure computation, cluster-hours per day")
+    ax.set_title("Cost at the measured MPC speeds"); ax.legend(fontsize=7)
+    save(fig, "secure_all")
+
+
 if __name__ == "__main__":
-    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy):
+    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all):
         f()
