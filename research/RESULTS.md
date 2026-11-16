@@ -791,8 +791,8 @@ with it (10,000 encounters, localhost):
 | Protocol | Security | Time | Per encounter | Data, all parties | Rounds |
 | --- | --- | --- | --- | --- | --- |
 | ring, probabilistic truncation | semi-honest | 3.9 s | 0.39 ms | 1.05 GB | 1,073 |
-| ring, exact truncation | semi-honest | 13.6 s | 1.4 ms | 2.5 GB | about 8,000 |
-| sy-rep-ring (SPDZ-wise replicated) | malicious, honest majority | 139 s | 13.9 ms | 13.1 GB | 201,261 |
+| ring, exact truncation | semi-honest | 13.6 s | 1.4 ms | 2.5 GB | 839 at 1,000 encounters |
+| sy-rep-ring (SPDZ-wise replicated) | malicious, honest majority | 139 s | 13.9 ms | 13.1 GB | 201,261 (21,957 at 1,000) |
 | ps-rep-ring | malicious, honest majority | 272 s | 27 ms | 12.0 GB | |
 | mal-rep-ring | malicious, honest majority | 284 s | 28 ms | 13.6 GB | |
 
