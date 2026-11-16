@@ -857,6 +857,61 @@ Caveats: the manoeuvre times are inferred from TLE jumps (some jumps are bad fit
 and small station-keeping burns are missed); truth is TLE-derived (section 11); small
 counts per window.
 
+## 15. What a shared owner model reveals: attacks by a rival
+
+`research/owner_model_privacy.py`, results `results/owner_model_privacy.json`. A rival
+holds an operator's shared owner model (section 10b) and the public catalogue. Models
+trained on 80% of the owner's satellites (by object) before day 19.9; attacks scored on
+the other 20% and on later data. Each model without DP and with DP-SGD at epsilon 8 and 2
+(per training sample).
+
+**(a) Does the model help locate the owner's satellites?** Median along-track error of the
+public prediction after the split, and after subtracting a model's predicted bias:
+
+| Fleet | Public prediction | Minus public model's bias | Minus owner model's bias | ... DP eps 8 | ... DP eps 2 |
+| --- | --- | --- | --- | --- | --- |
+| Starlink | 3.57 km | 3.46 km | 3.16 km | 3.30 km | 3.30 km |
+| Kuiper | 2.21 km | 2.15 km | 1.72 km | 1.91 km | 1.91 km |
+| OneWeb | 0.32 km | 0.32 km | 0.33 km | 0.32 km | 0.32 km |
+| Planet | 0.25 km | 0.54 km | 0.26 km | 0.27 km | 0.26 km |
+| Spire | 0.18 km | 0.28 km | 0.20 km | 0.19 km | 0.19 km |
+| ICEYE | 0.20 km | 0.25 km | 0.23 km | 0.23 km | 0.22 km |
+
+For the two fleets with systematic drift between element sets (Starlink, and Kuiper, which
+is still raising orbits), the owner model narrows a rival's along-track error by 11% and
+22% beyond what public data give (3% for the public model). DP at epsilon 2 halves that
+(to 8% and 14%). For the other fleets the model reveals nothing about positions. The leak
+is about a fleet's typical drift, not one satellite's precise state: the model sees only
+public element-set features, never time or identity.
+
+**(b) Membership inference** (loss threshold): can the rival tell which satellites were in
+the owner's private training data?
+
+| Fleet | AUC per sample, no DP / DP eps 2 | AUC per satellite, no DP / DP eps 2 |
+| --- | --- | --- |
+| Starlink | 0.502 / 0.502 | 0.508 / 0.507 |
+| Kuiper | 0.518 / 0.511 | 0.540 / 0.530 |
+| OneWeb | 0.517 / 0.517 | 0.546 / 0.545 |
+| Planet | 0.539 / 0.530 | 0.518 / 0.511 |
+| Spire | 0.505 / 0.507 | 0.535 / 0.520 |
+| ICEYE | 0.454 / 0.453 | 0.413 / 0.412 |
+
+Close to guessing (0.5) everywhere; the largest is 0.55 per satellite. Values below 0.5
+(ICEYE, 61 satellites) mean the held-out satellites happen to be harder to predict, not a
+leak. DP lowers these a little. In this setting the satellites an owner trains on are its
+own fleet, which is public anyway, so this attack is the weakest concern.
+
+**(c) Fleet habits.** The models' predicted along-track spread at 48 h, per operator, does
+not track the manoeuvre rate anyone can read from the public catalogue (rank correlation
+0.03 without DP, -0.20 with DP, over six operators; too few to conclude anything).
+
+Taken together: sharing an owner model leaks little, and what it does leak (a fleet's
+systematic drift, worth 11 to 22% of along-track uncertainty for drifting fleets) is
+reduced by DP. That is far smaller than what the coarse alerts of section 7 reveal (a day
+of alerts cut along-track uncertainty to 18% of the prior). Caveat: labels are TLE-derived;
+an owner model trained on precise ephemerides could carry more information and should be
+re-tested on the SupGP data.
+
 ## Reproduce
 
 ```bash

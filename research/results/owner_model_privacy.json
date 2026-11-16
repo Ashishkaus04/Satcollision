@@ -1,0 +1,205 @@
+{
+ "operators": {
+  "Starlink": {
+   "n_members": 240189,
+   "n_nonmembers": 59755,
+   "n_later": 49996,
+   "position": {
+    "median_along_track_km_public_prediction": 3.571127999657552,
+    "after_public_model_bias": 3.462753957615555,
+    "after_owner_model_bias_no_dp": 3.1636479705606364,
+    "after_owner_model_bias_dp_eps8": 3.3043254064317913,
+    "after_owner_model_bias_dp_eps2": 3.2982115127831513
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.5024549451996816,
+     "per_satellite": 0.5080299287325085
+    },
+    "dp_eps8": {
+     "per_sample": 0.5020321976180461,
+     "per_satellite": 0.5072471797107959
+    },
+    "dp_eps2": {
+     "per_sample": 0.5019563224410112,
+     "per_satellite": 0.5070598818886928
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 20.159209007950935,
+    "dp_eps8": 17.172075309274057,
+    "dp_eps2": 16.416709489340835,
+    "public_model": 23.936982723272244
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.12103563490894231
+  },
+  "Kuiper": {
+   "n_members": 92909,
+   "n_nonmembers": 24261,
+   "n_later": 36695,
+   "position": {
+    "median_along_track_km_public_prediction": 2.2065050595369406,
+    "after_public_model_bias": 2.1460302082062537,
+    "after_owner_model_bias_no_dp": 1.7197549026842887,
+    "after_owner_model_bias_dp_eps8": 1.9075251738252867,
+    "after_owner_model_bias_dp_eps2": 1.910249955119018
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.5177128392879101,
+     "per_satellite": 0.5401842948717949
+    },
+    "dp_eps8": {
+     "per_sample": 0.5112403740358628,
+     "per_satellite": 0.5295272435897436
+    },
+    "dp_eps2": {
+     "per_sample": 0.5112818173791915,
+     "per_satellite": 0.5296474358974359
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 9.791664354045176,
+    "dp_eps8": 8.678926175437429,
+    "dp_eps2": 8.755222459805644,
+    "public_model": 15.863455922582437
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.8375026469812968
+  },
+  "OneWeb": {
+   "n_members": 169767,
+   "n_nonmembers": 41696,
+   "n_later": 50000,
+   "position": {
+    "median_along_track_km_public_prediction": 0.3228648859947387,
+    "after_public_model_bias": 0.32145631996906665,
+    "after_owner_model_bias_no_dp": 0.3269796292629803,
+    "after_owner_model_bias_dp_eps8": 0.3235430645779652,
+    "after_owner_model_bias_dp_eps2": 0.32257603807581475
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.5166976863103975,
+     "per_satellite": 0.5461498708010336
+    },
+    "dp_eps8": {
+     "per_sample": 0.516652714454,
+     "per_satellite": 0.5447471391657438
+    },
+    "dp_eps2": {
+     "per_sample": 0.5168768069182139,
+     "per_satellite": 0.5447914359542266
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 1.1760797692055984,
+    "dp_eps8": 1.3018880141194087,
+    "dp_eps2": 1.3472163363486498,
+    "public_model": 1.1473022701961022
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.2891124755411149
+  },
+  "Planet": {
+   "n_members": 29904,
+   "n_nonmembers": 7461,
+   "n_later": 12043,
+   "position": {
+    "median_along_track_km_public_prediction": 0.24763184433256707,
+    "after_public_model_bias": 0.5374471195166186,
+    "after_owner_model_bias_no_dp": 0.26371362207711024,
+    "after_owner_model_bias_dp_eps8": 0.26541624508498046,
+    "after_owner_model_bias_dp_eps2": 0.255789404332324
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.538905070769643,
+     "per_satellite": 0.5182890855457227
+    },
+    "dp_eps8": {
+     "per_sample": 0.5295380010296452,
+     "per_satellite": 0.5106194690265486
+    },
+    "dp_eps2": {
+     "per_sample": 0.5297761889558897,
+     "per_satellite": 0.5106194690265486
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 2.9146155482531997,
+    "dp_eps8": 1.4033476730209042,
+    "dp_eps2": 1.4123877500176372,
+    "public_model": 10.311659824450418
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.1851442006929201
+  },
+  "Spire": {
+   "n_members": 21823,
+   "n_nonmembers": 4560,
+   "n_later": 7733,
+   "position": {
+    "median_along_track_km_public_prediction": 0.18031098618094887,
+    "after_public_model_bias": 0.2808877721358571,
+    "after_owner_model_bias_no_dp": 0.20427785249435662,
+    "after_owner_model_bias_dp_eps8": 0.19038576549132044,
+    "after_owner_model_bias_dp_eps2": 0.19351387644632392
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.5052555206923968,
+     "per_satellite": 0.5346239761727476
+    },
+    "dp_eps8": {
+     "per_sample": 0.5072239392528887,
+     "per_satellite": 0.5227103499627699
+    },
+    "dp_eps2": {
+     "per_sample": 0.5067629537000637,
+     "per_satellite": 0.5197319434102755
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 1.348733095254308,
+    "dp_eps8": 1.3012883442297347,
+    "dp_eps2": 1.5919288163831504,
+    "public_model": 2.1781473002447247
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.03326447340143787
+  },
+  "ICEYE": {
+   "n_members": 15045,
+   "n_nonmembers": 4654,
+   "n_later": 5730,
+   "position": {
+    "median_along_track_km_public_prediction": 0.19585096284937642,
+    "after_public_model_bias": 0.25016075401669946,
+    "after_owner_model_bias_no_dp": 0.22825561537470068,
+    "after_owner_model_bias_dp_eps8": 0.231630966796698,
+    "after_owner_model_bias_dp_eps2": 0.22158344890516157
+   },
+   "membership_auc": {
+    "no_dp": {
+     "per_sample": 0.4539649494433188,
+     "per_satellite": 0.4133738601823708
+    },
+    "dp_eps8": {
+     "per_sample": 0.45489449142902194,
+     "per_satellite": 0.41033434650455924
+    },
+    "dp_eps2": {
+     "per_sample": 0.4534465504789171,
+     "per_satellite": 0.41185410334346506
+    }
+   },
+   "sigma_t_48h_km": {
+    "no_dp": 2.0547699451659533,
+    "dp_eps8": 3.0048143466408046,
+    "dp_eps2": 3.515930791431029,
+    "public_model": 2.6674241916454347
+   },
+   "public_manoeuvre_rate_per_sat_day": 0.16127376633758983
+  }
+ },
+ "rank_corr_sigma48_vs_public_manoeuvre_rate_no_dp": 0.028571428571428574,
+ "rank_corr_sigma48_vs_public_manoeuvre_rate_dp_eps2": -0.2,
+ "rank_corr_sigma48_vs_public_manoeuvre_rate_public_model": 0.028571428571428574
+}
