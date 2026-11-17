@@ -52,6 +52,21 @@ def fetch(group: str, url: str = URL) -> bytes:
         return r.read()
 
 
+def csv_to_tle(csv_bytes: bytes):
+    """3LE text from CelesTrak's OMM CSV (sgp4's own OMM reader and TLE exporter)."""
+    import io
+    from sgp4 import exporter, omm
+    from sgp4.api import Satrec
+    out, n = [], 0
+    for fields in omm.parse_csv(io.StringIO(csv_bytes.decode("utf-8", "replace"))):
+        sat = Satrec()
+        omm.initialize(sat, fields)
+        l1, l2 = exporter.export_tle(sat)
+        out += [f"0 {fields['OBJECT_NAME']}", l1, l2]
+        n += 1
+    return "\n".join(out) + "\n", n
+
+
 def parse_table(page: bytes) -> str:
     """CelesTrak's comparison table as CSV text (one row per object)."""
     t = page.decode("utf-8", "replace")
@@ -76,14 +91,15 @@ def main() -> int:
             lines.append(f"{now:%Y-%m-%dT%H:%MZ} {g}: skipped (last fetch {age:.1f} h ago)")
             continue
         try:
-            data = fetch(g)
-            n = data.count(b"\n1 ")
-            if n == 0 or b"Invalid query" in data:
-                raise ValueError(f"no element sets ({data[:80]!r})")
-            (OUT / f"{g}_{now:%Y%m%dT%H%M}.tle").write_bytes(data)
-            time.sleep(2)
+            # One request per group: CelesTrak refuses (HTTP 403) a second
+            # download of the same group soon after the first, so fetch only the
+            # CSV (OMM fields plus the fit RMS) and write the TLE file from it.
             csv = fetch(g, URL_CSV)
+            if b"Invalid query" in csv or b"OBJECT_NAME" not in csv[:200]:
+                raise ValueError(f"no element sets ({csv[:80]!r})")
+            tle, n = csv_to_tle(csv)
             (OUT / f"{g}_{now:%Y%m%dT%H%M}.csv.gz").write_bytes(gzip.compress(csv))
+            (OUT / f"{g}_{now:%Y%m%dT%H%M}.tle").write_text(tle, encoding="ascii")
             lines.append(f"{now:%Y-%m-%dT%H:%MZ} {g}: {n} sets")
         except Exception as e:  # keep going with the other groups
             status = 1
