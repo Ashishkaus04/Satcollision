@@ -114,6 +114,7 @@ class ProcessWorld:
     """Same surface the app needs from a world: tick, save, the role views."""
 
     def __init__(self, sky: World, federation: NodeProcess, twins: Dict[str, NodeProcess], token: str):
+        self._pushed: set = set()
         self.sky = sky
         self.federation = federation
         self.twins = twins
@@ -184,12 +185,26 @@ class ProcessWorld:
         with ThreadPoolExecutor(max_workers=len(self.twins)) as pool:
             list(pool.map(lambda twin: self._call(twin, "POST", "/tick", {"to_tick": target}, timeout=600),
                           self.twins.values()))
+        self._push_secure_decisions()
         self._call(self.federation, "POST", "/settle", {})
         last = self._call(self.federation, "GET", "/health")["last_round"]
         if self.sky.round_index > last:
             self._call(self.federation, "POST", "/clock", {"tick": target, "sim_time": _iso(self.sky.sim_time)})
             for r in range(last + 1, self.sky.round_index + 1):
                 self._call(self.federation, "POST", "/round", {"round": r})
+
+    def _push_secure_decisions(self) -> None:
+        """Adopted design: the sky process stands in for the three-party MPC
+        cluster (it is the only process that holds every precise orbit) and
+        hands the federation the act/no-act decision of each secure check, and
+        nothing else. The federation passes each decision only to the two
+        operators that requested it."""
+        decisions = {e["id"]: e["secure_decision"] for e in self.sky.encounters
+                     if e.get("handling") == "secure" and e.get("secure_decision") in ("act", "no_act")}
+        new = {k: v for k, v in decisions.items() if k not in self._pushed}
+        if new:
+            self._call(self.federation, "POST", "/secure_decisions", {"decisions": new})
+            self._pushed.update(new)
 
     def save(self, wall_interval_s: Optional[float] = None) -> None:
         self.sky.save(wall_interval_s)

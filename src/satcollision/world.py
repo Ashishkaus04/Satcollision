@@ -1295,8 +1295,7 @@ class World:
         if not members:
             return
         tca_jd = self._jd(tca_s)
-        if (self.history.settings["design"] == "secure_filter" and len(members) == 2
-                and self.mode != "operator"):
+        if self.history.settings["design"] == "secure_filter" and len(members) == 2:
             self._handle_secure_pair(c, tca_s, tca_jd, jd_now)
             return
         sides = [self.me] if self.mode == "operator" else members
@@ -1462,6 +1461,9 @@ class World:
         self.counters["filter_screened"] = self.counters.get("filter_screened", 0) + 1
         if not passed:
             return
+        if self.mode == "operator":
+            self._request_secure_check(c, tca_s, tca_jd, jd_now, k_sig, miss_pub)
+            return
         own = [self._state_fn(o, "own", jd_now) for o in (a, b)]
         f_own = refine_tca(own[0], own[1], tca_jd, H.settings["refine_window_s"])
         if f_own is None:
@@ -1511,6 +1513,41 @@ class World:
                                   + (f" Applied to the truth: {moved}." if moved else ""),
                     encounter=encounter_id, operators=[a.operator, b.operator])
 
+
+    def _request_secure_check(self, c: Conjunction, tca_s: float, tca_jd: float, jd_now: float,
+                              k_sig: float, miss_pub: float) -> None:
+        """Operator mode (the multi-process app): this twin's half of a
+        filtered member pair. It cannot see the partner's precise orbit, so it
+        asks the federation for the secure check with a signed request and
+        records the encounter as awaiting the decision, which comes back
+        through the federation's feed. (In the app the sky process stands in
+        for the three-party MPC cluster; research/mpc/secure_pc.mpc is the
+        real computation.)"""
+        a, b = c.object_a, c.object_b
+        lo, hi = sorted((a.norad_id, b.norad_id))
+        encounter_id = f"ENC-{lo}-{hi}-{int(round(self.total_sim_s + (tca_s - self.elapsed_s)))}"
+        if any(e["id"] == encounter_id for e in self.encounters):
+            return
+        public = self._assess(c, tca_jd, jd_now, None)
+        self.encounters.append({
+            "id": encounter_id, "pair": [lo, hi], "labels": [a.label, b.label],
+            "operators": [a.operator, b.operator], "tca_s": tca_s, "tca": _iso(self._at(tca_s)),
+            "detected": _iso(self.sim_time), "warning_s": tca_s - self.elapsed_s,
+            "miss_km": round(miss_pub, 4), "pc": float(public.pc) if public else 0.0,
+            "geometry": c.geometry_class, "rel_speed_km_s": round(float(c.relative_speed_km_s), 3),
+            "engineered": False, "status": "upcoming", "handling": "secure",
+            "filter": {"public_sigmas_apart": round(k_sig, 2), "public_miss_km": round(miss_pub, 3),
+                       "k": float(self.history.settings["filter_k"])},
+            "secure_decision": "pending",
+        })
+        signature = self.identities[self.me].sign_bytes(f"secure_request|{self.me}|{encounter_id}".encode())
+        self.outbox.append({"type": "secure_request", "operator": self.me, "encounter_id": encounter_id,
+                            "signature": signature.hex()})
+        self.counters["secure_checks"] = self.counters.get("secure_checks", 0) + 1
+        self._event("secure_check", f"{a.label} x {b.label}: public predictions {miss_pub:.1f} km apart "
+                                    f"({k_sig:.1f} public sigmas); {self.me} asked the federation for a secure check "
+                                    f"on both owners' precise orbits.",
+                    encounter=encounter_id, operators=[a.operator, b.operator])
 
     # ---- optimised avoidance (avoidance.py) ----
 

@@ -209,7 +209,12 @@ class FederationService:
         self.last_round = 0
         self.clock = {"tick": 0, "sim_time": None}
         self.counters = {"signals_accepted": 0, "reports_accepted": 0, "refused": 0,
-                         "duplicates": 0, "attestation_queries": 0}
+                         "duplicates": 0, "attestation_queries": 0,
+                         "secure_requests": 0, "secure_decisions": 0}
+        # Adopted design (RESULTS.md 16b): signed requests for the secure Pc on a
+        # member pair, and the decisions that come back from the secure step.
+        self.secure_requests: Dict[str, List[str]] = {}
+        self.secure_decisions: Dict[str, str] = {}
         self._pending_lines: List[str] = []
         self._load()
 
@@ -258,6 +263,8 @@ class FederationService:
 
     def receive(self, message: dict) -> dict:
         kind = message.get("type")
+        if kind == "secure_request":
+            return self._receive_secure_request(message)
         try:
             if kind == "signal":
                 signed = decode_signed_signal(message)
@@ -295,6 +302,54 @@ class FederationService:
         self.round_reports[op] = {"operator": op, "counts": [float(c) for c in signed.report.counts]}
         self.counters["reports_accepted"] += 1
         return {"accepted": True}
+
+    def _receive_secure_request(self, message: dict) -> dict:
+        """A member asks for the secure check on one encounter. Signed with
+        its pinned key over ``secure_request|operator|encounter_id``; carries
+        no state at all, only the encounter id."""
+        from cryptography.exceptions import InvalidSignature
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        try:
+            op, eid, sig = message["operator"], str(message["encounter_id"]), bytes.fromhex(message["signature"])
+        except (KeyError, TypeError, ValueError) as exc:
+            self.counters["refused"] += 1
+            raise Refused(f"malformed secure request: {exc}")
+        key = self.registry.get(op)
+        if key is None:
+            self.counters["refused"] += 1
+            raise Refused(f"{op} has not registered")
+        try:
+            Ed25519PublicKey.from_public_bytes(key).verify(sig, f"secure_request|{op}|{eid}".encode())
+        except InvalidSignature:
+            self.counters["refused"] += 1
+            raise Refused("secure request signature does not match the registered key")
+        ops = self.secure_requests.setdefault(eid, [])
+        if op in ops:
+            self.counters["duplicates"] += 1
+            return {"accepted": False, "duplicate": True}
+        ops.append(op)
+        ops.sort()
+        self.counters["secure_requests"] += 1
+        self._trim_secure()
+        return {"accepted": True}
+
+    def record_decisions(self, decisions: Dict[str, str]) -> dict:
+        """Results of the secure step (act / no_act per encounter id). Only
+        the decision: never a Pc, never a state."""
+        n = 0
+        for eid, d in decisions.items():
+            if d in ("act", "no_act") and eid not in self.secure_decisions:
+                self.secure_decisions[eid] = d
+                n += 1
+        self.counters["secure_decisions"] += n
+        self._trim_secure()
+        return {"recorded": n}
+
+    def _trim_secure(self) -> None:
+        for table in (self.secure_requests, self.secure_decisions):
+            if len(table) > MAX_ATTESTED_KEPT:
+                for eid in list(table)[: len(table) - MAX_ATTESTED_KEPT]:
+                    del table[eid]
 
     def _append(self, signed) -> None:
         entry = self.ledger.append(signed, timestamp=self._now_ts())
@@ -383,8 +438,11 @@ class FederationService:
                 alert = tailor_alert(sig, tier)
                 alert["received"] = iso_from_ts(entry.timestamp)
                 alerts.append(alert)
+        decided = {eid: d for eid, d in self.secure_decisions.items()
+                   if operator in self.secure_requests.get(eid, []) and len(self.secure_requests[eid]) >= 2}
         return {
             "operator": operator,
+            "secure_decisions": decided,
             "alerts": alerts,
             "senders": {eid: sorted(ops) for eid, ops in senders.items()},
             "reputation": {"score": round(self.reputation.score(operator), 3), "tier": tier},
@@ -406,6 +464,9 @@ class FederationService:
                        "verified_on_load": self.ledger_verified},
             "registry": {op: key.hex()[:16] for op, key in sorted(self.registry.items())},
             "counters": self.counters,
+            "secure_checks": [{"encounter_id": eid, "requested_by": ops,
+                               "decision": self.secure_decisions.get(eid, "pending")}
+                              for eid, ops in list(self.secure_requests.items())[-60:][::-1]],
             "process": {"pid": os.getpid(), "separate": True},
             "withheld": FEDERATION_WITHHELD,
         }
@@ -425,6 +486,7 @@ class FederationService:
                            "history": self.reputation.history},
             "rounds": self.rounds, "last_round": self.last_round, "clock": self.clock,
             "counters": self.counters,
+            "secure_requests": self.secure_requests, "secure_decisions": self.secure_decisions,
             "ledger_entries": len(self.ledger.entries), "ledger_tail": self.ledger.tail_hash(),
         }))
 
@@ -447,6 +509,8 @@ class FederationService:
         self.last_round = ck["last_round"]
         self.clock = ck["clock"]
         self.counters.update(ck["counters"])
+        self.secure_requests = ck.get("secure_requests", {})
+        self.secure_decisions = ck.get("secure_decisions", {})
 
         path = self.run_dir / "ledger.jsonl"
         from .jsonl import read_valid_lines
