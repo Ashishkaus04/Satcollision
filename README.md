@@ -6,16 +6,63 @@ implemented, what's simplified (and why), and what's future work — an
 honest map from code to the project definition's sections, meant to survive
 direct panel questioning.
 
+## The adopted design in one page
+
+Operators keep their precise orbits private. What is shared, and with whom,
+depends on what the other object is:
+
+* **Two member satellites (both operators in the federation).** A *public
+  filter* first: each approach predicted from the public element sets goes
+  on only if its predicted miss is within 3 standard deviations of the
+  public prediction error (a Mahalanobis test using the measured TLE error
+  table), or under 1 km. Every approach that passes goes to a *secure Pc*:
+  both owners' precise orbits enter a secure multi-party computation
+  (MP-SPDZ, three parties, replicated secret sharing) that computes the
+  Foster Pc and reveals **only one bit, act or no act**, to the two
+  operators. On "act" an optimised avoidance plan is flown.
+* **Debris and non-members.** Each operator screens alone: its own precise
+  orbit against the public element set of the other object, with the
+  measured public error as covariance.
+* **Federated learning** sets the error model behind the filter (owners'
+  error models, trained with differential privacy). With TLE-derived labels
+  the public error table does equally well, so the live worlds use the
+  table; operator-quality labels (CelesTrak SupGP) are future work.
+
+Hindcast on four weeks of real Space-Track history (member-vs-member
+encounters; `research/RESULTS.md` sections 10 to 21):
+
+| Design | Rival's leftover uncertainty after 1 day | Caught | Caught >= 24 h ahead | False alarms / day | Risk removed |
+| --- | --- | --- | --- | --- | --- |
+| Each twin alone, circular Pc | 67% (learns nothing) | 88% | 65% | 269 | 71% |
+| Two-stage alerts (earlier design) | 10% | 71% | 52% | 99 | |
+| Fixed 20 km filter + secure Pc | 23% | 91% | 71% | 52 | 84% |
+| **Adopted: model-set filter + secure Pc** | **23%** | **97%** | **94%** | **62** | **90%** |
+| Full sharing of precise orbits | 0% (learns everything) | ~100% | ~100% | | |
+
+The adopted design is the safest short of giving up privacy entirely, and it
+leaks no more than the act/no-act decisions any warning service would reveal.
+It uses about a quarter of the fuel of the baseline (0.36 vs 1.42 m/s per
+day) for more risk removed. Its secure step costs about 14 ms per encounter
+with malicious security on one machine (`research/RESULTS.md` section 13).
+The live `real_leo_history` world and the per-party web app run this design
+(`"design": "secure_filter"`), and a private server runs it for examiners
+(see "Private deployment" below).
+
 ## Quick start
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-PYTHONPATH=src python3 -m pytest tests/ -q        # 269 tests, should all pass
+PYTHONPATH=src python3 -m pytest tests/ -q        # 305 tests, should all pass
 PYTHONPATH=src python3 scripts/run_demo.py         # full pipeline walkthrough
 python3 scripts/run_worlds.py                      # always-running worlds + live dashboard
 docker compose up --build                          # full-stack app: operator / federation / observer views
 ```
+
+The research results (hindcasts, MPC timing, privacy attacks, figures) are
+reproduced by the scripts in `research/`; `research/RESULTS.md` lists each
+experiment with its command, result file and figure. They need the
+Space-Track `gp_history` files in `data/historical/` (not in git).
 
 The demo script prints a run through every layer below and also writes
 `docs/sample_run.md`.
@@ -43,6 +90,12 @@ The demo script prints a run through every layer below and also writes
 | Incentive/reputation mechanism | `src/satcollision/reputation.py` | **Built.** Per-round reputation built only from behaviour the federation can already observe: *corroboration* (an encounter id names both NORAD objects, so every operator can answer one boolean — "am I a party to this?" — locally, which makes both withholding and fabrication detectable without any catalogue crossing a boundary), *consensus agreement* (distance from the median report, penalised only in excess of the round's own median deviation), and *participation* (contributing something another operator vouches for, so neither an empty report nor fabricated volume earns credit). Scores update as an asymmetric EWMA — rising at 0.10, falling at 0.35 — and feed back in two ways: `reputation_weighted_aggregate` gives influence over the federated result in proportion to score (quarantining anyone below 0.25), and `alert_tier`/`tailor_alert` make the *detail* an operator receives back proportional to its score, which is what makes it an incentive rather than a scoreboard. `scripts/run_demo.py` step `[9]` runs 20 reporting periods with honest / free-rider / spoofer / on-off strategies. See "Reputation: what it buys and what it must never do" below. |
 | Plain-language incident summaries | `src/satcollision/summaries.py` | **Built.** Deterministic template rendering (no language model anywhere — see "Why the summaries are templates" below) of every layer's output into sentences a duty officer, regulator or non-technical reader can act on: `Pc=8.00e-04` becomes "about a 1 in 1,200 chance", `tca_offset_s=1800.0` becomes "in 30 minutes", and every quoted probability carries the caveat that it is a model estimate rather than a measurement. Cross-operator summaries are rendered from the *tailored alert dict* produced by `reputation.tailor_alert`, never from the underlying signal, so a lower-tier reader's summary structurally cannot mention what that reader was not sent; `assert_no_undisclosed_terms` checks the rendered prose against the alert it came from, the prose-level counterpart of `signal.assert_no_raw_state`. `build_incident_report` assembles the four-section narrative (what happened / what was shared / what happens now / how to check), with the detecting operator's private view passed in only for its own copy. `scripts/run_demo.py` step `[10]` prints all of it. |
 | Presentation | `conjunction_watch.html` (project root) | **Built separately** as an illustrative, scripted interactive demo for panel presentations — see that file and Section 12 of the project definition. This codebase's `scripts/run_demo.py` is the *technical* presentation layer (plain-language console output); wiring its real numbers into a live visual dashboard is listed as future work below. |
+| Hindcast on real TLE history | `src/satcollision/hindcast.py`, `research/hindcast_*.py` | **Built and run.** Replays four weeks of Space-Track `gp_history`: the public prediction uses only sets published before each moment, the truth is the first set published after it, small-body Foster Pc on the measured covariance. Scores caught encounters, warning time and false alarms for every design (`research/RESULTS.md` sections 10, 16 to 20). |
+| Learned TLE error (federated learning) | `src/satcollision/error_learning.py` | **Built and run.** A Student-t network predicting each public prediction's RTN bias and spread: local-only, FedAvg (secure aggregation, DP-FedAvg), pooled, public model, owners' models with DP-SGD (per sample and per satellite), and conformal calibration. Sets the adopted design's filter. |
+| Secure Pc (MPC) | `research/mpc/secure_pc.mpc` | **Built and timed.** The Pc of one encounter from two secret-shared precise orbits in MP-SPDZ, revealing only the act bit; semi-honest and maliciously secure protocols timed (`research/RESULTS.md` section 13). In the live worlds the sky process stands in for the MPC cluster and hands out only the decision. |
+| Precise-orbit ground truth | `research/precise_orbits*.py`, `research/precise_vs_tle.py` | **Built and run.** Sentinel-1C/1D, Swarm A/B/C and COSMIC-2 precise orbits (ESA, UCAR) used to check how wrong the TLE-derived truth is (`research/RESULTS.md` section 11). |
+| Adopted design in the live worlds | `src/satcollision/history_world.py`, `world.py`, `processes.py`, `federation_service.py` | **Built.** `"design": "secure_filter"`: public filter, secure check, act/no-act only to the two operators that asked (signed requests through the federation), optimised avoidance on act; debris screened alone. |
+| SupGP collection | `scripts/collect_supgp.py`, `pull_supgp.py`, `supgp_sync.py` | **Running.** Saves CelesTrak's supplemental (operator-fitted) element sets and their fit RMS every 2 hours in the cloud, for the operator-quality-label test listed under future work. |
 | 3-scenario evaluation harness | `src/satcollision/evaluate.py`, `src/satcollision/real_evaluation.py` | **Built.** Compares No-Cooperation / Full-Sharing / Federated on detection lead time and raw-data exposure on one engineered conjunction, plus a separate robustness sweep of aggregation error vs. adversary fraction. |
 
 ## Why the walkthrough runs on synthetic fleets (and where the real data is)
@@ -138,6 +191,16 @@ src/satcollision/
   federation_service.py  the federation's ledger, pinned keys, attestations, reputation and alert tailoring
   node_http.py         the small JSON-over-HTTP layer those processes use (stdlib only)
   constants.py         shared constants with no heavy imports
+  screening.py         refined screening (closest approach between samples)
+  tle_history.py       Space-Track gp_history loading, as-of sets, blended truth, jump detection
+  history_world.py     real_leo_history settings, measured error table, public filter
+  avoidance.py         optimised avoidance burns (Clohessy-Wiltshire, secure yes/no check)
+  hindcast.py          hindcast on TLE history: as-of predictions, truth, Foster Pc, scoring
+  error_learning.py    learned TLE error: local, FedAvg, owners' models, DP-SGD, conformal
+research/              paper experiments (RESULTS.md, results/*.json, figures/, mpc/)
+deploy/                private-server compose file (app + Caddy HTTPS)
+scripts/make_users.py  accounts file with hashed passwords for a deployment
+scripts/collect_supgp.py, pull_supgp.py, supgp_sync.py  SupGP collection
 app/backend/           FastAPI backend (logins, role views, WebSocket live updates, serves the frontend)
 app/frontend/          React + TypeScript + three.js frontend (Vite)
 Dockerfile, docker-compose.yml  one-container build of the app
@@ -145,7 +208,7 @@ Dockerfile, docker-compose.yml  one-container build of the app
   hub.py               federation hub process (dumb relay, real asyncio TCP server)
   operator_node.py       one operator's standalone process (legitimate or attacker mode)
   distributed_demo.py    orchestrates hub + 3 operators + 1 attacker as real OS processes
-tests/                 pytest suite (269 tests) covering the above
+tests/                 pytest suite (305 tests) covering the above
 scripts/run_demo.py    end-to-end walkthrough, writes docs/sample_run.md
 scripts/make_figures.py  renders the evaluation figures into docs/figures/ (PNG + PDF + CSV)
 scripts/run_real_evaluation.py  3-scenario comparison on real data, writes docs/real_evaluation.md
@@ -697,6 +760,24 @@ What changes compared with `real_leo` (`src/satcollision/tle_history.py`,
   the last epoch it stops, logs that, and the dashboard shows a banner. With
   `"at_end": "loop"` it replays the file and logs a cycle event instead.
 
+**The adopted design in this world** (`"design": "secure_filter"`,
+`"filter_k": 3.0`, `"filter_near_km": 1.0`). For an approach between two
+member satellites the twins no longer decide alone. The public filter
+(`history_world.public_filter_sigma`) checks the public predicted miss
+against the public error covariance; an approach that passes gets a secure
+check on both owners' precise orbits, and only "act" or "no act" comes back.
+In the per-party app each twin sends a signed request that carries no
+state, the sky process stands in for the MPC cluster and posts the decision
+to the federation, and the federation passes it only to the two operators
+that asked. The operator view shows the decision, never the Pc; the
+observer sees both. Approaches with debris or non-members are still handled
+by each twin alone, as described above. The logs count `filter_screened`,
+`secure_checks`, `secure_acts` and `secure_no_act`.
+
+In the app on an 8-core laptop a tick of this world takes about 11 s (the
+sky and the six twins run at the same time), so at 30x it runs at about half
+its nominal speed; pages are not slowed by this (see "Full-stack app").
+
 On the week above, the first 12.5 h (300 ticks from 7 Nov 00:00), refined
 screen vs the grid screen it replaced:
 
@@ -806,21 +887,49 @@ or the other, not both at once. Configuration is by environment variable
 (`APP_HOST`, `APP_PORT`, `APP_SECRET`, `APP_USERS_FILE`, `APP_SPEED`,
 `APP_WORLDS`, `APP_RESET`, `APP_PROCESSES`; see `app/backend/main.py`).
 
-**Deploying later.** The Docker image is the deployable unit; any host that
-runs a container (a small VPS, Render, Railway, Fly.io) works. Before
-exposing it: set `APP_SECRET` to a long random string, and point
-`APP_USERS_FILE` at a JSON file of real accounts
-(`{"alpha": {"role": "operator", "operator": "Alpha", "password": "..."}}`),
-which also switches off the one-click demo logins. Put it behind HTTPS (the
-host's TLS or a reverse proxy); the WebSocket follows automatically. The Real
-LEO world needs `data/active.tle` in the build context. Download it with
+**Speed.** Every role's view is built once per tick, after the tick, and
+pages are served from that copy without waiting for the tick in progress
+(`WorldRunner` in `app/backend/main.py`), so a page loads in well under a
+second even when a world's tick takes longer than its slot. Within a tick
+the sky and the operator twins run at the same time (`ProcessWorld.tick`);
+the results are identical to running them one after the other.
+
+The Real LEO world needs `data/active.tle` in the build context. Download it with
 `curl -o data/active.tle "https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle"`
 and refresh it now and then, because TLEs go stale. When the world's definition
 changes, the app moves the old run aside to `runs/<world>.old-<time>` and starts fresh.
 
-For a private server with HTTPS, `deploy/docker-compose.server.yml` runs the app
-behind Caddy (automatic certificates) with accounts made by
-`scripts/make_users.py` (scrypt-hashed passwords; one random password per person).
+### Private deployment (examiners and the team)
+
+The app runs on one private server behind HTTPS, with a login per person.
+The Space-Track history is copied to that server only (it is behind logins
+and never in the image or in git), because it must not be redistributed.
+
+1. **A server.** Any Ubuntu VM with 4+ vCPU and 16 GB works (the project
+   uses an Azure for Students B4s_v2; student subscriptions allow only some
+   regions). Open ports 22, 80 and 443 and give the public IP a DNS name.
+   Stop the VM between demos to save credit; the app comes back by itself
+   when it starts.
+2. **Docker on it:** `sudo apt-get install -y docker.io docker-compose-v2`.
+3. **The code and data:** copy the repository (for example
+   `git archive HEAD` + `scp`) to `~/satcollision`, plus `data/` (the TLE
+   catalogues) and `data/historical/gp_history_week.tle`.
+4. **Secrets**, in `deploy/.env` on the server only:
+   `APP_SECRET=<openssl rand -hex 32>` and `SITE=<the DNS name>`.
+5. **Accounts.** On your own computer list the people in
+   `deploy/people.txt`, one per line (`name observer`, `name federation` or
+   `name operator Starlink`), and run `python scripts/make_users.py deploy/people.txt`.
+   It writes `deploy/users.json` (scrypt hashes, copy this to the server)
+   and `deploy/passwords.txt` (a fresh random password per person, to hand
+   out). All three files are git-ignored. A users file switches off the
+   one-click demo logins.
+6. **Start:** `cd deploy && sudo docker compose -f docker-compose.server.yml up -d --build`.
+   Caddy gets and renews the HTTPS certificate itself; only ports 80 and
+   443 are open, and plain http redirects to https.
+
+To change accounts, rerun step 5, copy `users.json` and run
+`sudo docker compose -f docker-compose.server.yml restart app`. Rerunning
+gives everyone new passwords.
 
 Simplifications: "public catalogue" positions
 are the true positions rounded, standing in for the km-level error of real
@@ -878,36 +987,31 @@ regenerated next week would otherwise quietly disagree with the numbers
 quoted in the report text. The cache pins both the distances and the epoch
 they came from; delete it to force a fresh run.
 
-## Next steps (see the Semester Implementation Plan, Sec. 10 of the project definition)
+## Future work
 
-1. Wire the Kalman-derived sigma from `kalman.py` into `twin.screen_conjunctions`
-   itself (rather than only the per-encounter `refine_pc_for_conjunction`
-   path), likely by maintaining one running filter per tracked object
-   across the whole propagation window instead of re-deriving one on
-   demand.
-2. Emit incident summaries from `operator_node.py` in the distributed demo,
-   so each process says in words what it received, accepted and rejected —
-   `summaries.py` is currently exercised only from the single-process
-   walkthrough.
-3. Extend the reputation layer's evidence set with post-maneuver
-   compliance (did an operator actually fly the deconfliction role it
-   agreed to), which needs an attestation path that doesn't exist yet, and
-   stress it against a colluding coalition rather than independent
-   adversaries.
-4. Verifiable secret sharing / range proofs on top of `secure_aggregation.py`
-   so secure aggregation and Byzantine-robust aggregation can run in the
-   same round (see "Trust model" above for why they currently can't).
-5. A total privacy-budget accountant across the whole federation's
-   lifetime in `federated_learning.py`, rather than the current per-round
-   epsilon — real deployments cap cumulative epsilon across many rounds,
-   not just report each round's individually.
-6. Run the distributed demo's operators and hub across genuinely separate
-   machines on a real LAN (currently all on `127.0.0.1`) — the wire
-   protocol and signature verification don't change, only `--host`/`--port`
-   would need to point somewhere other than loopback.
-7. Download the 2021 element-set histories from Space-Track and run
-   `scripts/run_historical_replay.py` for both registered China Space
-   Station events, with the exact times from A/AC.105/1262.
-8. Decide which Pc model the final report's headline uses (the anisotropic
-   one is the more defensible) and regenerate the figures and dashboard
-   from that run.
+Done since the first version of this list: the documented 2021 China Space
+Station events were replayed on Space-Track history (`research/RESULTS.md`
+section 6), and the anisotropic (Foster) Pc on the measured covariance is
+the model of every headline result. Still open:
+
+1. **Operator-quality labels.** Retrain the owners' error models and rerun
+   the privacy attack with CelesTrak SupGP element sets (fitted to the
+   operators' own ephemerides) as labels instead of later TLEs. The
+   collector is running; a few weeks of data are needed. With TLE labels the
+   public error table matches the owners' models, so this is the test of
+   whether private data adds anything to the filter.
+2. **The MPC across real machines.** The secure Pc is timed on one machine;
+   three parties over a WAN are latency-bound (about 20 rounds per
+   encounter), so batching encounters per round matters.
+3. **Each twin on its operator's own machine.** All processes run on one
+   computer over localhost today; the wire protocol and signatures don't
+   change, only the addresses.
+4. **Live daily mode.** Fetch the latest element sets every day instead of
+   replaying a stored week (check Space-Track's terms first).
+5. **Verifiable secret sharing / range proofs** on top of
+   `secure_aggregation.py`, so secure aggregation and Byzantine-robust
+   aggregation can run in the same round (see "Trust model").
+6. **A lifetime privacy budget** across all federated-learning rounds,
+   rather than per round.
+7. **Reputation from post-manoeuvre compliance** (did an operator fly the
+   burn it agreed to), and stress tests against colluding operators.
