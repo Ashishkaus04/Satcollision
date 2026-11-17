@@ -8,6 +8,11 @@ people.txt has one person per line, ``username role [operator]``, e.g.
     examiner1  observer
     team_sl    operator  Starlink
     fed        federation
+    guest      observer  worlds=sandbox,adversarial,real_leo
+
+``worlds=`` limits an account to those worlds (a guest whose password is
+public must not see real_leo_history: Space-Track data is not to be
+redistributed). ``password=`` sets a chosen password instead of a random one.
 
 Writes two files next to people.txt, both git-ignored:
   users.json      for the server (APP_USERS_FILE): scrypt hashes, no passwords
@@ -32,6 +37,8 @@ def main(path: str) -> None:
         parts = raw.split("#")[0].split()
         if not parts:
             continue
+        opts = dict(x.split("=", 1) for x in parts[2:] if "=" in x)
+        parts = [x for x in parts if "=" not in x]
         name, role = parts[0].lower(), parts[1].lower()
         if role not in ROLES:
             raise SystemExit(f"{name}: role must be one of {ROLES}")
@@ -40,7 +47,9 @@ def main(path: str) -> None:
             if len(parts) < 3:
                 raise SystemExit(f"{name}: an operator account needs the operator's name")
             user["operator"] = parts[2]
-        password = secrets.token_urlsafe(9)
+        if "worlds" in opts:
+            user["worlds"] = [w for w in opts["worlds"].split(",") if w]
+        password = opts.get("password") or secrets.token_urlsafe(9)
         users[name] = {**user, "password_hash": hash_password(password)}
         lines.append(f"{name:16s} {password}   ({role}{' ' + user['operator'] if role == 'operator' else ''})")
     (src.parent / "users.json").write_text(json.dumps(users, indent=1), encoding="utf-8")
