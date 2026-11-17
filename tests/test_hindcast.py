@@ -328,3 +328,13 @@ def test_conformal_scales_restore_coverage():
     cov_after = el.coverage(np.zeros(((~cal).sum(), 3)), s2, y[~cal])
     assert max(cov_before) < 0.5
     assert all(0.64 < c < 0.73 for c in cov_after)
+
+
+def test_satellite_level_dp_trains_and_reports_its_guarantee():
+    d = _synthetic(6000, 1.0, 21)
+    d.row = np.arange(len(d)) % 400                 # 400 "satellites", 15 samples each
+    test = _synthetic(2000, 1.0, 22)
+    m = el.train_owner_dp_satellite(d, target_epsilon=8.0, epochs=10, sats_per_step=64, per_sat=16)
+    assert m.dp["unit"].startswith("one satellite") and m.dp["noise_multiplier"] > 0
+    assert m.dp["n_satellites"] == 400
+    assert el.evaluate(m, test)["nll"] < el.evaluate(el.new_model(0), test)["nll"]

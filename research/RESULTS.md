@@ -1218,6 +1218,40 @@ rival sees about 42 decisions a day per target, not 300), and is the safest desi
 giving up privacy entirely. Data per operator per day: about 2 GB of MPC traffic (reveals
 nothing) and about 8 kB of decisions, against about 1 GB of ephemerides for full sharing.
 
+## 21. Better DP training for owner models
+
+`research/dp_training.py`, `error_learning.train_owner_dp_satellite`, results
+`results/dp_training.json`. Owner models trained on each member fleet's errors before the split
+(last window of 10c), scored on its errors after it. Held-out NLL (lower is better) and
+along-track 1-sigma coverage:
+
+| Fleet (satellites) | No DP | Per-sample DP eps 2, as before (5 epochs) | Per-sample DP eps 2, tuned | Per-satellite DP eps 8 | Per-satellite DP eps 2 |
+| --- | --- | --- | --- | --- | --- |
+| Starlink (11,221) | 1.25 / 63% | 1.34 / 56% | 1.29 / 57% | 1.31 / 63% | 1.32 / 64% |
+| Kuiper (392) | 0.44 / 74% | 0.50 / 66% | **0.42** / 64% | 0.76 / 69% | 0.81 / 61% |
+| OneWeb (654) | -0.78 / 77% | -0.75 / 71% | **-0.80** / 68% | -0.48 / 72% | -0.37 / 72% |
+| Planet (143) | -0.61 / 63% | -0.42 / 57% | -0.58 / 56% | -0.30 / 81% | -0.28 / 82% |
+| Spire (96) | -1.15 / 61% | -1.04 / 54% | -1.06 / 52% | -0.80 / 92% | -0.77 / 92% |
+| ICEYE (61) | -0.75 / 71% | -0.49 / 63% | -0.67 / 63% | -0.37 / 84% | -0.36 / 84% |
+
+Tuning chose 40 epochs and clip 1.0 on a validation split of each fleet's own satellites (grid
+of epochs x clip), at the same epsilon 2 per training sample.
+
+What this says:
+
+1. **Most of the DP cost was poor training, not the noise.** At the same per-sample epsilon 2,
+   longer training recovers 70 to 100% of the gap to the non-private model (Kuiper and OneWeb
+   end level with or better than it, within noise; Planet and ICEYE recover most of it).
+2. **Per-satellite DP, the stronger guarantee, depends on fleet size.** It protects a whole
+   satellite's history (not one sample), and its noise scales with how few satellites there
+   are. For Starlink it is almost free (1.31 vs 1.25 at epsilon 8, 1.32 at epsilon 2). For the
+   small fleets (61 to 654 satellites) it costs much more, and the models come out over-cautious
+   (coverage 81 to 92%, i.e. wider covariances: safe, but more false alarms).
+3. **Recommendation for the design:** large constellations use per-satellite DP; small
+   operators use tuned per-sample DP, or share only the 18 calibration numbers of section 17,
+   which reveal far less than a model. Section 15's leakage numbers were measured on the old
+   per-sample models; tuned per-sample models carry the same guarantee.
+
 ## Reproduce
 
 ```bash

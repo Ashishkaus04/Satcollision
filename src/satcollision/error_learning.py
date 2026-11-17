@@ -584,3 +584,80 @@ def gaussian_nll(bias: np.ndarray, sigma: np.ndarray, y: np.ndarray, ref: np.nda
     tables, models and calibrated variants compare on one scale."""
     z = (y - bias) / sigma
     return float(np.mean(np.log(sigma / ref) + 0.5 * z * z))
+
+
+# ---------------------------------------------------------------------------
+# Satellite-level DP (user-level DP-SGD)
+# ---------------------------------------------------------------------------
+#
+# train_owner_dp protects one training sample; a satellite contributes many
+# samples, so by group privacy it is protected only at about k x epsilon. Here
+# the unit is the satellite: each step samples satellites (Poisson, rate q),
+# takes up to ``per_sat`` of each one's samples, computes ONE gradient per
+# satellite (the mean over its samples), clips it to ``clip``, sums, adds
+# Gaussian noise of std noise_multiplier x clip and divides by the expected
+# number of satellites (McMahan et al. 2018, "Learning differentially private
+# recurrent language models"). The RDP accountant of the sampled Gaussian
+# mechanism gives epsilon for the whole run, per satellite.
+
+
+def train_owner_dp_satellite(data: ErrorSamples, target_epsilon: float = 2.0, delta: float = 1e-5,
+                             epochs: int = 20, sats_per_step: int = 64, per_sat: int = 32,
+                             clip: float = 1.0, lr: float = 3e-3, seed: int = 0) -> ErrorNet:
+    from opacus.accountants.utils import get_noise_multiplier
+    from torch.func import functional_call, grad, vmap
+
+    torch.manual_seed(seed)
+    rng = np.random.default_rng(seed)
+    model = new_model(seed)
+    rows, inv = np.unique(data.row, return_inverse=True)
+    n_sat = len(rows)
+    if n_sat < 2:
+        return model
+    X, Y = _tensors(data)
+    order = np.argsort(inv, kind="stable")
+    starts = np.searchsorted(inv[order], np.arange(n_sat))
+    ends = np.append(starts[1:], len(order))
+    q = min(1.0, sats_per_step / n_sat)
+    steps = max(1, int(round(epochs / q)))
+    sigma = get_noise_multiplier(target_epsilon=target_epsilon, target_delta=delta, sample_rate=q,
+                                 steps=steps, accountant="rdp")
+    params = {k: v.detach() for k, v in model.named_parameters()}
+
+    def loss_one(p, x, y, mask):
+        mu, ls = functional_call(model, p, (x,))
+        z = (y - mu) / torch.exp(ls)
+        per = (ls + 0.5 * (NU + 1.0) * torch.log1p(z * z / NU)).mean(-1)
+        return (per * mask).sum() / mask.sum().clamp(min=1.0)
+
+    per_sat_grad = vmap(grad(loss_one), in_dims=(None, 0, 0, 0))
+    opt = torch.optim.Adam(model.parameters(), lr=lr)
+    for _ in range(steps):
+        chosen = np.nonzero(rng.random(n_sat) < q)[0]
+        if chosen.size == 0:
+            continue
+        xb = torch.zeros(len(chosen), per_sat, X.shape[1])
+        yb = torch.zeros(len(chosen), per_sat, 3)
+        mb = torch.zeros(len(chosen), per_sat)
+        for j, s in enumerate(chosen):
+            idx = order[starts[s]:ends[s]]
+            if len(idx) > per_sat:
+                idx = rng.choice(idx, per_sat, replace=False)
+            xb[j, :len(idx)] = X[idx]
+            yb[j, :len(idx)] = Y[idx]
+            mb[j, :len(idx)] = 1.0
+        params = {k: v.detach() for k, v in model.named_parameters()}
+        g = per_sat_grad(params, xb, yb, mb)
+        norms = torch.sqrt(sum((v.reshape(len(chosen), -1) ** 2).sum(1) for v in g.values()))
+        factor = (clip / (norms + 1e-12)).clamp(max=1.0)
+        expected = q * n_sat
+        opt.zero_grad()
+        for name, prm in model.named_parameters():
+            summed = (g[name] * factor.view(-1, *([1] * (g[name].dim() - 1)))).sum(0)
+            noisy = summed + torch.randn_like(summed) * sigma * clip
+            prm.grad = noisy / expected
+        opt.step()
+    model.dp = {"epsilon": float(target_epsilon), "delta": delta, "unit": "one satellite (all its samples)",
+                "noise_multiplier": float(sigma), "sample_rate": float(q), "steps": int(steps),
+                "clip": clip, "per_sat": per_sat, "n_satellites": int(n_sat)}
+    return model
