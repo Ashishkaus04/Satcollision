@@ -239,3 +239,13 @@ def test_views_are_served_while_a_tick_is_running(two_worlds):
         t.join()
     runner.step()
     assert c.get("/api/worlds/sandbox/view", headers=h).json()["version"] == first["version"] + 1
+
+
+def test_hashed_passwords_in_a_users_file():
+    from app.backend.main import check_password, hash_password
+    user = {"role": "observer", "password_hash": hash_password("s3cret")}
+    assert check_password(user, "s3cret")
+    assert not check_password(user, "wrong")
+    assert not check_password({"role": "observer", "password_hash": "garbage"}, "s3cret")
+    assert check_password({"role": "observer", "password": "demo"}, "demo")
+    assert not check_password({"role": "observer"}, "")

@@ -818,8 +818,11 @@ LEO world needs `data/active.tle` in the build context. Download it with
 and refresh it now and then, because TLEs go stale. When the world's definition
 changes, the app moves the old run aside to `runs/<world>.old-<time>` and starts fresh.
 
-Simplifications: passwords in the users file are compared as plain text
-(fine for a demo, hash them before real users); "public catalogue" positions
+For a private server with HTTPS, `deploy/docker-compose.server.yml` runs the app
+behind Caddy (automatic certificates) with accounts made by
+`scripts/make_users.py` (scrypt-hashed passwords; one random password per person).
+
+Simplifications: "public catalogue" positions
 are the true positions rounded, standing in for the km-level error of real
 public TLEs. All the processes run on one computer and talk over localhost,
 where a real deployment would put each twin on its operator's own machine.

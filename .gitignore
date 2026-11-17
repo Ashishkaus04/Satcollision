@@ -13,3 +13,7 @@ data/historical/
 cache/
 research/logs/
 research/mpc/run*/
+deploy/.env
+deploy/users.json
+deploy/passwords.txt
+deploy/people.txt

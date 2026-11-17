@@ -44,6 +44,7 @@ same time: both would advance the same worlds.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import hmac
 import json
 import logging
@@ -98,6 +99,29 @@ DEMO_USERS = {
     "observer": {"role": "observer"},
 }
 DEMO_PASSWORD = "demo"
+
+
+def hash_password(password: str, salt: Optional[bytes] = None) -> str:
+    """scrypt, stored as ``scrypt$n$r$p$salt$hash`` (hex)."""
+    salt = salt or secrets.token_bytes(16)
+    n, r, p = 2 ** 14, 8, 1
+    digest = hashlib.scrypt(password.encode(), salt=salt, n=n, r=r, p=p, dklen=32)
+    return f"scrypt${n}${r}${p}${salt.hex()}${digest.hex()}"
+
+
+def check_password(user: dict, password: str) -> bool:
+    """A users file holds ``password_hash`` (made by scripts/make_users.py);
+    a plain ``password`` is still accepted for the demo accounts and tests."""
+    stored = user.get("password_hash")
+    if stored:
+        try:
+            _, n, r, p, salt, digest = stored.split("$")
+            got = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), n=int(n), r=int(r), p=int(p),
+                                 dklen=len(digest) // 2)
+        except (ValueError, TypeError):
+            return False
+        return hmac.compare_digest(got.hex(), digest)
+    return "password" in user and hmac.compare_digest(str(user["password"]), password)
 TOKEN_HOURS = 12
 
 
@@ -421,7 +445,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
     @app.post("/api/login")
     def login(body: LoginBody):
         user = settings.users.get(body.username.strip().lower())
-        if not user or not hmac.compare_digest(str(user.get("password", "")), body.password):
+        if not user or not check_password(user, body.password):
             raise HTTPException(401, "wrong username or password")
         return {"token": _issue(settings, body.username.strip().lower(), user),
                 "role": user["role"], "operator": user.get("operator"),
