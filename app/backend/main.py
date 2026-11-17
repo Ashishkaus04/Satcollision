@@ -199,11 +199,15 @@ class WorldRunner:
                 self._refresh_views()
 
     def _refresh_views(self) -> None:
-        """Rebuild, once per tick, every view someone has asked for, then
-        swap them in together. Until the swap, pages keep getting the views
-        of the previous tick, so a page never waits for a tick to finish."""
+        """Rebuild, once per tick, every role's view (and any other view
+        someone has asked for), then swap them in together. Until the swap,
+        pages keep getting the views of the previous tick, so a page never
+        waits for a tick to finish, not even the first one."""
         fresh: Dict[str, tuple] = {}
-        for key, (_, _, build) in list(self._cache.items()):
+        builders = {"observer": self.observer_view, "federation": self.federation_view,
+                    **{f"op:{op}": (lambda op=op: self.operator_view(op)) for op in self.world.operators},
+                    **{key: entry[2] for key, entry in self._cache.items()}}
+        for key, build in builders.items():
             try:
                 data = build()
             except Exception:  # e.g. a process restarting: built again on the next request
