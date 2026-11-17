@@ -302,6 +302,27 @@ def fig_avoidance():
     save(fig, "avoidance")
 
 
+def fig_debris():
+    """Section 19: screening non-member objects alone, by kind (equal false-alarm budget)."""
+    d = load("hindcast_debris.json")
+    if not d:
+        return print("skip debris")
+    S = d["summary"]
+    kinds = [("payload", "Other payloads"), ("debris", "Debris"), ("rocket_body", "Rocket bodies"), ("all_non_member", "All non-members")]
+    sch = [("baseline", "Circular Pc", C["baseline"]), ("foster_table", "Foster, public table", C["foster"]),
+           ("foster_model", "Foster, public model", C["public"]), ("foster_model_cal", "... calibrated", C["owner_dp"])]
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+    x = np.arange(len(kinds))
+    for ax, key, lab in ((axes[0], "at_100", "Caught at 100 false alarms a day (%)"),
+                         (axes[1], "at_100_24h", "... caught at least 24 h ahead (%)")):
+        for i, (k, l, col) in enumerate(sch):
+            ax.bar(x + (i - 1.5) * 0.2, [S[k][kk][key] * 100 for kk, _ in kinds], 0.2, color=col, label=l)
+        ax.set_xticks(x, [l for _, l in kinds], fontsize=8); ax.set_ylabel(lab)
+    axes[0].legend(fontsize=7)
+    fig.suptitle("Encounters with objects no member flies, screened by each operator alone (rolling windows)", fontsize=10)
+    save(fig, "debris")
+
+
 if __name__ == "__main__":
-    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid, fig_conformal, fig_avoidance):
+    for f in (fig_rolling, fig_precise, fig_owner_precise, fig_dilution, fig_mpc, fig_manoeuvre, fig_privacy, fig_secure_all, fig_hybrid, fig_conformal, fig_avoidance, fig_debris):
         f()
