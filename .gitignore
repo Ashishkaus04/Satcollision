@@ -17,3 +17,4 @@ deploy/.env
 deploy/users.json
 deploy/passwords.txt
 deploy/people.txt
+docs/*.docx
