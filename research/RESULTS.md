@@ -1195,6 +1195,29 @@ What this says:
 Caveats: TLE-derived truth (section 11); "payload" includes every non-member satellite (active
 and dead); kinds are read from catalogue names.
 
+## 20. Safety vs privacy: every design in one table
+
+`research/privacy_safety.py` (from saved results), `results/privacy_safety.json`, figure
+`figures/fig_privacy_safety.png`. Leakage: the section 7 attacker, now with a FILTERSEC channel
+(the adopted design: no alerts; the secure step's act/no-act bit on every filtered approach),
+median error of the rival's estimate of a target's along-track offset as a share of the public
+uncertainty (67% = learned nothing). Safety: member-vs-member encounters.
+
+| Design | Rival's error after 1 day / 1 week | Caught | Caught >= 24 h | FA/day | Risk removed |
+| --- | --- | --- | --- | --- | --- |
+| Each twin alone, circular Pc | 67% / 67% (nothing) | 88% | 65% | 269 | 71% |
+| Each twin alone + owner models (DP eps 2) | 67% / 67%, plus model leak up to 14% | 71% | 52% | 99 | 44% |
+| Two-stage alerts + secure bit (original) | 10% / 11% | 71% | 52% | 99 | |
+| Two-stage, hardened (act only) | 20% / 20% | 71% | 52% | 99 | |
+| Fixed 20 km filter + secure Pc | 23% / 20% | 91% | 71% | 52 | 84% |
+| **Adopted: model-set filter + secure Pc** | **23% / 20%** | **97%** | **94%** | **62** | **90%** |
+| Full sharing of precise orbits | 0% / 0% | ~100% | ~100% | | |
+
+The adopted design leaks no more than the "act only" floor any warning service reveals (the
+rival sees about 42 decisions a day per target, not 300), and is the safest design short of
+giving up privacy entirely. Data per operator per day: about 2 GB of MPC traffic (reveals
+nothing) and about 8 kB of decisions, against about 1 GB of ephemerides for full sharing.
+
 ## Reproduce
 
 ```bash

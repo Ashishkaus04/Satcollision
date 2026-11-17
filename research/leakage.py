@@ -19,6 +19,10 @@ TCA, under the two-stage scheme (channels are cumulative, in this order):
   SECVAL  instead of SECBIT, the secure step returns the Pc value (3 significant figures)
   MINIMAL a hardened design: alerts, tiers and TCAs stay inside the secure computation and
           A only learns "act now" (B's alert and full-precision Pc >= T) at each update
+  FILTERSEC the adopted design (RESULTS.md 16b): no alerts at all; at every update where the
+          public filter passes (both public predictions within FILTER_K public sigmas, or under
+          1 km; computable by anyone, so it carries no information about delta), A learns the
+          secure step's act/no-act bit (full-precision Pc >= T)
 
 Posterior by importance sampling in two passes (prior samples, then a Gaussian
 proposal fitted to pass 1), so a sharp posterior is resolved rather than
@@ -35,7 +39,8 @@ import aniso
 
 UPD = 8 * 3600.0
 TAU = 3e-5
-CHANNELS = ["MINIMAL", "ALERT", "TIER", "TCA", "SECBIT", "SECVAL"]
+CHANNELS = ["MINIMAL", "ALERT", "TIER", "TCA", "SECBIT", "SECVAL", "FILTERSEC"]
+FILTER_K = 3.0
 
 
 def unit_rtn_basis(r, v):
@@ -75,7 +80,13 @@ def observations(enc, geo, sel, sid, delta_true, rng, k, p, far, K, window=None)
             C_B = p * p * S_S + pub * pub * S_X
             Lc = np.linalg.cholesky(pub * pub * S_X + 1e-12 * np.eye(2))
             z = rng.standard_normal((K, 2)) @ Lc.T
-            pcB_true = float(aniso.pc_small(m_true + Lc @ rng.standard_normal(2), C_B))
+            eX = Lc @ rng.standard_normal(2)                    # X's public error at this update
+            pcB_true = float(aniso.pc_small(m_true + eX, C_B))
+            # public filter, from both public predictions (S public: m_att; X public: + eX)
+            m_pub = m_att + eX
+            C_pub = pub * pub * (S_S + S_X)
+            q = float(m_pub @ np.linalg.solve(C_pub, m_pub))
+            filtered = (math.sqrt(max(q, 0.0)) <= FILTER_K) or (np.linalg.norm(m_pub) < 1.0)
             alert = pcB_true >= TAU
             covX = aniso.rtn_unit_cov(rX[None], vX[None], k)[0] * pub * pub
             sd_t = math.sqrt(vh @ covX @ vh) / speed
@@ -84,7 +95,7 @@ def observations(enc, geo, sel, sid, delta_true, rng, k, p, far, K, window=None)
             alerted = alerted or alert
             obs.append(dict(P=P, m_att=m_att, C_B=C_B, z=z, alert=alert, tier=tier_of(pcB_true),
                             t_att=t_att, tshift=tshift, sd_t=sd_t, t_obs=math.floor(tB),
-                            secure=alerted, C_full=C_full, bit=pc_full_true >= T,
+                            secure=alerted, filtered=filtered, C_full=C_full, bit=pc_full_true >= T,
                             logpc=math.log(max(pc_full_true, 1e-300))))
     return obs
 
@@ -105,13 +116,16 @@ def loglik(G, obs):
         pact = np.clip(pa * (pcf >= T), 1e-4, 1 - 1e-4)
         act = o["alert"] and o["bit"]
         out["MINIMAL"] += np.log(pact if act else 1 - pact)
+        if o["filtered"]:
+            pf = np.where(pcf >= T, 1 - 1e-4, 1e-4)
+            out["FILTERSEC"] += np.log(pf if o["bit"] else 1 - pf)
         if o["secure"]:
             pb = np.where(pcf >= T, 1 - 1e-4, 1e-4)
             out["SECBIT"] += np.log(pb if o["bit"] else 1 - pb)
             out["SECVAL"] += -0.5 * ((np.log(np.maximum(pcf, 1e-300)) - o["logpc"]) / 0.005) ** 2
     base = out["ALERT"] + out["TIER"] + out["TCA"]
     return {"MINIMAL": out["MINIMAL"], "ALERT": out["ALERT"], "TIER": out["ALERT"] + out["TIER"], "TCA": base,
-            "SECBIT": base + out["SECBIT"], "SECVAL": base + out["SECVAL"]}
+            "SECBIT": base + out["SECBIT"], "SECVAL": base + out["SECVAL"], "FILTERSEC": out["FILTERSEC"]}
 
 
 def posterior(G, logw):
@@ -158,6 +172,7 @@ def run(enc, n_targets=100, k=8.0, sp=0.5, far=3.0, K=16, N=8000, seed=0, window
             sd = np.sqrt(np.maximum(np.diag(c2), 0))
             res[c].append({"norad": int(sid), "n_approaches": int(len(sel)), "n_obs": len(obs),
                            "n_alerts": int(sum(o["alert"] for o in obs)),
+                           "n_filtered": int(sum(o["filtered"] for o in obs)),
                            "sd_ratio": (sd / sig).tolist(), "err_ratio": (np.abs(m2 - delta) / sig).tolist(),
                            "ess": float(ess)})
         done += 1
