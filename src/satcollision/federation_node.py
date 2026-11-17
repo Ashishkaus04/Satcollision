@@ -103,6 +103,13 @@ def build_routes(service: FederationService, token: str):
         with lock:
             return service.view()
 
+    def secure_decisions(body, query):
+        # From the process standing in for the secure-computation cluster.
+        with lock:
+            out = service.record_decisions(body["decisions"])
+            service.save()
+            return out
+
     return {
         ("GET", "/health"): health,
         ("POST", "/register"): register,
@@ -112,6 +119,7 @@ def build_routes(service: FederationService, token: str):
         ("POST", "/round"): round_,
         ("POST", "/feed"): feed,
         ("GET", "/view"): view,
+        ("POST", "/secure_decisions"): secure_decisions,
     }
 
 

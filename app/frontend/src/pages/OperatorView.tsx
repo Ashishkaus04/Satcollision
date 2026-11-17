@@ -86,7 +86,10 @@ export default function OperatorView({ view, session }: { view: any; session: Se
                       <td className="num">{e.pc.toExponential(1)}
                         {e.other_tle_age_h != null && <div className="muted small">other: {e.other_tle_age_h} h old TLE, σT {e.sigma_other_rtn_km[1]} km</div>}</td>
                       <td><Pill kind={e.handling}>{e.handling}</Pill>{e.handling === "federated" && !e.i_signalled && <div className="bad small">I stayed silent</div>}</td>
-                      <td>{e.plan ? <span className="good">move {e.plan.direction === "+" ? "+" : "−"} (partner {e.plan.partner_direction === "+" ? "+" : "−"})</span>
+                      <td>{e.handling === "secure" ? (e.secure_decision === "act" ? <span className="good">secure check: ACT</span>
+                          : e.secure_decision === "no_act" ? <span className="muted">secure check: no action</span>
+                          : <span className="muted">awaiting secure check</span>)
+                        : e.plan ? <span className="good">move {e.plan.direction === "+" ? "+" : "−"} (partner {e.plan.partner_direction === "+" ? "+" : "−"})</span>
                         : e.handling === "federated" ? <span className="bad">no joint plan</span> : <span className="muted">own call</span>}
                         {e.my_burn && (
                           <div className="small">

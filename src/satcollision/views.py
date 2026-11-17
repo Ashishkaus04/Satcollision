@@ -207,7 +207,8 @@ def operator_view(world: World, operator: str, feed: Optional[dict] = None) -> d
             "rel_speed_km_s": e["rel_speed_km_s"], "handling": e.get("handling"),
             # adopted design: the secure check's decision is the one thing an operator
             # learns about the pair (never the secure Pc, which stays observer-only)
-            "secure_decision": e.get("secure_decision"),
+            "secure_decision": ((feed or {}).get("secure_decisions", {}).get(e["id"], e.get("secure_decision"))
+                                if feed is not None and e.get("handling") == "secure" else e.get("secure_decision")),
             "i_signalled": e.get("i_signalled", operator in e.get("signals_sent", [])),
             "plan": _my_plan(e.get("plan") or _plan_from_feed(e, senders), operator),
             "engineered": e.get("engineered", False),

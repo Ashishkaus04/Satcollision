@@ -318,6 +318,36 @@ def test_separate_processes_match_one_process(hist_file, tmp_path):
         group.close()
 
 
+def test_secure_filter_design_across_separate_processes(hist_file, tmp_path):
+    """The adopted design in the multi-process app: each twin sends a signed,
+    state-free request for the filtered member pair; the federation gets
+    only the decision back from the secure step (the sky stands in for the
+    MPC cluster) and passes it to exactly the two requesting operators."""
+    from pathlib import Path
+    from satcollision.processes import ProcessWorld
+    repo = Path(__file__).resolve().parents[1]
+    cfg = WorldConfig.from_dict(config(hist_file, fleet={"design": "secure_filter", "candidate_km": 20.0}))
+    group = ProcessWorld.start(cfg, tmp_path / "proc", repo, reset=True)
+    try:
+        for _ in range(20):
+            group.tick()
+        fed = group.federation_view()
+        assert fed["positions"] == []
+        row = next(r for r in fed["secure_checks"] if r["encounter_id"] == ENC)
+        assert row["requested_by"] == ["Alpha", "Beta"] and row["decision"] == "act"
+        assert fed["counters"]["secure_requests"] >= 2 and fed["counters"]["secure_decisions"] >= 1
+        assert "secure_pc" not in json.dumps(fed)
+        for op in ("Alpha", "Beta"):
+            mine = next(e for e in group.operator_view(op)["encounters"] if e["id"] == ENC)
+            assert mine["handling"] == "secure" and mine["secure_decision"] == "act"
+            assert "secure_pc" not in mine
+        obs = group.observer_view()
+        e = next(e for e in obs["upcoming"] + obs["passed"] if e["id"] == ENC)
+        assert e["secure_decision"] == "act" and e["truth"]["miss_km"] > 2 * e["truth"]["miss_km_without_maneuver"]
+    finally:
+        group.close()
+
+
 # ---------------------------------------------------------------------------
 # Optimised avoidance (avoidance.py)
 # ---------------------------------------------------------------------------

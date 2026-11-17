@@ -63,7 +63,8 @@ export default function ObserverView({ view, session }: { view: any; session: Se
                         {e.avoidance?.total_dv_m_s != null && <div className="muted small">burns {(e.avoidance.total_dv_m_s * 100).toFixed(1)} cm/s in all · Pc {e.avoidance.check?.pc_precise_before?.toExponential(1)} → {e.avoidance.check?.pc_precise_after?.toExponential(1)} at the precise covariance{e.avoidance.check?.met ? "" : " (target NOT met)"}</div>}
                         {e.avoidance?.cannot_avoid && <div className="bad small">neither satellite can burn</div>}</td>
                       <td className="num">{e.pc.toExponential(1)}</td>
-                      <td><Pill kind={e.handling}>{e.handling}</Pill></td>
+                      <td><Pill kind={e.handling}>{e.handling}</Pill>
+                        {e.handling === "secure" && <div className="small">{e.secure_decision === "act" ? <span className="good">ACT</span> : <span className="muted">no action</span>}</div>}</td>
                       <td><button className="btn small" onClick={() => setComparing(e.id)}>Compare</button>
                         {e.has_path
                           ? <button className="btn small" onClick={() => setPathFor(e.id)}>Show avoidance path</button>
