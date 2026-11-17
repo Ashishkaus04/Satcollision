@@ -172,7 +172,22 @@ class WorldRunner:
                 (self.group or self.world).tick()
                 self.world.save(self.interval)
                 self.version += 1
-                self._cache.clear()
+                self._refresh_views()
+
+    def _refresh_views(self) -> None:
+        """Rebuild, once per tick, every view someone has asked for, then
+        swap them in together. Until the swap, pages keep getting the views
+        of the previous tick, so a page never waits for a tick to finish."""
+        fresh: Dict[str, tuple] = {}
+        for key, (_, _, build) in list(self._cache.items()):
+            try:
+                data = build()
+            except Exception:  # e.g. a process restarting: built again on the next request
+                log.exception("world %s: building view %s failed", self.world.cfg.name, key)
+                continue
+            data["version"] = self.version
+            fresh[key] = (self.version, data, build)
+        self._cache = fresh
 
     def _recover(self) -> None:
         """A twin or the federation process died: restart the group. Each
@@ -211,13 +226,19 @@ class WorldRunner:
                 self._stop.wait(delay)
 
     def view(self, key: str, build) -> dict:
+        """The view as of the last finished tick. Served without taking the
+        lock, so a request never waits behind a tick in progress; only the
+        first request for a view builds it."""
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached[1]
         with self.lock:
             cached = self._cache.get(key)
-            if cached and cached[0] == self.version:
+            if cached is not None and cached[0] == self.version:
                 return cached[1]
             data = build()
             data["version"] = self.version
-            self._cache[key] = (self.version, data)
+            self._cache = {**self._cache, key: (self.version, data, build)}
             return data
 
     # ---- role views, from whichever kind of world this is ----

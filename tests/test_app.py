@@ -211,3 +211,31 @@ def test_server_never_sends_an_operator_another_operators_path():
     view["burn_paths"].append({"operator": "Beta", "satellite": "Beta-2"})
     with pytest.raises(HTTPException):
         _check_view_is_for(view, alpha, "w")
+
+
+def test_views_are_served_while_a_tick_is_running(two_worlds):
+    """A page never waits for a tick: while the lock is held it gets the
+    last finished tick's view, and the next tick refreshes it."""
+    import threading
+    c, app = two_worlds
+    runner = app.state.app_state.runners["sandbox"]
+    h = _headers(c, "alpha")
+    first = c.get("/api/worlds/sandbox/view", headers=h).json()
+    held, release = threading.Event(), threading.Event()
+
+    def hold():
+        with runner.lock:
+            held.set()
+            release.wait(10)
+
+    t = threading.Thread(target=hold)
+    t.start()
+    held.wait(5)
+    try:
+        r = c.get("/api/worlds/sandbox/view", headers=h)
+        assert r.status_code == 200 and r.json()["version"] == first["version"]
+    finally:
+        release.set()
+        t.join()
+    runner.step()
+    assert c.get("/api/worlds/sandbox/view", headers=h).json()["version"] == first["version"] + 1
