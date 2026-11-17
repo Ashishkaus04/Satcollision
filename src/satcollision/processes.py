@@ -173,9 +173,24 @@ class ProcessWorld:
         return call(node.url, method, path, body, token=self.token, timeout=timeout)
 
     def tick(self) -> None:
+        """The sky and the twins tick at the same time: within a tick they
+        are independent (each twin screens its own world and talks only to
+        the federation, which the sky does not touch until sync). The
+        federation steps that follow (secure decisions, settle, rounds) run
+        after both, in the same order as before."""
         started = _iso(self.sky.sim_time)
-        self.sky.tick()
-        self.sync(started)
+        if not self.sky.finished:
+            target = self.sky.tick_index + 1
+            self._call(self.federation, "POST", "/clock", {"tick": target, "sim_time": started})
+            with ThreadPoolExecutor(max_workers=len(self.twins)) as pool:
+                pending = [pool.submit(self._call, twin, "POST", "/tick", {"to_tick": target}, 600)
+                           for twin in self.twins.values()]
+                try:
+                    self.sky.tick()
+                finally:
+                    for f in pending:
+                        f.result()
+        self.sync(started)   # twins already at the target only re-post the clock
 
     def sync(self, tick_started: Optional[str] = None) -> None:
         target = self.sky.tick_index
