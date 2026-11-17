@@ -229,6 +229,8 @@ class WorldRunner:
             self._cache.clear()
 
     def _loop(self) -> None:
+        with self.lock:   # views ready before the first (slow) tick, so the first page doesn't wait for it
+            self._refresh_views()
         next_at = time.monotonic()
         failures = 0
         while not self._stop.is_set():
