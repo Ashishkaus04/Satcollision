@@ -1152,6 +1152,49 @@ the burn's effect (the world's avoidance.py optimiser is more exact); risk uses 
 truth (section 11) and a 20 m hard-body radius; the two-stage design's secure confirmation
 step is not modelled here (its row is each operator acting on its own Pc).
 
+## 19. Debris and non-member objects: public-only screening
+
+`research/hindcast_debris.py`, results `results/hindcast_debris.json`, figure
+`figures/fig_debris.png`. In the adopted design, each operator screens objects no member flies
+on its own: its satellite from its precise orbit, the other object from the public catalogue.
+There is no one to share with, so everything depends on how well the public error of those
+objects is modelled. Four rolling windows (the 6-12 Nov file has no objects named DEB or R/B,
+so debris and rocket-body figures use the three October windows). The public table, a public
+model (TLE labels, every object) and its conformal calibration are fitted before each split.
+
+**This is most of the work: 92% of the dangerous encounters of member satellites are with
+non-member objects** (about 460 a day: 390 with other payloads, 60 with debris, 30 with
+rocket bodies), against about 40 a day between two members.
+
+| Non-member kind | Circular Pc: caught / >= 24 h at 1e-4, FA/day | Caught at 100 FA/day: circular / table / public model / calibrated | ... >= 24 h at 100 FA/day |
+| --- | --- | --- | --- |
+| Other payloads | 92% / 72%, 777 | 37% / 34% / 42% / 43% | 27% / 24% / 24% / 24% |
+| Debris | 69% / 51%, 134 | 59% / 54% / 63% / 63% | 41% / 39% / 44% / 44% |
+| Rocket bodies | 95% / 84%, 35 | 99% / 98% / 95% / 95% | 93% / 95% / 88% / 87% |
+| All non-members (one shared 100/day budget) | 90% / 70%, 904 | 35% / 30% / 39% / 40% | 25% / 21% / 22% / 22% |
+
+What this says:
+
+1. **Rocket bodies are easy**: large, stable, non-manoeuvring objects whose public orbits are
+   good; any method catches nearly all of them a day ahead with few false alarms.
+2. **Other payloads are the hard part and the bulk of the risk.** Many manoeuvre (other
+   constellations) or have poor element sets; at an equal false-alarm budget a calibrated public
+   model catches 43%, a few points above the circular baseline, and only about a quarter a day
+   ahead. A single operator's view of a manoeuvring object it does not fly is fundamentally
+   limited (section 14).
+3. **Debris** sits in between: the public model helps a little (63% vs 59% at 100 false
+   alarms a day).
+4. **The fixed-threshold numbers look better than they are.** The circular baseline catches
+   90% at 1e-4 only by raising about 900 false alarms a day on non-members.
+5. **Implication for the design:** the federation's secure step fixes member pairs (97% caught,
+   section 16b), but most of the remaining risk sits with non-member payloads. The levers are
+   outside this design: bringing more operators in (each one turns non-member encounters into
+   member pairs), operator-published ephemerides such as SupGP for those payloads, and better
+   public error models for the rest.
+
+Caveats: TLE-derived truth (section 11); "payload" includes every non-member satellite (active
+and dead); kinds are read from catalogue names.
+
 ## Reproduce
 
 ```bash

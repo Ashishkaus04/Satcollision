@@ -1,0 +1,1696 @@
+{
+ "windows": {
+  "w4": {
+   "baseline": {
+    "all_non_member": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1490.0,
+     "caught_frac": 0.919185687847008,
+     "caught_24h_frac": 0.6588525601480567,
+     "median_warning_h": 37.181546956300735,
+     "warning_hours_per_dangerous": 34.74210128536302,
+     "false_alarms": 4097.0,
+     "false_alarms_per_day": 1024.25,
+     "alerts_per_day": 1396.75,
+     "precision": 0.2666905315911938,
+     "at_budget": {
+      "30": 0.33532832533523155,
+      "100": 0.35206346180501885,
+      "300": 0.4468188649322347
+     },
+     "at_budget_24h": {
+      "30": 0.21901308558274007,
+      "100": 0.22994331007908173,
+      "300": 0.29907573772912466
+     }
+    },
+    "debris": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "rocket_body": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1490.0,
+     "caught_frac": 0.919185687847008,
+     "caught_24h_frac": 0.6588525601480567,
+     "median_warning_h": 37.181546956300735,
+     "warning_hours_per_dangerous": 34.74210128536302,
+     "false_alarms": 4097.0,
+     "false_alarms_per_day": 1024.25,
+     "alerts_per_day": 1396.75,
+     "precision": 0.2666905315911938,
+     "at_budget": {
+      "30": 0.33532832533523155,
+      "100": 0.35206346180501885,
+      "300": 0.4468188649322347
+     },
+     "at_budget_24h": {
+      "30": 0.21901308558274007,
+      "100": 0.22994331007908173,
+      "300": 0.29907573772912466
+     }
+    }
+   },
+   "foster_table": {
+    "all_non_member": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1261.0,
+     "caught_frac": 0.7779148673658236,
+     "caught_24h_frac": 0.5755706354102406,
+     "median_warning_h": 38.03993958234787,
+     "warning_hours_per_dangerous": 29.96544351985817,
+     "false_alarms": 3412.0,
+     "false_alarms_per_day": 853.0,
+     "alerts_per_day": 1168.25,
+     "precision": 0.26984806334260647,
+     "at_budget": {
+      "30": 0.13702803549837986,
+      "100": 0.2826607512209607,
+      "300": 0.45343850855592993
+     },
+     "at_budget_24h": {
+      "30": 0.07742391243406216,
+      "100": 0.17861889766727973,
+      "300": 0.30277879239090416
+     }
+    },
+    "debris": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "rocket_body": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1261.0,
+     "caught_frac": 0.7779148673658236,
+     "caught_24h_frac": 0.5755706354102406,
+     "median_warning_h": 38.03993958234787,
+     "warning_hours_per_dangerous": 29.96544351985817,
+     "false_alarms": 3412.0,
+     "false_alarms_per_day": 853.0,
+     "alerts_per_day": 1168.25,
+     "precision": 0.26984806334260647,
+     "at_budget": {
+      "30": 0.13702803549837986,
+      "100": 0.2826607512209607,
+      "300": 0.45343850855592993
+     },
+     "at_budget_24h": {
+      "30": 0.07742391243406216,
+      "100": 0.17861889766727973,
+      "300": 0.30277879239090416
+     }
+    }
+   },
+   "foster_model": {
+    "all_non_member": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1146.0,
+     "caught_frac": 0.7069710055521283,
+     "caught_24h_frac": 0.4509561998766194,
+     "median_warning_h": 32.93183374218643,
+     "warning_hours_per_dangerous": 24.573771611203075,
+     "false_alarms": 2758.0,
+     "false_alarms_per_day": 689.5,
+     "alerts_per_day": 976.0,
+     "precision": 0.29354508196721313,
+     "at_budget": {
+      "30": 0.2568136877409189,
+      "100": 0.401930702227405,
+      "300": 0.5641805695936728
+     },
+     "at_budget_24h": {
+      "30": 0.11479488516201822,
+      "100": 0.21412325643422658,
+      "300": 0.3349120087200498
+     }
+    },
+    "debris": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "rocket_body": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1146.0,
+     "caught_frac": 0.7069710055521283,
+     "caught_24h_frac": 0.4509561998766194,
+     "median_warning_h": 32.93183374218643,
+     "warning_hours_per_dangerous": 24.573771611203075,
+     "false_alarms": 2758.0,
+     "false_alarms_per_day": 689.5,
+     "alerts_per_day": 976.0,
+     "precision": 0.29354508196721313,
+     "at_budget": {
+      "30": 0.2568136877409189,
+      "100": 0.401930702227405,
+      "300": 0.5641805695936728
+     },
+     "at_budget_24h": {
+      "30": 0.11479488516201822,
+      "100": 0.21412325643422658,
+      "300": 0.3349120087200498
+     }
+    }
+   },
+   "foster_model_cal": {
+    "all_non_member": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1152.0,
+     "caught_frac": 0.7106724244293646,
+     "caught_24h_frac": 0.4497223935842073,
+     "median_warning_h": 32.7442870773375,
+     "warning_hours_per_dangerous": 24.52188114122356,
+     "false_alarms": 2694.0,
+     "false_alarms_per_day": 673.5,
+     "alerts_per_day": 961.5,
+     "precision": 0.2995319812792512,
+     "at_budget": {
+      "30": 0.2633276876539863,
+      "100": 0.4105766549328663,
+      "300": 0.5718369950948735
+     },
+     "at_budget_24h": {
+      "30": 0.11560866868845271,
+      "100": 0.2163662381288423,
+      "300": 0.3365504830054858
+     }
+    },
+    "debris": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "rocket_body": {
+     "assessed": 0.0,
+     "dangerous": 0.0,
+     "caught": 0.0,
+     "caught_frac": 0.0,
+     "caught_24h_frac": 0.0,
+     "median_warning_h": 0.0,
+     "warning_hours_per_dangerous": 0.0,
+     "false_alarms": 0.0,
+     "false_alarms_per_day": 0.0,
+     "alerts_per_day": 0.0,
+     "precision": 0.0,
+     "at_budget": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": NaN,
+      "100": NaN,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16187332.0,
+     "dangerous": 1621.0,
+     "caught": 1152.0,
+     "caught_frac": 0.7106724244293646,
+     "caught_24h_frac": 0.4497223935842073,
+     "median_warning_h": 32.7442870773375,
+     "warning_hours_per_dangerous": 24.52188114122356,
+     "false_alarms": 2694.0,
+     "false_alarms_per_day": 673.5,
+     "alerts_per_day": 961.5,
+     "precision": 0.2995319812792512,
+     "at_budget": {
+      "30": 0.2633276876539863,
+      "100": 0.4105766549328663,
+      "300": 0.5718369950948735
+     },
+     "at_budget_24h": {
+      "30": 0.11560866868845271,
+      "100": 0.2163662381288423,
+      "300": 0.3365504830054858
+     }
+    }
+   },
+   "share_dangerous_non_member": 0.9071068830442082,
+   "dangerous_per_day_by_kind": {
+    "debris": 0.0,
+    "rocket_body": 0.0,
+    "payload": 405.25
+   }
+  },
+  "w4_t7.4": {
+   "baseline": {
+    "all_non_member": {
+     "assessed": 21588291.0,
+     "dangerous": 1946.0,
+     "caught": 1724.0,
+     "caught_frac": 0.8859198355601233,
+     "caught_24h_frac": 0.7702980472764646,
+     "median_warning_h": 49.47536205500364,
+     "warning_hours_per_dangerous": 41.91466761522477,
+     "false_alarms": 2921.0,
+     "false_alarms_per_day": 730.25,
+     "alerts_per_day": 1161.25,
+     "precision": 0.37115177610333694,
+     "at_budget": {
+      "30": 0.3398387129350819,
+      "100": 0.3567989480509191,
+      "300": 0.5745223055953812
+     },
+     "at_budget_24h": {
+      "30": 0.2744666267127748,
+      "100": 0.2881643554979842,
+      "300": 0.482471035774075
+     }
+    },
+    "debris": {
+     "assessed": 3938231.0,
+     "dangerous": 309.0,
+     "caught": 205.0,
+     "caught_frac": 0.6634304207119741,
+     "caught_24h_frac": 0.48220064724919093,
+     "median_warning_h": 39.985343400388956,
+     "warning_hours_per_dangerous": 27.058847474277886,
+     "false_alarms": 546.0,
+     "false_alarms_per_day": 136.5,
+     "alerts_per_day": 187.75,
+     "precision": 0.2729693741677763,
+     "at_budget": {
+      "30": 0.2371583531567399,
+      "100": 0.5538837206498963,
+      "300": 0.7729462068451054
+     },
+     "at_budget_24h": {
+      "30": 0.16344697312153697,
+      "100": 0.39053912270745245,
+      "300": 0.5846184710927524
+     }
+    },
+    "rocket_body": {
+     "assessed": 1213379.0,
+     "dangerous": 140.0,
+     "caught": 132.0,
+     "caught_frac": 0.9428571428571428,
+     "caught_24h_frac": 0.8714285714285714,
+     "median_warning_h": 57.45483502373099,
+     "warning_hours_per_dangerous": 48.48697820944445,
+     "false_alarms": 156.0,
+     "false_alarms_per_day": 39.0,
+     "alerts_per_day": 72.0,
+     "precision": 0.4583333333333333,
+     "at_budget": {
+      "30": 0.8219468608648131,
+      "100": 0.9928571428571429,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.7618536283730225,
+      "100": 0.95,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16436681.0,
+     "dangerous": 1497.0,
+     "caught": 1387.0,
+     "caught_frac": 0.9265197060788243,
+     "caught_24h_frac": 0.8203072812291249,
+     "median_warning_h": 49.74574711918831,
+     "warning_hours_per_dangerous": 44.366454482533946,
+     "false_alarms": 2219.0,
+     "false_alarms_per_day": 554.75,
+     "alerts_per_day": 901.5,
+     "precision": 0.384636716583472,
+     "at_budget": {
+      "30": 0.3708106339235739,
+      "100": 0.38931657599379893,
+      "300": 0.7112802714679922
+     },
+     "at_budget_24h": {
+      "30": 0.3036210147852853,
+      "100": 0.3187737434205636,
+      "300": 0.6136598394825348
+     }
+    }
+   },
+   "foster_table": {
+    "all_non_member": {
+     "assessed": 21588291.0,
+     "dangerous": 1946.0,
+     "caught": 1459.0,
+     "caught_frac": 0.749743062692703,
+     "caught_24h_frac": 0.6603288797533402,
+     "median_warning_h": 52.50107115134597,
+     "warning_hours_per_dangerous": 36.92215061678196,
+     "false_alarms": 2653.0,
+     "false_alarms_per_day": 663.25,
+     "alerts_per_day": 1028.0,
+     "precision": 0.3548151750972763,
+     "at_budget": {
+      "30": 0.2274684107121977,
+      "100": 0.3528240142540845,
+      "300": 0.5457804952402879
+     },
+     "at_budget_24h": {
+      "30": 0.1587969235648128,
+      "100": 0.27764704668336815,
+      "300": 0.46645628576824416
+     }
+    },
+    "debris": {
+     "assessed": 3938231.0,
+     "dangerous": 309.0,
+     "caught": 174.0,
+     "caught_frac": 0.5631067961165048,
+     "caught_24h_frac": 0.4110032362459547,
+     "median_warning_h": 45.360696421936154,
+     "warning_hours_per_dangerous": 23.9281658370735,
+     "false_alarms": 578.0,
+     "false_alarms_per_day": 144.5,
+     "alerts_per_day": 188.0,
+     "precision": 0.23138297872340424,
+     "at_budget": {
+      "30": 0.25585020746032905,
+      "100": 0.47959193170160475,
+      "300": 0.7459363440599135
+     },
+     "at_budget_24h": {
+      "30": 0.15646128912642887,
+      "100": 0.3449682271737081,
+      "300": 0.6043414092937537
+     }
+    },
+    "rocket_body": {
+     "assessed": 1213379.0,
+     "dangerous": 140.0,
+     "caught": 108.0,
+     "caught_frac": 0.7714285714285715,
+     "caught_24h_frac": 0.7214285714285714,
+     "median_warning_h": 60.04039001092315,
+     "warning_hours_per_dangerous": 41.67002190960837,
+     "false_alarms": 141.0,
+     "false_alarms_per_day": 35.25,
+     "alerts_per_day": 62.25,
+     "precision": 0.43373493975903615,
+     "at_budget": {
+      "30": 0.7189442709383206,
+      "100": 0.9928571428571429,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.6641729708937524,
+      "100": 0.9547127313358162,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16436681.0,
+     "dangerous": 1497.0,
+     "caught": 1177.0,
+     "caught_frac": 0.7862391449565799,
+     "caught_24h_frac": 0.7060788243152972,
+     "median_warning_h": 52.50107115134597,
+     "warning_hours_per_dangerous": 39.16025303223568,
+     "false_alarms": 1934.0,
+     "false_alarms_per_day": 483.5,
+     "alerts_per_day": 777.75,
+     "precision": 0.37833494053359046,
+     "at_budget": {
+      "30": 0.295000766018539,
+      "100": 0.41822054540090164,
+      "300": 0.6438639131496594
+     },
+     "at_budget_24h": {
+      "30": 0.22293127896091353,
+      "100": 0.344084480240681,
+      "300": 0.5708876638380839
+     }
+    }
+   },
+   "foster_model": {
+    "all_non_member": {
+     "assessed": 21588291.0,
+     "dangerous": 1946.0,
+     "caught": 1337.0,
+     "caught_frac": 0.6870503597122302,
+     "caught_24h_frac": 0.5441932168550874,
+     "median_warning_h": 47.079611130058765,
+     "warning_hours_per_dangerous": 30.782712804783376,
+     "false_alarms": 2340.0,
+     "false_alarms_per_day": 585.0,
+     "alerts_per_day": 919.25,
+     "precision": 0.363611639923851,
+     "at_budget": {
+      "30": 0.2572920234555624,
+      "100": 0.40685091687374997,
+      "300": 0.5741197305530231
+     },
+     "at_budget_24h": {
+      "30": 0.13735566216602396,
+      "100": 0.2679463617152299,
+      "300": 0.4289578809783454
+     }
+    },
+    "debris": {
+     "assessed": 3938231.0,
+     "dangerous": 309.0,
+     "caught": 152.0,
+     "caught_frac": 0.4919093851132686,
+     "caught_24h_frac": 0.3333333333333333,
+     "median_warning_h": 44.29649727791548,
+     "warning_hours_per_dangerous": 20.185228736402053,
+     "false_alarms": 257.0,
+     "false_alarms_per_day": 64.25,
+     "alerts_per_day": 102.25,
+     "precision": 0.37163814180929094,
+     "at_budget": {
+      "30": 0.368483843724501,
+      "100": 0.574938180654597,
+      "300": 0.7370152720896224
+     },
+     "at_budget_24h": {
+      "30": 0.24076417729175764,
+      "100": 0.40039505280902166,
+      "300": 0.5273905478981381
+     }
+    },
+    "rocket_body": {
+     "assessed": 1213379.0,
+     "dangerous": 140.0,
+     "caught": 104.0,
+     "caught_frac": 0.7428571428571429,
+     "caught_24h_frac": 0.65,
+     "median_warning_h": 61.248613150790334,
+     "warning_hours_per_dangerous": 38.29870452830302,
+     "false_alarms": 129.0,
+     "false_alarms_per_day": 32.25,
+     "alerts_per_day": 58.25,
+     "precision": 0.44635193133047213,
+     "at_budget": {
+      "30": 0.7284869807714749,
+      "100": 0.9321462935406352,
+      "300": 0.9866827997952783
+     },
+     "at_budget_24h": {
+      "30": 0.6339392306101358,
+      "100": 0.863100965424868,
+      "300": 0.9778046663254638
+     }
+    },
+    "payload": {
+     "assessed": 16436681.0,
+     "dangerous": 1497.0,
+     "caught": 1081.0,
+     "caught_frac": 0.7221108884435538,
+     "caught_24h_frac": 0.5778223112892451,
+     "median_warning_h": 46.805070608854294,
+     "warning_hours_per_dangerous": 32.267271078555645,
+     "false_alarms": 1954.0,
+     "false_alarms_per_day": 488.5,
+     "alerts_per_day": 758.75,
+     "precision": 0.3561779242174629,
+     "at_budget": {
+      "30": 0.2804730903973625,
+      "100": 0.4603231315006448,
+      "300": 0.6400915719135
+     },
+     "at_budget_24h": {
+      "30": 0.14778486271035768,
+      "100": 0.30948523673408046,
+      "300": 0.4909144262242874
+     }
+    }
+   },
+   "foster_model_cal": {
+    "all_non_member": {
+     "assessed": 21588291.0,
+     "dangerous": 1946.0,
+     "caught": 1339.0,
+     "caught_frac": 0.6880781089414183,
+     "caught_24h_frac": 0.539568345323741,
+     "median_warning_h": 46.87975765764713,
+     "warning_hours_per_dangerous": 30.50062796741701,
+     "false_alarms": 2195.0,
+     "false_alarms_per_day": 548.75,
+     "alerts_per_day": 883.5,
+     "precision": 0.3788907753254103,
+     "at_budget": {
+      "30": 0.2853262372683372,
+      "100": 0.42793517416103477,
+      "300": 0.5884003975943677
+     },
+     "at_budget_24h": {
+      "30": 0.1439918819042737,
+      "100": 0.26788742888797473,
+      "300": 0.43098642154866607
+     }
+    },
+    "debris": {
+     "assessed": 3938231.0,
+     "dangerous": 309.0,
+     "caught": 146.0,
+     "caught_frac": 0.47249190938511326,
+     "caught_24h_frac": 0.3333333333333333,
+     "median_warning_h": 45.47488775476813,
+     "warning_hours_per_dangerous": 19.724176371343507,
+     "false_alarms": 241.0,
+     "false_alarms_per_day": 60.25,
+     "alerts_per_day": 96.75,
+     "precision": 0.3772609819121447,
+     "at_budget": {
+      "30": 0.3769303675675691,
+      "100": 0.566358402920652,
+      "300": 0.7474098840089314
+     },
+     "at_budget_24h": {
+      "30": 0.25115040737024535,
+      "100": 0.4054093908695506,
+      "300": 0.541642724527782
+     }
+    },
+    "rocket_body": {
+     "assessed": 1213379.0,
+     "dangerous": 140.0,
+     "caught": 105.0,
+     "caught_frac": 0.75,
+     "caught_24h_frac": 0.6571428571428571,
+     "median_warning_h": 60.157108537852764,
+     "warning_hours_per_dangerous": 38.41159096078149,
+     "false_alarms": 127.0,
+     "false_alarms_per_day": 31.75,
+     "alerts_per_day": 58.0,
+     "precision": 0.4525862068965517,
+     "at_budget": {
+      "30": 0.7400113479956233,
+      "100": 0.9313088085931067,
+      "300": 0.995570144527139
+     },
+     "at_budget_24h": {
+      "30": 0.6445101501961454,
+      "100": 0.8572474057528247,
+      "300": 0.991140289054278
+     }
+    },
+    "payload": {
+     "assessed": 16436681.0,
+     "dangerous": 1497.0,
+     "caught": 1088.0,
+     "caught_frac": 0.7267869071476286,
+     "caught_24h_frac": 0.5711422845691383,
+     "median_warning_h": 46.027515292167664,
+     "warning_hours_per_dangerous": 31.98518957337271,
+     "false_alarms": 1827.0,
+     "false_alarms_per_day": 456.75,
+     "alerts_per_day": 728.75,
+     "precision": 0.3732418524871355,
+     "at_budget": {
+      "30": 0.3224045579757627,
+      "100": 0.4794675940282106,
+      "300": 0.655503882355973
+     },
+     "at_budget_24h": {
+      "30": 0.1674392232337474,
+      "100": 0.3052961815080427,
+      "300": 0.49226169600658526
+     }
+    }
+   },
+   "share_dangerous_non_member": 0.9297658862876255,
+   "dangerous_per_day_by_kind": {
+    "debris": 77.25,
+    "rocket_body": 35.0,
+    "payload": 374.25
+   }
+  },
+  "w4_t11.4": {
+   "baseline": {
+    "all_non_member": {
+     "assessed": 21441011.0,
+     "dangerous": 1867.0,
+     "caught": 1682.0,
+     "caught_frac": 0.9009105516871987,
+     "caught_24h_frac": 0.7327262988752009,
+     "median_warning_h": 54.07177437096834,
+     "warning_hours_per_dangerous": 43.04831024328966,
+     "false_alarms": 3809.0,
+     "false_alarms_per_day": 952.25,
+     "alerts_per_day": 1372.75,
+     "precision": 0.3063194317974868,
+     "at_budget": {
+      "30": 0.3479442822501125,
+      "100": 0.3653090397352328,
+      "300": 0.4486872077470929
+     },
+     "at_budget_24h": {
+      "30": 0.25591375780772063,
+      "100": 0.2686855737798035,
+      "300": 0.3337943229920305
+     }
+    },
+    "debris": {
+     "assessed": 3782219.0,
+     "dangerous": 257.0,
+     "caught": 184.0,
+     "caught_frac": 0.7159533073929961,
+     "caught_24h_frac": 0.5369649805447471,
+     "median_warning_h": 45.15824276022613,
+     "warning_hours_per_dangerous": 31.315956139987776,
+     "false_alarms": 654.0,
+     "false_alarms_per_day": 163.5,
+     "alerts_per_day": 209.5,
+     "precision": 0.21957040572792363,
+     "at_budget": {
+      "30": 0.290831771426604,
+      "100": 0.5259542867590297,
+      "300": 0.7626155525833864
+     },
+     "at_budget_24h": {
+      "30": 0.19133669172802892,
+      "100": 0.3606232745213438,
+      "300": 0.5951789302321074
+     }
+    },
+    "rocket_body": {
+     "assessed": 1189977.0,
+     "dangerous": 104.0,
+     "caught": 101.0,
+     "caught_frac": 0.9711538461538461,
+     "caught_24h_frac": 0.8461538461538461,
+     "median_warning_h": 64.06053360924125,
+     "warning_hours_per_dangerous": 52.008875080849975,
+     "false_alarms": 177.0,
+     "false_alarms_per_day": 44.25,
+     "alerts_per_day": 69.5,
+     "precision": 0.36330935251798563,
+     "at_budget": {
+      "30": 0.8235699937843058,
+      "100": 0.9903846153846154,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.6845143887967305,
+      "100": 0.8883526155669481,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16468815.0,
+     "dangerous": 1506.0,
+     "caught": 1397.0,
+     "caught_frac": 0.9276228419654714,
+     "caught_24h_frac": 0.7583001328021248,
+     "median_warning_h": 53.94733352959156,
+     "warning_hours_per_dangerous": 44.43165437439345,
+     "false_alarms": 2978.0,
+     "false_alarms_per_day": 744.5,
+     "alerts_per_day": 1093.75,
+     "precision": 0.3193142857142857,
+     "at_budget": {
+      "30": 0.36725522620119105,
+      "100": 0.3855837295376607,
+      "300": 0.5751374743684661
+     },
+     "at_budget_24h": {
+      "30": 0.2711280193431612,
+      "100": 0.28465912918887704,
+      "300": 0.43534523780538503
+     }
+    }
+   },
+   "foster_table": {
+    "all_non_member": {
+     "assessed": 21441011.0,
+     "dangerous": 1867.0,
+     "caught": 1442.0,
+     "caught_frac": 0.7723620782003213,
+     "caught_24h_frac": 0.6261381896089984,
+     "median_warning_h": 57.73131340742111,
+     "warning_hours_per_dangerous": 38.03470498645488,
+     "false_alarms": 3171.0,
+     "false_alarms_per_day": 792.75,
+     "alerts_per_day": 1153.25,
+     "precision": 0.3125948406676783,
+     "at_budget": {
+      "30": 0.15623432226758832,
+      "100": 0.2959860597581553,
+      "300": 0.45611546624656885
+     },
+     "at_budget_24h": {
+      "30": 0.08418336103003783,
+      "100": 0.19872937432390936,
+      "300": 0.3342722107144383
+     }
+    },
+    "debris": {
+     "assessed": 3782219.0,
+     "dangerous": 257.0,
+     "caught": 147.0,
+     "caught_frac": 0.5719844357976653,
+     "caught_24h_frac": 0.4163424124513619,
+     "median_warning_h": 52.02348966524005,
+     "warning_hours_per_dangerous": 25.468816597203105,
+     "false_alarms": 538.0,
+     "false_alarms_per_day": 134.5,
+     "alerts_per_day": 171.25,
+     "precision": 0.2145985401459854,
+     "at_budget": {
+      "30": 0.25701204343007095,
+      "100": 0.4754997080826856,
+      "300": 0.7582977440453454
+     },
+     "at_budget_24h": {
+      "30": 0.15369107460165704,
+      "100": 0.3409637189240339,
+      "300": 0.5794008411506734
+     }
+    },
+    "rocket_body": {
+     "assessed": 1189977.0,
+     "dangerous": 104.0,
+     "caught": 87.0,
+     "caught_frac": 0.8365384615384616,
+     "caught_24h_frac": 0.7115384615384616,
+     "median_warning_h": 64.33460846543312,
+     "warning_hours_per_dangerous": 44.308519472475524,
+     "false_alarms": 146.0,
+     "false_alarms_per_day": 36.5,
+     "alerts_per_day": 58.25,
+     "precision": 0.37339055793991416,
+     "at_budget": {
+      "30": 0.737200199165562,
+      "100": 0.9807692307692307,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.612200199165562,
+      "100": 0.9408683053928087,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16468815.0,
+     "dangerous": 1506.0,
+     "caught": 1208.0,
+     "caught_frac": 0.8021248339973439,
+     "caught_24h_frac": 0.6560424966799469,
+     "median_warning_h": 57.76223354972899,
+     "warning_hours_per_dangerous": 39.74583155318234,
+     "false_alarms": 2487.0,
+     "false_alarms_per_day": 621.75,
+     "alerts_per_day": 923.75,
+     "precision": 0.3269282814614344,
+     "at_budget": {
+      "30": 0.21185733366931625,
+      "100": 0.34840471755804936,
+      "300": 0.5531885818158224
+     },
+     "at_budget_24h": {
+      "30": 0.12860616644782777,
+      "100": 0.2411135179617839,
+      "300": 0.4207662090300892
+     }
+    }
+   },
+   "foster_model": {
+    "all_non_member": {
+     "assessed": 21441011.0,
+     "dangerous": 1867.0,
+     "caught": 1320.0,
+     "caught_frac": 0.7070166041778254,
+     "caught_24h_frac": 0.5249062667380825,
+     "median_warning_h": 44.21665468253195,
+     "warning_hours_per_dangerous": 29.953253437998896,
+     "false_alarms": 2957.0,
+     "false_alarms_per_day": 739.25,
+     "alerts_per_day": 1069.25,
+     "precision": 0.30862754267009584,
+     "at_budget": {
+      "30": 0.26261444110554044,
+      "100": 0.3856959264321663,
+      "300": 0.5388747738336153
+     },
+     "at_budget_24h": {
+      "30": 0.12640547200560284,
+      "100": 0.22292148865374223,
+      "300": 0.3562727936150881
+     }
+    },
+    "debris": {
+     "assessed": 3782219.0,
+     "dangerous": 257.0,
+     "caught": 138.0,
+     "caught_frac": 0.5369649805447471,
+     "caught_24h_frac": 0.35019455252918286,
+     "median_warning_h": 35.0674301572144,
+     "warning_hours_per_dangerous": 20.822623037845474,
+     "false_alarms": 353.0,
+     "false_alarms_per_day": 88.25,
+     "alerts_per_day": 122.75,
+     "precision": 0.28105906313645623,
+     "at_budget": {
+      "30": 0.35797665369649806,
+      "100": 0.5587849254062465,
+      "300": 0.7534656523424632
+     },
+     "at_budget_24h": {
+      "30": 0.2490272373540856,
+      "100": 0.3664196397338875,
+      "300": 0.5199362701224358
+     }
+    },
+    "rocket_body": {
+     "assessed": 1189977.0,
+     "dangerous": 104.0,
+     "caught": 77.0,
+     "caught_frac": 0.7403846153846154,
+     "caught_24h_frac": 0.6153846153846154,
+     "median_warning_h": 52.94996448978782,
+     "warning_hours_per_dangerous": 35.441800262349155,
+     "false_alarms": 166.0,
+     "false_alarms_per_day": 41.5,
+     "alerts_per_day": 60.75,
+     "precision": 0.3168724279835391,
+     "at_budget": {
+      "30": 0.6671728445882176,
+      "100": 0.9504650136735259,
+      "300": 1.0
+     },
+     "at_budget_24h": {
+      "30": 0.538845036824745,
+      "100": 0.8710356345275516,
+      "300": 0.9673517734334173
+     }
+    },
+    "payload": {
+     "assessed": 16468815.0,
+     "dangerous": 1506.0,
+     "caught": 1105.0,
+     "caught_frac": 0.7337317397078353,
+     "caught_24h_frac": 0.548472775564409,
+     "median_warning_h": 44.251071721315384,
+     "warning_hours_per_dangerous": 31.132379031031434,
+     "false_alarms": 2438.0,
+     "false_alarms_per_day": 609.5,
+     "alerts_per_day": 885.75,
+     "precision": 0.31188258537962177,
+     "at_budget": {
+      "30": 0.29208412853254095,
+      "100": 0.4372732062410237,
+      "300": 0.6011009755184601
+     },
+     "at_budget_24h": {
+      "30": 0.14073872352925512,
+      "100": 0.2573474117745555,
+      "300": 0.40616093369697726
+     }
+    }
+   },
+   "foster_model_cal": {
+    "all_non_member": {
+     "assessed": 21441011.0,
+     "dangerous": 1867.0,
+     "caught": 1320.0,
+     "caught_frac": 0.7070166041778254,
+     "caught_24h_frac": 0.5259775040171398,
+     "median_warning_h": 44.48198441416025,
+     "warning_hours_per_dangerous": 30.011598153924744,
+     "false_alarms": 2904.0,
+     "false_alarms_per_day": 726.0,
+     "alerts_per_day": 1056.0,
+     "precision": 0.3125,
+     "at_budget": {
+      "30": 0.2566972481922591,
+      "100": 0.38671771374814945,
+      "300": 0.5459173302813936
+     },
+     "at_budget_24h": {
+      "30": 0.11942436264775609,
+      "100": 0.22108274378670814,
+      "300": 0.3586452224997151
+     }
+    },
+    "debris": {
+     "assessed": 3782219.0,
+     "dangerous": 257.0,
+     "caught": 138.0,
+     "caught_frac": 0.5369649805447471,
+     "caught_24h_frac": 0.35019455252918286,
+     "median_warning_h": 34.801093105226755,
+     "warning_hours_per_dangerous": 20.803065384538836,
+     "false_alarms": 341.0,
+     "false_alarms_per_day": 85.25,
+     "alerts_per_day": 119.75,
+     "precision": 0.2881002087682672,
+     "at_budget": {
+      "30": 0.3569820237246637,
+      "100": 0.5644504606905693,
+      "300": 0.758333312389498
+     },
+     "at_budget_24h": {
+      "30": 0.2429706633597715,
+      "100": 0.37274674136678054,
+      "300": 0.5316678286370389
+     }
+    },
+    "rocket_body": {
+     "assessed": 1189977.0,
+     "dangerous": 104.0,
+     "caught": 77.0,
+     "caught_frac": 0.7403846153846154,
+     "caught_24h_frac": 0.6153846153846154,
+     "median_warning_h": 54.786866035312414,
+     "warning_hours_per_dangerous": 35.90333872410254,
+     "false_alarms": 168.0,
+     "false_alarms_per_day": 42.0,
+     "alerts_per_day": 61.25,
+     "precision": 0.3142857142857143,
+     "at_budget": {
+      "30": 0.6666324360833251,
+      "100": 0.9571319544564796,
+      "300": 1.0
+     },
+     "at_budget_24h": {
+      "30": 0.5416324360833251,
+      "100": 0.872096304914224,
+      "300": 0.9714551558423387
+     }
+    },
+    "payload": {
+     "assessed": 16468815.0,
+     "dangerous": 1506.0,
+     "caught": 1105.0,
+     "caught_frac": 0.7337317397078353,
+     "caught_24h_frac": 0.549800796812749,
+     "median_warning_h": 44.38562223315239,
+     "warning_hours_per_dangerous": 31.176174450361454,
+     "false_alarms": 2395.0,
+     "false_alarms_per_day": 598.75,
+     "alerts_per_day": 875.0,
+     "precision": 0.3157142857142857,
+     "at_budget": {
+      "30": 0.2853348714660754,
+      "100": 0.4402713706968727,
+      "300": 0.608551984730798
+     },
+     "at_budget_24h": {
+      "30": 0.13097442177921184,
+      "100": 0.2551522905808149,
+      "300": 0.409618224759812
+     }
+    }
+   },
+   "share_dangerous_non_member": 0.9228868017795353,
+   "dangerous_per_day_by_kind": {
+    "debris": 64.25,
+    "rocket_body": 26.0,
+    "payload": 376.5
+   }
+  },
+  "w4_t15.4": {
+   "baseline": {
+    "all_non_member": {
+     "assessed": 18766906.0,
+     "dangerous": 1902.0,
+     "caught": 1683.0,
+     "caught_frac": 0.8848580441640379,
+     "caught_24h_frac": 0.6409043112513144,
+     "median_warning_h": 42.03507053107023,
+     "warning_hours_per_dangerous": 36.23555912234312,
+     "false_alarms": 3635.0,
+     "false_alarms_per_day": 908.75,
+     "alerts_per_day": 1329.5,
+     "precision": 0.3164723580293343,
+     "at_budget": {
+      "30": 0.3199603847458951,
+      "100": 0.3359285577247068,
+      "300": 0.4269989552086244
+     },
+     "at_budget_24h": {
+      "30": 0.21604575828008327,
+      "100": 0.22682789320686397,
+      "300": 0.2921863325734909
+     }
+    },
+    "debris": {
+     "assessed": 1800886.0,
+     "dangerous": 143.0,
+     "caught": 99.0,
+     "caught_frac": 0.6923076923076923,
+     "caught_24h_frac": 0.4965034965034965,
+     "median_warning_h": 44.15056062117219,
+     "warning_hours_per_dangerous": 30.223321914256037,
+     "false_alarms": 408.0,
+     "false_alarms_per_day": 102.0,
+     "alerts_per_day": 126.75,
+     "precision": 0.1952662721893491,
+     "at_budget": {
+      "30": 0.3949817508381615,
+      "100": 0.6881522703695374,
+      "300": 0.863751181028315
+     },
+     "at_budget_24h": {
+      "30": 0.2756762127320835,
+      "100": 0.493292488642195,
+      "300": 0.6662561421718434
+     }
+    },
+    "rocket_body": {
+     "assessed": 692699.0,
+     "dangerous": 87.0,
+     "caught": 82.0,
+     "caught_frac": 0.9425287356321839,
+     "caught_24h_frac": 0.8160919540229885,
+     "median_warning_h": 60.81362086907029,
+     "warning_hours_per_dangerous": 48.58706585844529,
+     "false_alarms": 91.0,
+     "false_alarms_per_day": 22.75,
+     "alerts_per_day": 43.25,
+     "precision": 0.47398843930635837,
+     "at_budget": {
+      "30": 0.9578011915872312,
+      "100": 0.9770114942528736,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.8771817778431775,
+      "100": 0.9655172413793104,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16273321.0,
+     "dangerous": 1672.0,
+     "caught": 1502.0,
+     "caught_frac": 0.8983253588516746,
+     "caught_24h_frac": 0.6441387559808612,
+     "median_warning_h": 41.037066696211696,
+     "warning_hours_per_dangerous": 36.107071583297405,
+     "false_alarms": 3136.0,
+     "false_alarms_per_day": 784.0,
+     "alerts_per_day": 1159.5,
+     "precision": 0.32384648555411816,
+     "at_budget": {
+      "30": 0.3280185891812021,
+      "100": 0.34438892070355914,
+      "300": 0.4862780181644474
+     },
+     "at_budget_24h": {
+      "30": 0.2186790594541347,
+      "100": 0.22959261380237272,
+      "300": 0.33036258117936573
+     }
+    }
+   },
+   "foster_table": {
+    "all_non_member": {
+     "assessed": 18766906.0,
+     "dangerous": 1902.0,
+     "caught": 1423.0,
+     "caught_frac": 0.7481598317560463,
+     "caught_24h_frac": 0.5630914826498423,
+     "median_warning_h": 47.07385300844908,
+     "warning_hours_per_dangerous": 32.36787585224898,
+     "false_alarms": 3071.0,
+     "false_alarms_per_day": 767.75,
+     "alerts_per_day": 1123.5,
+     "precision": 0.3166444147752559,
+     "at_budget": {
+      "30": 0.14902789809078404,
+      "100": 0.27488057426705703,
+      "300": 0.4297699456097631
+     },
+     "at_budget_24h": {
+      "30": 0.07149814634156128,
+      "100": 0.17319160343042475,
+      "300": 0.298518538078085
+     }
+    },
+    "debris": {
+     "assessed": 1800886.0,
+     "dangerous": 143.0,
+     "caught": 83.0,
+     "caught_frac": 0.5804195804195804,
+     "caught_24h_frac": 0.4405594405594406,
+     "median_warning_h": 56.593298479914665,
+     "warning_hours_per_dangerous": 27.621244069527496,
+     "false_alarms": 260.0,
+     "false_alarms_per_day": 65.0,
+     "alerts_per_day": 85.75,
+     "precision": 0.24198250728862974,
+     "at_budget": {
+      "30": 0.37431118776026867,
+      "100": 0.6631279950124385,
+      "300": 0.8537184112332306
+     },
+     "at_budget_24h": {
+      "30": 0.26849562858243925,
+      "100": 0.49018448931515546,
+      "300": 0.6788932364080558
+     }
+    },
+    "rocket_body": {
+     "assessed": 692699.0,
+     "dangerous": 87.0,
+     "caught": 68.0,
+     "caught_frac": 0.7816091954022989,
+     "caught_24h_frac": 0.7126436781609196,
+     "median_warning_h": 64.98051082715392,
+     "warning_hours_per_dangerous": 44.28261106769587,
+     "false_alarms": 82.0,
+     "false_alarms_per_day": 20.5,
+     "alerts_per_day": 37.5,
+     "precision": 0.4533333333333333,
+     "at_budget": {
+      "30": 0.8986310197767796,
+      "100": 0.9770114942528736,
+      "300": NaN
+     },
+     "at_budget_24h": {
+      "30": 0.8468367732057788,
+      "100": 0.9641962193254524,
+      "300": NaN
+     }
+    },
+    "payload": {
+     "assessed": 16273321.0,
+     "dangerous": 1672.0,
+     "caught": 1272.0,
+     "caught_frac": 0.7607655502392344,
+     "caught_24h_frac": 0.5657894736842105,
+     "median_warning_h": 45.69817298837006,
+     "warning_hours_per_dangerous": 32.15387249171386,
+     "false_alarms": 2729.0,
+     "false_alarms_per_day": 682.25,
+     "alerts_per_day": 1000.25,
+     "precision": 0.3179205198700325,
+     "at_budget": {
+      "30": 0.1746257354293233,
+      "100": 0.2977246218870724,
+      "300": 0.47763624005794847
+     },
+     "at_budget_24h": {
+      "30": 0.08688155568413959,
+      "100": 0.18634300010386706,
+      "300": 0.33181148226992146
+     }
+    }
+   },
+   "foster_model": {
+    "all_non_member": {
+     "assessed": 18766906.0,
+     "dangerous": 1902.0,
+     "caught": 1300.0,
+     "caught_frac": 0.6834910620399579,
+     "caught_24h_frac": 0.4479495268138801,
+     "median_warning_h": 38.7622164208442,
+     "warning_hours_per_dangerous": 26.22981316656203,
+     "false_alarms": 2817.0,
+     "false_alarms_per_day": 704.25,
+     "alerts_per_day": 1029.25,
+     "precision": 0.3157639057566189,
+     "at_budget": {
+      "30": 0.2167306503040357,
+      "100": 0.3483933097661225,
+      "300": 0.5178698032846943
+     },
+     "at_budget_24h": {
+      "30": 0.0939786710829608,
+      "100": 0.1733636968794083,
+      "300": 0.2940093643940004
+     }
+    },
+    "debris": {
+     "assessed": 1800886.0,
+     "dangerous": 143.0,
+     "caught": 85.0,
+     "caught_frac": 0.5944055944055944,
+     "caught_24h_frac": 0.3916083916083916,
+     "median_warning_h": 47.98363400995731,
+     "warning_hours_per_dangerous": 25.672908862049763,
+     "false_alarms": 134.0,
+     "false_alarms_per_day": 33.5,
+     "alerts_per_day": 54.75,
+     "precision": 0.3881278538812785,
+     "at_budget": {
+      "30": 0.5788859846678575,
+      "100": 0.7506493321057807,
+      "300": 0.8557809903010102
+     },
+     "at_budget_24h": {
+      "30": 0.37781318295262545,
+      "100": 0.5548451363015848,
+      "300": 0.6835899526299923
+     }
+    },
+    "rocket_body": {
+     "assessed": 692699.0,
+     "dangerous": 87.0,
+     "caught": 59.0,
+     "caught_frac": 0.6781609195402298,
+     "caught_24h_frac": 0.5402298850574713,
+     "median_warning_h": 65.54614822939038,
+     "warning_hours_per_dangerous": 34.407340459525585,
+     "false_alarms": 89.0,
+     "false_alarms_per_day": 22.25,
+     "alerts_per_day": 37.0,
+     "precision": 0.39864864864864863,
+     "at_budget": {
+      "30": 0.7617345496572213,
+      "100": 0.9630411911155743,
+      "300": 0.9885057471264368
+     },
+     "at_budget_24h": {
+      "30": 0.6385518028421671,
+      "100": 0.893147155025294,
+      "300": 0.9885057471264368
+     }
+    },
+    "payload": {
+     "assessed": 16273321.0,
+     "dangerous": 1672.0,
+     "caught": 1156.0,
+     "caught_frac": 0.6913875598086124,
+     "caught_24h_frac": 0.4479665071770335,
+     "median_warning_h": 37.243276834487915,
+     "warning_hours_per_dangerous": 25.851937832266234,
+     "false_alarms": 2594.0,
+     "false_alarms_per_day": 648.5,
+     "alerts_per_day": 937.5,
+     "precision": 0.3082666666666667,
+     "at_budget": {
+      "30": 0.22536430014049208,
+      "100": 0.36398177344763194,
+      "300": 0.5370423321596917
+     },
+     "at_budget_24h": {
+      "30": 0.09196308632899881,
+      "100": 0.17538948107773972,
+      "300": 0.30321335582267844
+     }
+    }
+   },
+   "foster_model_cal": {
+    "all_non_member": {
+     "assessed": 18766906.0,
+     "dangerous": 1902.0,
+     "caught": 1311.0,
+     "caught_frac": 0.6892744479495269,
+     "caught_24h_frac": 0.443217665615142,
+     "median_warning_h": 37.241268664598465,
+     "warning_hours_per_dangerous": 25.799061978723536,
+     "false_alarms": 2759.0,
+     "false_alarms_per_day": 689.75,
+     "alerts_per_day": 1017.5,
+     "precision": 0.3221130221130221,
+     "at_budget": {
+      "30": 0.23182325795930836,
+      "100": 0.36355312045423005,
+      "300": 0.5286089142937296
+     },
+     "at_budget_24h": {
+      "30": 0.09281231146736404,
+      "100": 0.1743514766609214,
+      "300": 0.2963466474752465
+     }
+    },
+    "debris": {
+     "assessed": 1800886.0,
+     "dangerous": 143.0,
+     "caught": 86.0,
+     "caught_frac": 0.6013986013986014,
+     "caught_24h_frac": 0.3986013986013986,
+     "median_warning_h": 50.06709731183946,
+     "warning_hours_per_dangerous": 26.121814373828524,
+     "false_alarms": 131.0,
+     "false_alarms_per_day": 32.75,
+     "alerts_per_day": 54.25,
+     "precision": 0.39631336405529954,
+     "at_budget": {
+      "30": 0.5860358619419607,
+      "100": 0.7546430490148678,
+      "300": 0.8597796113435922
+     },
+     "at_budget_24h": {
+      "30": 0.3867076648285155,
+      "100": 0.5477638841888199,
+      "300": 0.7026319063854605
+     }
+    },
+    "rocket_body": {
+     "assessed": 692699.0,
+     "dangerous": 87.0,
+     "caught": 59.0,
+     "caught_frac": 0.6781609195402298,
+     "caught_24h_frac": 0.5402298850574713,
+     "median_warning_h": 65.30029068142176,
+     "warning_hours_per_dangerous": 34.31538643662272,
+     "false_alarms": 88.0,
+     "false_alarms_per_day": 22.0,
+     "alerts_per_day": 36.75,
+     "precision": 0.4013605442176871,
+     "at_budget": {
+      "30": 0.7639026884045584,
+      "100": 0.9562359634540479,
+      "300": 0.9885057471264368
+     },
+     "at_budget_24h": {
+      "30": 0.6354985171289474,
+      "100": 0.8819668588268043,
+      "300": 0.9885057471264368
+     }
+    },
+    "payload": {
+     "assessed": 16273321.0,
+     "dangerous": 1672.0,
+     "caught": 1166.0,
+     "caught_frac": 0.6973684210526315,
+     "caught_24h_frac": 0.44198564593301437,
+     "median_warning_h": 35.7690782379359,
+     "warning_hours_per_dangerous": 25.328324047899827,
+     "false_alarms": 2540.0,
+     "false_alarms_per_day": 635.0,
+     "alerts_per_day": 926.5,
+     "precision": 0.31462493254182405,
+     "at_budget": {
+      "30": 0.24392056119660693,
+      "100": 0.38145594527827675,
+      "300": 0.5501854677742308
+     },
+     "at_budget_24h": {
+      "30": 0.09084689514658159,
+      "100": 0.1761465903013008,
+      "300": 0.30534588415020103
+     }
+    }
+   },
+   "share_dangerous_non_member": 0.9282576866764275,
+   "dangerous_per_day_by_kind": {
+    "debris": 35.75,
+    "rocket_body": 21.75,
+    "payload": 418.0
+   }
+  }
+ },
+ "summary": {
+  "baseline": {
+   "all_non_member": {
+    "caught": 0.897718529814592,
+    "caught_24h": 0.7006953043877592,
+    "fa_day": 903.875,
+    "at_100": 0.3525250018289694,
+    "at_100_24h": 0.25340528314093336,
+    "dangerous_per_day": 458.5,
+    "n_windows": 4
+   },
+   "debris": {
+    "caught": 0.6905638068042208,
+    "caught_24h": 0.5052230414324782,
+    "fa_day": 134.0,
+    "at_100": 0.5893300925928212,
+    "at_100_24h": 0.4148182952903304,
+    "dangerous_per_day": 59.083333333333336,
+    "n_windows": 3
+   },
+   "rocket_body": {
+    "caught": 0.9521799082143909,
+    "caught_24h": 0.8445581238684688,
+    "fa_day": 35.333333333333336,
+    "at_100": 0.9867510841648773,
+    "at_100_24h": 0.9346232856487529,
+    "dangerous_per_day": 27.583333333333332,
+    "n_windows": 3
+   },
+   "payload": {
+    "caught": 0.9179133986857446,
+    "caught_24h": 0.7203996825400419,
+    "fa_day": 776.875,
+    "at_100": 0.3678381720100094,
+    "at_100_24h": 0.2657421991227238,
+    "dangerous_per_day": 393.5,
+    "n_windows": 4
+   }
+  },
+  "foster_table": {
+   "all_non_member": {
+    "caught": 0.7620449600037236,
+    "caught_24h": 0.6062822968556054,
+    "fa_day": 769.1875,
+    "at_100": 0.3015878498750644,
+    "at_100_24h": 0.20704673052624548,
+    "dangerous_per_day": 458.5,
+    "n_windows": 4
+   },
+   "debris": {
+    "caught": 0.5718369374445835,
+    "caught_24h": 0.42263502975225237,
+    "fa_day": 114.66666666666667,
+    "at_100": 0.5394065449322429,
+    "at_100_24h": 0.39203881180429917,
+    "dangerous_per_day": 59.083333333333336,
+    "n_windows": 3
+   },
+   "rocket_body": {
+    "caught": 0.7965254094564439,
+    "caught_24h": 0.7152035703759841,
+    "fa_day": 30.75,
+    "at_100": 0.983545955959749,
+    "at_100_24h": 0.9532590853513591,
+    "dangerous_per_day": 27.583333333333332,
+    "n_windows": 3
+   },
+   "payload": {
+    "caught": 0.7817610991397453,
+    "caught_24h": 0.6258703575224238,
+    "fa_day": 660.125,
+    "at_100": 0.336752659016746,
+    "at_100_24h": 0.23753997399340293,
+    "dangerous_per_day": 393.5,
+    "n_windows": 4
+   }
+  },
+  "foster_model": {
+   "all_non_member": {
+    "caught": 0.6961322578705356,
+    "caught_24h": 0.49200130257091734,
+    "fa_day": 679.5,
+    "at_100": 0.3857177138248609,
+    "at_100_24h": 0.21958870092065175,
+    "dangerous_per_day": 458.5,
+    "n_windows": 4
+   },
+   "debris": {
+    "caught": 0.5410933200212034,
+    "caught_24h": 0.3583787591569693,
+    "fa_day": 62.0,
+    "at_100": 0.6281241460555415,
+    "at_100_24h": 0.44055327628149793,
+    "dangerous_per_day": 59.083333333333336,
+    "n_windows": 3
+   },
+   "rocket_body": {
+    "caught": 0.7204675592606627,
+    "caught_24h": 0.6018715001473622,
+    "fa_day": 32.0,
+    "at_100": 0.9485508327765784,
+    "at_100_24h": 0.8757612516592378,
+    "dangerous_per_day": 27.583333333333332,
+    "n_windows": 3
+   },
+   "payload": {
+    "caught": 0.7135502983780324,
+    "caught_24h": 0.5063044484768268,
+    "fa_day": 609.0,
+    "at_100": 0.41587720335417644,
+    "at_100_24h": 0.23908634650515054,
+    "dangerous_per_day": 393.5,
+    "n_windows": 4
+   }
+  },
+  "foster_model_cal": {
+   "all_non_member": {
+    "caught": 0.6987603963745338,
+    "caught_24h": 0.48962147713505755,
+    "fa_day": 659.5,
+    "at_100": 0.3971956658240702,
+    "at_100_24h": 0.21992197186611165,
+    "dangerous_per_day": 458.5,
+    "n_windows": 4
+   },
+   "debris": {
+    "caught": 0.5369518304428206,
+    "caught_24h": 0.36070976148797157,
+    "fa_day": 59.416666666666664,
+    "at_100": 0.628483970875363,
+    "at_100_24h": 0.4419733388083837,
+    "dangerous_per_day": 59.083333333333336,
+    "n_windows": 3
+   },
+   "rocket_body": {
+    "caught": 0.7228485116416151,
+    "caught_24h": 0.6042524525283146,
+    "fa_day": 31.916666666666668,
+    "at_100": 0.9482255755012114,
+    "at_100_24h": 0.870436856497951,
+    "dangerous_per_day": 27.583333333333332,
+    "n_windows": 3
+   },
+   "payload": {
+    "caught": 0.717139873084365,
+    "caught_24h": 0.5031627802247772,
+    "fa_day": 591.0,
+    "at_100": 0.4279428912340566,
+    "at_100_24h": 0.23824032512975019,
+    "dangerous_per_day": 393.5,
+    "n_windows": 4
+   }
+  }
+ },
+ "share_dangerous_non_member": 0.9220043144469491,
+ "note": "The 6-12 Nov file has no objects named DEB or R/B (a different query), so debris and rocket-body averages use the three October windows."
+}
