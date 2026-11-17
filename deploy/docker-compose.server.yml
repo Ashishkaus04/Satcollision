@@ -1,0 +1,36 @@
+# Private deployment on one server (e.g. an Azure VM), with HTTPS.
+#
+#   cd deploy && SITE=<dns-name> docker compose -f docker-compose.server.yml up -d --build
+#
+# Needs, next to this file (all git-ignored):
+#   .env          APP_SECRET=<long random string>  and  SITE=<the server's DNS name>
+#   users.json    made by scripts/make_users.py (hashed passwords; no demo logins)
+# and the Space-Track history in ../data/historical (mounted read-only, never
+# built into the image). Caddy gets and renews the HTTPS certificate itself;
+# the app port is not exposed, only 80/443 through Caddy.
+services:
+  app:
+    build: ..
+    image: satcollision-app
+    environment:
+      APP_SECRET: ${APP_SECRET:?set APP_SECRET in deploy/.env}
+      APP_USERS_FILE: /srv/users.json
+    volumes:
+      - worlds-state:/srv/runs
+      - ../data/historical:/srv/data/historical:ro
+      - ./users.json:/srv/users.json:ro
+    restart: unless-stopped
+  caddy:
+    image: caddy:2.8.4-alpine
+    command: caddy reverse-proxy --from ${SITE:?set SITE in deploy/.env} --to app:8000
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+volumes:
+  worlds-state:
+  caddy-data:
