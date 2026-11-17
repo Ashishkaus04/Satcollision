@@ -361,10 +361,11 @@ class User(BaseModel):
     username: str
     role: str
     operator: Optional[str] = None
+    worlds: Optional[list] = None   # set in the users file to limit an account (e.g. a public guest) to these worlds
 
 
 def _issue(settings: Settings, username: str, user: dict) -> str:
-    payload = {"sub": username, "role": user["role"], "op": user.get("operator"),
+    payload = {"sub": username, "role": user["role"], "op": user.get("operator"), "worlds": user.get("worlds"),
                "exp": int(time.time()) + TOKEN_HOURS * 3600}
     return jwt.encode(payload, settings.secret, algorithm="HS256")
 
@@ -374,7 +375,7 @@ def _decode(settings: Settings, token: str) -> User:
         p = jwt.decode(token, settings.secret, algorithms=["HS256"])
     except jwt.PyJWTError:
         raise HTTPException(401, "invalid or expired token")
-    return User(username=p["sub"], role=p["role"], operator=p.get("op"))
+    return User(username=p["sub"], role=p["role"], operator=p.get("op"), worlds=p.get("worlds"))
 
 
 def _check_view_is_for(data: dict, user: "User", world: str) -> None:
@@ -393,6 +394,8 @@ def _check_view_is_for(data: dict, user: "User", world: str) -> None:
 
 
 def _can_see_world(user: User, runner: WorldRunner) -> bool:
+    if user.worlds is not None and runner.world.cfg.name not in user.worlds:
+        return False
     return user.role in ("federation", "observer") or user.operator in runner.world.operators
 
 
@@ -427,7 +430,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         if runner is None:
             raise HTTPException(404, f"no world named {name!r}")
         if not _can_see_world(user, runner):
-            raise HTTPException(403, f"{user.operator} is not an operator in {name}")
+            raise HTTPException(403, f"{user.operator or user.username} may not see {name}")
         return runner
 
     def build_view(runner: WorldRunner, user: User) -> dict:

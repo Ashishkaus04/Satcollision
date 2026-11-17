@@ -249,3 +249,21 @@ def test_hashed_passwords_in_a_users_file():
     assert not check_password({"role": "observer", "password_hash": "garbage"}, "s3cret")
     assert check_password({"role": "observer", "password": "demo"}, "demo")
     assert not check_password({"role": "observer"}, "")
+
+
+def test_an_account_limited_to_some_worlds_sees_only_those(two_worlds):
+    """A public guest account (worlds=...) must not see a world outside its
+    list, e.g. real_leo_history (Space-Track data)."""
+    from app.backend.main import _issue
+    c, app = two_worlds
+    settings = app.state.app_state.settings
+    names = list(app.state.app_state.runners)
+    allowed, hidden = names[0], names[1]
+    token = _issue(settings, "guest", {"role": "observer", "worlds": [allowed]})
+    h = {"Authorization": f"Bearer {token}"}
+    assert [w["name"] for w in c.get("/api/worlds", headers=h).json()] == [allowed]
+    assert c.get(f"/api/worlds/{allowed}/view", headers=h).status_code == 200
+    assert c.get(f"/api/worlds/{hidden}/view", headers=h).status_code == 403
+    with pytest.raises(Exception):
+        with c.websocket_connect(f"/api/worlds/{hidden}/live?token={token}") as ws:
+            ws.receive_json()
